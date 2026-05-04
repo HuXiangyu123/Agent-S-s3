@@ -798,6 +798,8 @@ class Launcher:
         env_txt = _parse_env_txt(ENV_FILE)
         reasoning_effort = env_txt.get("model_reasoning_effort", "medium")
         cmd.extend(["--reasoning_effort", reasoning_effort])
+        reflection_mode = env_txt.get("reflection_mode", "on_failure")
+        cmd.extend(["--reflection_mode", reflection_mode])
 
         self.process = subprocess.Popen(
             cmd, env=env,

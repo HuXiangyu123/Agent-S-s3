@@ -67,6 +67,9 @@ class Worker(BaseModule):
         self.grounding_agent = grounding_agent
         self.max_trajectory_length = max_trajectory_length
         self.enable_reflection = enable_reflection
+        # reflection_mode: "full" (every step), "reduced" (every other step),
+        # "on_failure" (only when last step failed), "off" (never)
+        self.reflection_mode = worker_engine_params.get("reflection_mode", "on_failure")
         # Whether the main model supports reasoning_effort (GPT/o-series only)
         model_name = worker_engine_params.get("model", "").lower()
         self.supports_reasoning = any(
@@ -131,6 +134,19 @@ class Worker(BaseModule):
             if len(self.reflection_agent.messages) > self.max_trajectory_length + 1:
                 self.reflection_agent.messages.pop(1)
 
+    def _should_reflect(self) -> bool:
+        """Decide whether to run reflection on this step based on reflection_mode."""
+        if not self.enable_reflection or self.reflection_mode == "off":
+            return False
+        if self.reflection_mode == "full":
+            return True
+        if self.reflection_mode == "reduced":
+            # Reflect on odd steps (1, 3, 5, ...); step 0 is setup-only anyway
+            return self.turn_count % 2 == 1
+        if self.reflection_mode == "on_failure":
+            return self.last_step_failed
+        return True
+
     def _generate_reflection(self, instruction: str, obs: Dict) -> Tuple[str, str]:
         """
         Generate a reflection based on the current observation and instruction.
@@ -149,7 +165,7 @@ class Worker(BaseModule):
         reflection = None
         reflection_thoughts = None
         if self.enable_reflection:
-            # Load the initial message
+            # Load the initial message (always done for context)
             if self.turn_count == 0:
                 text_content = textwrap.dedent(
                     f"""
@@ -166,28 +182,33 @@ class Worker(BaseModule):
                     image_content=obs["screenshot"],
                     role="user",
                 )
-            # Load the latest action
+            # Load the latest action (always add to history for context)
             else:
                 self.reflection_agent.add_message(
                     text_content=self.worker_history[-1],
                     image_content=obs["screenshot"],
                     role="user",
                 )
-                reflect_kwargs = {}
-                if self.supports_reasoning:
-                    reflect_kwargs["reasoning_effort"] = self.default_reasoning_effort.value
-                full_reflection = call_llm_safe(
-                    self.reflection_agent,
-                    temperature=self.temperature,
-                    use_thinking=self.use_thinking,
-                    **reflect_kwargs,
-                )
-                reflection, reflection_thoughts = split_thinking_response(
-                    full_reflection
-                )
-                self.reflections.append(reflection)
-                logger.info("REFLECTION THOUGHTS: %s", reflection_thoughts)
-                logger.info("REFLECTION: %s", reflection)
+                # Only call the LLM if the reflection mode allows it
+                if self._should_reflect():
+                    reflect_kwargs = {}
+                    if self.supports_reasoning:
+                        reflect_kwargs["reasoning_effort"] = self.default_reasoning_effort.value
+                    full_reflection = call_llm_safe(
+                        self.reflection_agent,
+                        temperature=self.temperature,
+                        use_thinking=self.use_thinking,
+                        **reflect_kwargs,
+                    )
+                    reflection, reflection_thoughts = split_thinking_response(
+                        full_reflection
+                    )
+                    self.reflections.append(reflection)
+                    logger.info("REFLECTION THOUGHTS: %s", reflection_thoughts)
+                    logger.info("REFLECTION: %s", reflection)
+                else:
+                    logger.info("REFLECTION SKIPPED (mode=%s, step=%d, failed=%s)",
+                                self.reflection_mode, self.turn_count, self.last_step_failed)
         return reflection, reflection_thoughts
 
     def generate_next_action(self, instruction: str, obs: Dict) -> Tuple[Dict, List]:

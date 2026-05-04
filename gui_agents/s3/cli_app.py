@@ -352,6 +352,14 @@ def main():
         help="Enable reflection agent to assist the worker agent",
     )
     parser.add_argument(
+        "--reflection_mode",
+        type=str,
+        default="on_failure",
+        choices=["full", "reduced", "on_failure", "off"],
+        help="Reflection frequency: full (every step), reduced (every other), "
+             "on_failure (only after failed steps), off (disabled)",
+    )
+    parser.add_argument(
         "--reasoning_effort",
         type=str,
         default="medium",
@@ -376,6 +384,7 @@ def main():
         "api_key": args.model_api_key,
         "temperature": getattr(args, "model_temperature", None),
         "reasoning_effort": args.reasoning_effort,
+        "reflection_mode": args.reflection_mode,
     }
 
     # Load the grounding engine from a custom endpoint
