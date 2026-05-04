@@ -198,10 +198,19 @@ test_models.py                ← 模型连通性测试
 sop_executor.py               ← SOP 脚本执行引擎
 sops/                         ← SOP JSON 配置文件
 docs/
-  feishu_secondary_dev_guide.md        ← 飞书二开方案（详细）
-  feishu_tools_skills_architecture.md  ← Tools/Skills 架构指导
+  README.md                              ← 文档索引与协作入口
+  feishu_gui_agent_master_plan.md      ← 飞书 GUI Agent 主方案
+  product/
+    feishu_gui_agent_prd.md            ← 产品需求文档
+  spec/
+    feishu_gui_agent_technical_spec.md ← 技术规格文档
+  interfaces/
+    feishu_gui_agent_interfaces.md     ← 模块接口文档
+  archive/
+    feishu_secondary_dev_guide.md      ← 归档：飞书二开方案
+    feishu_tools_skills_architecture.md← 归档：Tools/Skills 架构指导
   openai_api_parameters.md             ← OpenAI API 参数参考
-  project_requirements.md              ← 项目需求
+  项目需求.md                          ← 项目需求
 ```
 
 ---

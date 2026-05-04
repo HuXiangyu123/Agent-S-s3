@@ -2,50 +2,66 @@
 
 ## Purpose
 
-This repo is `Agent-S` secondary development for a Feishu GUI agent.
-Current stable baseline is:
+This repo is `Agent-S` secondary development for a Feishu desktop GUI agent.
 
-- `launcher.py` as the product shell
-- `gui_agents/s3/` as the generic execution kernel
-- `sop_executor.py` + `sops/` as the lightweight scripted path
+Current baseline:
 
-Feishu-specific capability should be added as a new domain layer, not by continuously polluting `gui_agents/s3/`.
-Current product direction is desktop GUI automation, not Feishu CLI/bot integration.
+- `launcher.py` is the product shell
+- `gui_agents/s3/` is the generic GUI kernel
+- `sop_executor.py` and `sops/` are the lightweight scripted path
+
+Feishu capability should be added as a domain layer, not by continuously polluting `gui_agents/s3/`.
+Current mainline is `Windows + 飞书桌面端 + GUI-first`, not Feishu CLI, bot, or open-platform-first integration.
+
+## Source Of Truth
+
+Read in this order before changing architecture or module boundaries:
+
+1. `docs/项目需求.md`
+2. `docs/feishu_gui_agent_master_plan.md`
+3. `docs/product/feishu_gui_agent_prd.md`
+4. `docs/spec/feishu_gui_agent_technical_spec.md`
+5. `docs/interfaces/feishu_gui_agent_interfaces.md`
 
 ## Collaboration Rules
 
-1. Use multiple coding agents only for modules with clear boundaries and disjoint ownership.
+1. Use multiple coding agents only when module ownership is clear and write scopes are disjoint.
 2. Every module change must follow `analysis -> manual plan -> coding -> review`.
-3. Do not start coding a module until the manual plan is understood and confirmed by the human.
-4. After coding, the same agent should run basic verification; a different agent should review when possible.
-5. Do not mix architecture design, feature coding, and regression judgment in one uncontrolled pass.
-6. Do not assume Feishu open-platform or bot capability exists unless the task explicitly targets that deployment mode.
+3. Do not code before the manual plan is understood by both the model and the human.
+4. If an interface changes, update `docs/interfaces/` before or together with implementation.
+5. After coding, run minimal verification first; use a different agent for review when practical.
+6. Do not assume Feishu open-platform capability exists unless the task explicitly targets that mode.
 
 ## Ownership Boundaries
 
 Prefer parallel work in these areas:
 
-- `launcher.py`
-- `sop_executor.py` and `sops/`
-- new `gui_agents/feishu/pages/`, `anchors/`, `maintenance/`
-- new `gui_agents/feishu/workflows/`, `verifiers/`, `router/`
-- isolated provider work in `gui_agents/s3/core/`
+- `gui_agents/feishu/testcases/`
+- `gui_agents/feishu/planner/`
+- `gui_agents/feishu/pages/`
+- `gui_agents/feishu/detectors/`
+- `gui_agents/feishu/locators/`
+- `gui_agents/feishu/workflows/`
+- `gui_agents/feishu/verifiers/`
+- `gui_agents/feishu/reports/`
+- `gui_agents/feishu/maintenance/`
 
-Treat these as high-coupling modules and change them serially:
+Treat these as high-coupling and change them serially:
 
 - `gui_agents/s3/agents/worker.py`
 - `gui_agents/s3/agents/grounding.py`
 - `gui_agents/s3/cli_app.py`
 - `gui_agents/s3/memory/procedural_memory.py`
+- future `gui_agents/feishu/agents/feishu_worker.py`
 
 ## Architecture Constraints
 
 1. Keep `s3` as the generic GUI kernel.
-2. Add Feishu domain logic under `gui_agents/feishu/`.
-3. New Feishu work should be split by responsibility: `agents`, `detectors/pages`, `workflows`, `verifiers`, `router`, `memory/skills`.
-4. Reuse `s2` knowledge retrieval selectively; do not reintroduce the full `s2` orchestration/DAG into the main path.
-5. Do not treat memory as the primary solution. Build stable actions, state detection, verifier gates, and fallback first.
-6. Any future Feishu open-platform or API adapter must stay optional and isolated from the GUI-first main path.
+2. Add Feishu logic under `gui_agents/feishu/`.
+3. Prefer explicit `TestCase -> Planner -> Workflow -> Verifier -> Report` contracts.
+4. Do not use unconstrained free-form agent execution as the main path.
+5. Do not treat memory as the primary solution; stabilize actions, state detection, locators, verifier gates, and fallback first.
+6. Any future API adapter must remain optional and isolated from the GUI-first path.
 
 ## Planning Standard
 
@@ -53,11 +69,11 @@ Before coding any module, write a short manual plan with:
 
 - target files and ownership
 - interface changes
-- dependencies on `worker`, `grounding`, or `cli_app`
-- test or regression path
-- rollback/risk notes
+- direct dependencies
+- verification path
+- risk or rollback notes
 
-If the change touches a high-coupling module, the plan must be reviewed before any edit.
+If the change touches a high-coupling module, finish plan review before any edit.
 
 ## Delivery Standard
 
