@@ -10,6 +10,7 @@ Current stable baseline is:
 - `sop_executor.py` + `sops/` as the lightweight scripted path
 
 Feishu-specific capability should be added as a new domain layer, not by continuously polluting `gui_agents/s3/`.
+Current product direction is desktop GUI automation, not Feishu CLI/bot integration.
 
 ## Collaboration Rules
 
@@ -18,6 +19,7 @@ Feishu-specific capability should be added as a new domain layer, not by continu
 3. Do not start coding a module until the manual plan is understood and confirmed by the human.
 4. After coding, the same agent should run basic verification; a different agent should review when possible.
 5. Do not mix architecture design, feature coding, and regression judgment in one uncontrolled pass.
+6. Do not assume Feishu open-platform or bot capability exists unless the task explicitly targets that deployment mode.
 
 ## Ownership Boundaries
 
@@ -43,6 +45,7 @@ Treat these as high-coupling modules and change them serially:
 3. New Feishu work should be split by responsibility: `agents`, `detectors/pages`, `workflows`, `verifiers`, `router`, `memory/skills`.
 4. Reuse `s2` knowledge retrieval selectively; do not reintroduce the full `s2` orchestration/DAG into the main path.
 5. Do not treat memory as the primary solution. Build stable actions, state detection, verifier gates, and fallback first.
+6. Any future Feishu open-platform or API adapter must stay optional and isolated from the GUI-first main path.
 
 ## Planning Standard
 

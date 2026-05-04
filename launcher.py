@@ -20,7 +20,7 @@ ENV_FILE = os.path.join(PROJECT_DIR, "env.txt")
 HISTORY_FILE = os.path.join(PROJECT_DIR, "command_history.json")
 
 CANDIDATE_COMMANDS = [
-    "打开消息中的bot功能测试群聊，在消息发送框输入hello，并且在聊天框点击右侧的表情图标，选择一个随机表情，并且发送",
+    "打开消息中的测试群聊，在消息发送框输入 hello，并且在聊天框点击右侧的表情图标，选择一个随机表情后发送",
     "打开云文档页面，点击新建按钮，创建空白文档",
 ]
 
