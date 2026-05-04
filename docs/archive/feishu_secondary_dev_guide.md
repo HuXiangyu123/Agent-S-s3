@@ -18,6 +18,26 @@
 
 未来如果目标场景切到企业自建应用、受控组织账号或明确依赖开放平台能力，再把 API 适配作为独立扩展层接回。
 
+## 1.1 与项目需求的直接对应关系
+
+`docs/项目需求.md` 的目标不是单纯“把飞书操作起来”，而是构建一个面向测试与质量评估的 CUA-Lark Agent。
+
+因此当前设计必须显式覆盖 5 个核心能力：
+
+1. 视觉感知：识别页面、UI 元素、界面状态和布局
+2. 语义理解：把自然语言测试指令拆成可执行步骤
+3. 自主操作：点击、输入、滚动、快捷键、多步串联
+4. 状态验证：操作后判断结果是否符合预期
+5. 评估报告：输出操作轨迹、成功率、耗时、步骤数等指标
+
+对应到当前二开结构，应当映射为：
+
+- 视觉感知 -> `StateDetector` + `PageRegistry` + `Visual Anchor`
+- 语义理解 -> `FeishuWorker` + workflow selector + task parser
+- 自主操作 -> `FeishuACI` + `gui_agents/s3/`
+- 状态验证 -> `Verifier` + OCR / VLM / visual diff
+- 评估报告 -> regression artifacts + report exporter
+
 ## 2. 为什么只扩 memory 不够
 
 只扩 memory 不能解决当前核心问题。当前真正缺的是：
@@ -82,6 +102,24 @@ gui_agents/feishu/
 
 这些如果未来需要，应该作为可选扩展层独立加入，而不是现在写进主链。
 
+但为了满足项目需求，建议现在就预留两个需求驱动模块：
+
+```text
+gui_agents/feishu/
+  reports/
+    __init__.py
+    report_builder.py
+  testcases/
+    __init__.py
+    nl_parser.py
+    scenario_schema.py
+```
+
+原因：
+
+- `reports/` 对应项目需求里的“评估报告层”
+- `testcases/` 对应项目需求里的“自然语言驱动测试”
+
 ## 4. 当前阶段最值得优先做的能力
 
 先只做最小闭环，不要一开始追求“全产品覆盖”。
@@ -93,6 +131,20 @@ gui_agents/feishu/
 3. 上传文件
 
 这三个能力一旦稳定，后续很多场景都能从这里生长出来。
+
+但从项目需求出发，子产品路线不能长期只停留在 IM。
+
+建议覆盖顺序：
+
+1. `IM`：最适合先做消息发送、搜索、表情、文件上传
+2. `Docs`：最适合验证创建文档、输入内容、标题/列表编辑
+3. `Calendar`：最适合验证跨产品和状态确认
+
+原因是这条路线能最好对应需求中的：
+
+- 最少 2 个子产品覆盖
+- M3 在 IM / Calendar / Docs 上形成可运行用例
+- 后续跨产品联动测试
 
 ## 5. 当前推荐的执行路径
 
@@ -115,6 +167,20 @@ User Task
 - `FeishuACI` 负责“如何落成 GUI 动作”
 - `Verifier` 负责“这一步到底成没成”
 - `Code Agent` 只做辅助，不接管飞书主流程
+
+如果从测试框架角度补全，当前推荐的完整执行路径应当是：
+
+```text
+Natural Language Test Case
+  -> Testcase Parser
+  -> Workflow Selector / Planner
+  -> FeishuWorker
+  -> StateDetector
+  -> FeishuACI
+  -> Verifier
+  -> Report Builder
+  -> Structured Test Report
+```
 
 ## 6. 先做哪些飞书语义动作
 
@@ -179,6 +245,25 @@ INIT
 
 当前主要问题不是“语言理解不够”，而是“页面操作不稳定”。因此第一版应更偏显式状态机，少依赖自由规划。
 
+但为了满足项目需求中的“自然语言驱动测试”，建议保留一个轻量的自然语言到结构化场景转换层，例如：
+
+```json
+{
+  "product": "im",
+  "intent": "send_message",
+  "target": "测试群",
+  "payload": {
+    "text": "Hello World"
+  },
+  "assertions": [
+    "message_sent",
+    "target_chat_matched"
+  ]
+}
+```
+
+第一阶段可以只支持少数高频模板，不必一开始就追求全自由输入。
+
 ## 9. verifier 为什么是硬需求
 
 没有 verifier，系统就会把“看起来点了”误判为“已经完成”。
@@ -220,6 +305,14 @@ gui_agents/feishu/integrations/
 
 并通过 feature flag 或显式配置接入，而不是污染主工作流。
 
+需要强调的是：这并不意味着需求文档里的开放平台资源无价值。
+
+当前更合理的用法是：
+
+- 用开放平台文档帮助理解产品功能边界
+- 不把开放平台调用当成当前 GUI 测试主链
+- 如果未来要做企业版扩展，再单独接入
+
 ## 11. 推荐的分阶段推进
 
 ### 阶段 0：先稳住运行基线
@@ -229,11 +322,13 @@ gui_agents/feishu/integrations/
 - 现有 `launcher.py` 和 `gui_agents/s3/cli_app.py` 可以稳定启动
 - 每次运行都能保留 step 截图和日志
 - 有一个可重复执行的真实 smoke case
+- 开始固化统一的测试产物目录和报告元数据
 
 退出条件：
 
 - 能稳定复现一条固定消息发送任务
 - 失败时能判断是识别错、点偏、输入错位还是发送未完成
+- 每次运行都能产出结构化结果，例如 `summary.json`
 
 ### 阶段 1：最小飞书闭环
 
@@ -243,10 +338,12 @@ gui_agents/feishu/integrations/
 - `FeishuACI`
 - `SendMessageWorkflow`
 - `CompletionGate`
+- `ReportBuilder` 的最小版本
 
 退出条件：
 
 - 在固定目标会话里高成功率发送唯一 token 消息
+- 能输出单条测试用例的轨迹、成功/失败、耗时、步骤数
 
 ### 阶段 2：增强恢复与第二个 workflow
 
@@ -256,10 +353,12 @@ gui_agents/feishu/integrations/
 - 错页恢复
 - 弹窗恢复
 - 第二个 workflow，如 `SendFileWorkflow`
+- 第二个子产品 workflow，如 `DocsCreateAndEditWorkflow`
 
 退出条件：
 
 - 至少 2 个 workflow 能稳定回归
+- 至少覆盖 2 个子产品
 
 ### 阶段 3：锚点维护与回归体系
 
@@ -269,12 +368,86 @@ gui_agents/feishu/integrations/
 - `Visual Anchor Store`
 - `AnchorValidator`
 - 截图刷新工具
+- regression runner
+- structured report exporter
 
 退出条件：
 
 - UI 漂移时能被发现，而不是静默失败
+- 回归运行后能自动汇总成功率、耗时、步骤数
 
-## 12. memory 应该服务什么
+### 阶段 4：对齐项目需求的多产品覆盖
+
+目标：
+
+- `IM` 至少 2 条可运行用例
+- `Docs` 至少 2 条可运行用例
+- `Calendar` 至少 2 条可运行用例
+
+建议示例：
+
+- IM：发送消息、文件上传
+- Docs：创建文档、编辑标题/列表
+- Calendar：创建会议、邀请参会人
+
+退出条件：
+
+- 基本满足 `docs/项目需求.md` 里 M3 的覆盖方向
+
+### 阶段 5：进阶能力
+
+目标：
+
+- 异常场景处理
+- 自愈式执行
+- 跨产品联动测试
+- 录制回放
+
+建议优先级：
+
+1. 异常处理
+2. 自愈
+3. 跨产品联动
+4. 录制回放
+
+原因是这条顺序最贴近需求里的 M5，而且对真实可用性提升最大。
+
+## 12. 评估报告层为什么必须现在设计
+
+项目需求里“评估报告层”是必做，不是锦上添花。
+
+因此即使第一阶段功能很少，也建议从一开始就统一测试产物结构，例如：
+
+```text
+artifacts/
+  test_runs/
+    2026-05-04_153000/
+      screenshots/
+      actions.jsonl
+      summary.json
+      report.md
+```
+
+`summary.json` 建议至少包含：
+
+- `task_id`
+- `product`
+- `workflow`
+- `status`
+- `steps`
+- `duration_sec`
+- `assertions`
+- `failure_reason`
+
+`report.md` 建议至少包含：
+
+- 用例描述
+- 执行轨迹摘要
+- 验证结果
+- 成功率/耗时/步骤数
+- 截图链接
+
+## 13. memory 应该服务什么
 
 memory 仍然有价值，但位置要靠后。
 
@@ -292,8 +465,8 @@ memory 仍然有价值，但位置要靠后。
 - 任务完成判断
 - 新语义动作定义
 
-## 13. 一句话原则
+## 14. 一句话原则
 
-先把飞书任务拆成“状态 + 语义动作 + workflow + verifier + fallback”，再考虑 memory 和未来可选的开放平台扩展。
+先把飞书需求拆成“自然语言测试用例 + 状态 + 语义动作 + workflow + verifier + report + fallback”，再考虑 memory 和未来可选的开放平台扩展。
 
 当前项目要做的是“真实桌面 GUI agent”，不是“bot 套壳”。
