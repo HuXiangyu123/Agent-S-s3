@@ -1,332 +1,243 @@
-<h1 align="center">
-  <img src="images/agent_s.png" alt="Logo" style="vertical-align:middle" width="60"> Agent S:
-  <small>Use Computer Like a Human</small>
-</h1>
+# Agent-S3 for Feishu
+
+基于 [Agent-S (Simular AI)](https://github.com/simular-ai/Agent-S) 的飞书桌面端 CUA（Computer-Use Agent）二次开发项目。在原版 S3 通用 GUI Agent 基础上，针对飞书场景增加了图形化启动器、环境自动检测、指令历史复用、推理强度自动切换等功能。
 
 ---
 
-## 🇨🇳 快速上手（Windows）
+## 快速上手（Windows）
 
-> 本版本在原版 Agent S3 基础上新增了 **图形化启动器**，支持一键启动，自动适配屏幕分辨率，适合 Windows 用户直接使用。
+### 第一步：环境准备
 
-### 第一步：安装依赖
+- 安装 [Python 3.10–3.12](https://www.python.org/downloads/)
+- （可选）创建 conda 环境：`conda create -n agent-s python=3.12 && conda activate agent-s`
+- 右键 `install.ps1` → **用 PowerShell 运行**
 
-右键 `install.ps1` → **用 PowerShell 运行**，等待安装完成。
+### 第二步：配置 API Key
 
-> 需要提前安装 [Python 3.10–3.12](https://www.python.org/downloads/)
+复制 `env.txt.example` 为 `env.txt`，填入实际 API Key：
 
-### 第二步：准备 API Key
-
-需要两个免费/付费 API：
+```bash
+cp env.txt.example env.txt
+```
 
 | 用途 | 平台 | 说明 |
 |------|------|------|
-| 主模型（理解指令）| [火山引擎方舟](https://console.volcengine.com/ark) | 注册后创建豆包视觉模型 Endpoint，获取 API Key 和 Endpoint ID |
-| 定位模型（找图标）| [OpenRouter](https://openrouter.ai) | 注册免费账号，在 Settings → Keys 创建 Key |
+| 主模型（推理规划） | OpenAI GPT / 火山引擎豆包 | 支持 reasoning_effort 控制 |
+| 落地模型（视觉定位） | 火山引擎豆包 Vision | doubao-seed-1-6-vision，坐标空间 0-1000 |
+
+> `env.txt` 已在 `.gitignore` 中，不会被提交到仓库。
 
 ### 第三步：启动
 
-双击 **`启动.bat`**，在弹出的界面中填入 API Key，点击「保存配置」后点「启动 Agent」。
-
-出现 **✅ Agent 就绪** 后，在底部输入框输入任务指令即可，例如：
-
-```
-在飞书群聊"项目组"中发送消息"今天下午3点开会"
+```bash
+python launcher.py
 ```
 
-### 注意事项
+在图形界面中：
+1. 选择主模型（OpenAI GPT / 火山引擎豆包）和落地服务
+2. 填写 API Key
+3. 系统自动检测屏幕分辨率和 DPI 缩放
+4. 点击「保存配置」→「启动 Agent」
+5. 出现 **✅ Agent 就绪** 后，输入任务指令或从下拉框选择历史指令
 
-- 仅支持**单显示器**
-- Agent 会直接控制鼠标和键盘，执行过程中请勿操作电脑
-- 每步操作需要 30 秒–2 分钟，请耐心等待
+### 候选指令
+
+- `打开消息中的bot功能测试群聊，在消息发送框输入hello，并且在聊天框点击右侧的表情图标，选择一个随机表情，并且发送`
+- `打开云文档页面，点击新建按钮，创建空白文档`
 
 ---
 
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s3">[S3 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2510.02250">[S3 Paper]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=VHr0a3UBsh4">[S3 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s2-technical-review">[S2 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2504.00906">[S2 Paper (COLM 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=wUGVQl7c0eg">[S2 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/agent-s">[S1 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2410.08164">[S1 Paper (ICLR 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=OBDE3Knte0g">[S1 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-<a href="https://trendshift.io/repositories/13151" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13151" alt="simular-ai%2FAgent-S | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white" alt="Windows">
-  <img src="https://img.shields.io/badge/OS-macOS-black?logo=apple&logoColor=white" alt="macOS">
-  <img src="https://img.shields.io/badge/OS-Linux-yellow?logo=linux&logoColor=black" alt="Linux">
-  <a href="https://discord.gg/E2XfsK9fPV">
-    <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/E2XfsK9fPV?style=flat" alt="Discord">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://pepy.tech/projects/gui-agents">
-    <img src="https://static.pepy.tech/badge/gui-agents" alt="PyPI Downloads">
-  </a>
-</p>
-
-<div align="center">
-  <!-- Keep these links. Translations will automatically update with the README. -->
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=de">Deutsch</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=es">Español</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=fr">français</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ja">日本語</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ko">한국어</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=pt">Português</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ru">Русский</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=zh">中文</a>
-</div>
-
-<div align="center">
-  &nbsp;&nbsp;
-<p>Skip the setup? Try Agent S in <a href="https://cloud.simular.ai/">Simular Cloud</a>
-</div>
-
-## 🥳 Updates
-- [x] **2025/10/02**: Released the [Agent S3 paper](https://arxiv.org/abs/2510.02250), setting a new SOTA of **69.9%** on OSWorld, with strong performance on WindowsAgentArena, and AndroidWorld!
-- [x] **2025/08/01**: Agent S2.5 is released (gui-agents v0.2.5): simpler, better, and faster! New SOTA on [OSWorld-Verified](https://os-world.github.io)!
-- [x] **2025/07/07**: The [Agent S2 paper](https://arxiv.org/abs/2504.00906) is accepted to COLM 2025! See you in Montreal!
-- [x] **2025/04/27**: The Agent S paper won the Best Paper Award 🏆 at ICLR 2025 Agentic AI for Science Workshop!
-- [x] **2025/04/01**: Released the [Agent S2 paper](https://arxiv.org/abs/2504.00906) with new SOTA results on OSWorld, WindowsAgentArena, and AndroidWorld!
-- [x] **2025/03/12**: Released Agent S2 along with v0.2.0 of [gui-agents](https://github.com/simular-ai/Agent-S), the new state-of-the-art for computer use agents (CUA), outperforming OpenAI's CUA/Operator and Anthropic's Claude 3.7 Sonnet Computer-Use!
-- [x] **2025/01/22**: The [Agent S paper](https://arxiv.org/abs/2410.08164) is accepted to ICLR 2025!
-- [x] **2025/01/21**: Released v0.1.2 of [gui-agents](https://github.com/simular-ai/Agent-S) library, with support for Linux and Windows!
-- [x] **2024/12/05**: Released v0.1.0 of [gui-agents](https://github.com/simular-ai/Agent-S) library, allowing you to use Agent-S for Mac, OSWorld, and WindowsAgentArena with ease!
-- [x] **2024/10/10**: Released the [Agent S paper](https://arxiv.org/abs/2410.08164) and codebase!
-
-## Table of Contents
-
-1. [💡 Introduction](#-introduction)
-2. [🎯 Current Results](#-current-results)
-3. [🛠️ Installation & Setup](#%EF%B8%8F-installation--setup) 
-4. [🚀 Usage](#-usage)
-5. [🤝 Acknowledgements](#-acknowledgements)
-6. [💬 Citation](#-citation)
-
-## 💡 Introduction
-
-Welcome to **Agent S**, an open-source framework designed to enable autonomous interaction with computers through Agent-Computer Interface. Our mission is to build intelligent GUI agents that can learn from past experiences and perform complex tasks autonomously on your computer. 
-
-Whether you're interested in AI, automation, or contributing to cutting-edge agent-based systems, we're excited to have you here!
-
-## 🎯 Current Results
-
-<p align="center">
-  <img src="images/s3_results.png" alt="Agent S3 Results" width="700"/>
-</p>
-
-On OSWorld, Agent S3 alone reaches 62.6% in the 100-step setting, already exceeding the previous state of the art of 61.4% (Claude Sonnet 4.5). With the addition of Behavior Best-of-N, performance climbs even higher to 69.9%, bringing computer-use agents to within just a few points of human-level accuracy (72%).
-
-Agent S3 also demonstrates strong zero-shot generalization. On WindowsAgentArena, accuracy rises from 50.2% using only Agent S3 to 56.6% by selecting from 3 rollouts. Similarly on AndroidWorld, performance improves from 68.1% to 71.6%
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-- **Single Monitor**: Our agent is designed for single monitor screens
-- **Security**: The agent runs Python code to control your computer - use with care
-- **Supported Platforms**: Linux, Mac, and Windows
-
-
-### Installation
-To install Agent S3 without cloning the repository, run
-```bash
-pip install gui-agents
-```
-If you would like to test Agent S3 while making changes, clone the repository and install using
-```
-pip install -e .
-```
-
-### API Configuration
-
-#### Option 1: Environment Variables
-Add to your `.bashrc` (Linux) or `.zshrc` (MacOS):
-```bash
-export OPENAI_API_KEY=<YOUR_API_KEY>
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
-export HF_TOKEN=<YOUR_HF_TOKEN>
-```
-
-#### Option 2: Python Script
-```python
-import os
-os.environ["OPENAI_API_KEY"] = "<YOUR_API_KEY>"
-```
-
-### Supported Models
-We support Azure OpenAI, Anthropic, Gemini, Open Router, and vLLM inference. See [models.md](models.md) for details.
-
-### Grounding Models (Required)
-For optimal performance, we recommend [UI-TARS-1.5-7B](https://huggingface.co/ByteDance-Seed/UI-TARS-1.5-7B) hosted on Hugging Face Inference Endpoints or another provider. See [Hugging Face Inference Endpoints](https://huggingface.co/learn/cookbook/en/enterprise_dedicated_endpoints) for setup instructions.
-
-## 🚀 Usage
-
-
-> ⚡️ **Recommended Setup:**  
-> For the best configuration, we recommend using **OpenAI gpt-5-2025-08-07** as the main model, paired with **UI-TARS-1.5-7B** for grounding.  
-
-
-### CLI
-
-Note, this is running Agent S3, our improved agent, without bBoN. 
-
-Run Agent S3 with the required parameters:
+## 命令行启动
 
 ```bash
-agent_s \
+python gui_agents/s3/cli_app.py \
     --provider openai \
-    --model gpt-5-2025-08-07 \
-    --ground_provider huggingface \
-    --ground_url http://localhost:8080 \
-    --ground_model ui-tars-1.5-7b \
-    --grounding_width 1920 \
-    --grounding_height 1080
+    --model gpt-5.4 \
+    --model_url https://right.codes/codex/v1 \
+    --model_api_key sk-xxx \
+    --ground_provider openai \
+    --ground_url https://ark.cn-beijing.volces.com/api/v3 \
+    --ground_api_key ark-xxx \
+    --ground_model doubao-seed-1-6-vision-250815 \
+    --grounding_width 2000 \
+    --grounding_height 1125 \
+    --ground_coord_scale 1000 \
+    --reasoning_effort medium \
+    --reflection_mode on_failure
 ```
 
-#### Required Parameters
-- **`--provider`**: Main generation model provider (e.g., openai, anthropic, etc.) - Default: "openai"
-- **`--model`**: Main generation model name (e.g., gpt-5-2025-08-07) - Default: "gpt-5-2025-08-07"
-- **`--ground_provider`**: The provider for the grounding model - **Required**
-- **`--ground_url`**: The URL of the grounding model - **Required**
-- **`--ground_model`**: The model name for the grounding model - **Required**
-- **`--grounding_width`**: Width of the output coordinate resolution from the grounding model - **Required**
-- **`--grounding_height`**: Height of the output coordinate resolution from the grounding model - **Required**
+### 参数说明
 
-#### Optional Parameters
-- **`--model_temperature`**: The temperature to fix all model calls to (necessary to set to 1.0 for models like o3 but can be left blank for other models)
+| 参数 | 必需 | 默认值 | 说明 |
+|------|------|--------|------|
+| `--provider` | 否 | `openai` | 主模型 provider |
+| `--model` | 否 | `gpt-5-2025-08-07` | 主模型名称 |
+| `--model_url` | 否 | — | 主模型 API 端点 |
+| `--model_api_key` | 否 | — | 主模型 API Key |
+| `--ground_provider` | **是** | — | 落地模型 provider |
+| `--ground_url` | **是** | — | 落地模型 API 端点 |
+| `--ground_model` | **是** | — | 落地模型名称 |
+| `--ground_api_key` | 否 | — | 落地模型 API Key |
+| `--grounding_width` | **是** | — | 落地图片宽度 |
+| `--grounding_height` | **是** | — | 落地图片高度 |
+| `--ground_coord_scale` | 否 | — | 落地坐标空间（Doubao 用 1000） |
+| `--reasoning_effort` | 否 | `medium` | GPT 推理强度：`low` / `medium` / `high` / `xhigh` |
+| `--reflection_mode` | 否 | `on_failure` | 反射频率：`full` / `reduced` / `on_failure` / `off` |
+| `--enable_reflection` | 否 | `True` | 启用反射代理 |
+| `--max_trajectory_length` | 否 | `8` | 最多保留的图像轮数 |
 
-#### Grounding Model Dimensions
-The grounding width and height should match the output coordinate resolution of your grounding model:
-- **UI-TARS-1.5-7B**: Use `--grounding_width 1920 --grounding_height 1080`
-- **UI-TARS-72B**: Use `--grounding_width 1000 --grounding_height 1000`
+---
 
-#### Optional Parameters
-- **`--model_url`**: Custom API URL for main generation model - Default: ""
-- **`--model_api_key`**: API key for main generation model - Default: ""
-- **`--ground_api_key`**: API key for grounding model endpoint - Default: ""
-- **`--max_trajectory_length`**: Maximum number of image turns to keep in trajectory - Default: 8
-- **`--enable_reflection`**: Enable reflection agent to assist the worker agent - Default: True
+## SDK 使用
 
-### `gui_agents` SDK
-
-First, we import the necessary modules. `AgentS3` is the main agent class for Agent S3. `OSWorldACI` is our grounding agent that translates agent actions into executable python code.
 ```python
-import pyautogui
-import io
 from gui_agents.s3.agents.agent_s import AgentS3
 from gui_agents.s3.agents.grounding import OSWorldACI
 
-# Load in your API keys.
-from dotenv import load_dotenv
-load_dotenv()
-
-current_platform = "linux"  # "darwin", "windows"
-```
-
-Next, we define our engine parameters. `engine_params` is used for the main agent, and `engine_params_for_grounding` is for grounding. For `engine_params_for_grounding`, we support custom endpoints like HuggingFace TGI, vLLM, and Open Router.
-
-```python
 engine_params = {
-  "engine_type": provider,
-  "model": model,
-  "base_url": model_url,           # Optional
-  "api_key": model_api_key,        # Optional
-  "temperature": model_temperature # Optional
+    "engine_type": "openai",
+    "model": "gpt-5.4",
+    "base_url": "https://right.codes/codex/v1",
+    "api_key": "sk-xxx",
+    "reasoning_effort": "medium",
+    "reflection_mode": "on_failure",
 }
-
-# Load the grounding engine from a custom endpoint
-ground_provider = "<your_ground_provider>"
-ground_url = "<your_ground_url>"
-ground_model = "<your_ground_model>"
-ground_api_key = "<your_ground_api_key>"
-
-# Set grounding dimensions based on your model's output coordinate resolution
-# UI-TARS-1.5-7B: grounding_width=1920, grounding_height=1080
-# UI-TARS-72B: grounding_width=1000, grounding_height=1000
-grounding_width = 1920  # Width of output coordinate resolution
-grounding_height = 1080  # Height of output coordinate resolution
 
 engine_params_for_grounding = {
-  "engine_type": ground_provider,
-  "model": ground_model,
-  "base_url": ground_url,
-  "api_key": ground_api_key,  # Optional
-  "grounding_width": grounding_width,
-  "grounding_height": grounding_height,
+    "engine_type": "openai",
+    "model": "doubao-seed-1-6-vision-250815",
+    "base_url": "https://ark.cn-beijing.volces.com/api/v3",
+    "api_key": "ark-xxx",
+    "grounding_width": 2000,
+    "grounding_height": 1125,
+    "ground_coord_scale": 1000,  # Doubao 坐标空间 0-1000
 }
-```
 
-Then, we define our grounding agent and Agent S3.
-
-```python
 grounding_agent = OSWorldACI(
-    platform=current_platform,
+    platform="windows",
     engine_params_for_generation=engine_params,
     engine_params_for_grounding=engine_params_for_grounding,
-    width=1920,  # Optional: screen width
-    height=1080  # Optional: screen height
+    width=3840,   # 屏幕宽度（pyautogui.size()）
+    height=2160,  # 屏幕高度
 )
 
 agent = AgentS3(
     engine_params,
     grounding_agent,
-    platform=current_platform,
-    max_trajectory_length=8,  # Optional: maximum image turns to keep
-    enable_reflection=True     # Optional: enable reflection agent
+    platform="windows",
+    max_trajectory_length=8,
+    enable_reflection=True,
 )
+
+# 执行
+info, actions = agent.predict(instruction="在飞书中发送消息", observation=obs)
+exec(actions[0])
 ```
 
-Finally, let's query the agent!
+---
 
-```python
-# Get screenshot.
-screenshot = pyautogui.screenshot()
-buffered = io.BytesIO() 
-screenshot.save(buffered, format="PNG")
-screenshot_bytes = buffered.getvalue()
+## 项目特性
 
-obs = {
-  "screenshot": screenshot_bytes,
-}
+### 推理强度自动切换
 
-instruction = "Close VS Code"
-info, action = agent.predict(instruction=instruction, observation=obs)
+GPT/o-series 模型根据任务复杂度自动调整 `reasoning_effort`：
 
-exec(action[0])
+| 场景 | 推理强度 |
+|------|----------|
+| 普通操作（点击、输入、等待） | `medium` |
+| 复杂操作（跨窗口、应用切换、跨模块） | `xhigh` |
+| 步骤失败重试 | `xhigh` |
+
+策略定义在 `gui_agents/s3/agents/reasoning_strategy.py`，可通过 `env.txt` 的 `model_reasoning_effort` 覆盖默认值。
+
+### 反射频率控制
+
+| 模式 | 行为 | 说明 |
+|------|------|------|
+| `full` | 每步反射 | 最稳定，最慢（多 ~15-25s/步） |
+| `reduced` | 每隔一步反射 | 节省 ~50% 反射调用 |
+| `on_failure` | 仅失败时反射 | 默认，节省 ~90% 反射调用 |
+| `off` | 不反射 | 最快，精度可能下降 |
+
+### 环境自动检测
+
+首次启动时自动检测：
+- 操作系统 & 版本
+- 屏幕分辨率（虚拟 + 物理）
+- DPI 缩放比例
+- 推荐落地分辨率（按 provider）
+
+检测结果持久化到 `config.json`，后续启动直接复用。支持手动「重新检测环境」。
+
+### 指令历史复用
+
+输入过的指令自动保存到 `command_history.json`（去重，上限 50 条），通过下拉框复用。
+
+---
+
+## 项目结构
+
+```text
+gui_agents/s3/               ← S3 通用 GUI 执行内核
+  agents/
+    agent_s.py                ← AgentS3 主入口
+    worker.py                 ← Worker（规划 + 落地 + 反射）
+    grounding.py              ← OSWorldACI 落地代理
+    reasoning_strategy.py     ← reasoning_effort 自动切换
+    code_agent.py             ← Code Agent（混合执行）
+  memory/
+    procedural_memory.py      ← 过程记忆 & prompt
+  core/
+    engine.py                 ← LLM 引擎（OpenAI/Anthropic/Gemini）
+    module.py                 ← BaseModule
+
+launcher.py                   ← 图形化启动器
+test_models.py                ← 模型连通性测试
+sop_executor.py               ← SOP 脚本执行引擎
+sops/                         ← SOP JSON 配置文件
+docs/
+  feishu_secondary_dev_guide.md        ← 飞书二开方案（详细）
+  feishu_tools_skills_architecture.md  ← Tools/Skills 架构指导
+  openai_api_parameters.md             ← OpenAI API 参数参考
+  project_requirements.md              ← 项目需求
 ```
 
-Refer to `gui_agents/s3/cli_app.py` for more details on how the inference loop works.
+---
 
-### OSWorld
+## 测试
 
-To deploy Agent S3 in OSWorld, follow the [OSWorld Deployment instructions](osworld_setup/s3/OSWorld.md).
-
-## 💬 Citations
-
-If you find this codebase useful, please cite:
-
+```bash
+# 模型连通性测试
+python test_models.py          # 终端输出
+python test_models.py --json   # 机器可读
+python test_models.py -v       # 显示原始响应
 ```
+
+---
+
+## 注意事项
+
+- 仅支持**单显示器**
+- Agent 会直接控制鼠标和键盘，执行过程中请勿操作电脑
+- 每步约 30–60 秒（含 1 次生成器 + 1 次落地 + 可选反射调用）
+- 反射模式默认 `on_failure`，如需更稳定可改为 `full`
+
+---
+
+## 致谢
+
+本项目基于 [Agent-S (Simular AI)](https://github.com/simular-ai/Agent-S) 的 S3 内核构建，在原版通用 GUI Agent 能力之上增加了飞书场景适配和工程化改进。
+
+## 引用
+
+```bibtex
 @misc{Agent-S2,
-      title={Agent S2: A Compositional Generalist-Specialist Framework for Computer Use Agents}, 
-      author={Saaket Agashe and Kyle Wong and Vincent Tu and Jiachen Yang and Ang Li and Xin Eric Wang},
-      year={2025},
-      eprint={2504.00906},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2504.00906}, 
+    title={Agent S2: A Compositional Generalist-Specialist Framework for Computer Use Agents},
+    author={Saaket Agashe and Kyle Wong and Vincent Tu and Jiachen Yang and Ang Li and Xin Eric Wang},
+    year={2025},
+    eprint={2504.00906},
+    archivePrefix={arXiv},
+    primaryClass={cs.AI},
 }
 
 @inproceedings{Agent-S,
@@ -334,10 +245,6 @@ If you find this codebase useful, please cite:
     author={Saaket Agashe and Jiuzhou Han and Shuyu Gan and Jiachen Yang and Ang Li and Xin Eric Wang},
     booktitle={International Conference on Learning Representations (ICLR)},
     year={2025},
-    url={https://arxiv.org/abs/2410.08164}
+    url={https://arxiv.org/abs/2410.08164},
 }
 ```
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=simular-ai/Agent-S&type=Date)](https://star-history.com/#simular-ai/Agent-S&Date)
