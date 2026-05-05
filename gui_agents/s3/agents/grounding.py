@@ -3,9 +3,7 @@ from collections import defaultdict
 from io import BytesIO
 from typing import Any, Dict, List, Optional, Tuple
 
-import pytesseract
 from PIL import Image
-from pytesseract import Output
 
 from gui_agents.s3.memory.procedural_memory import PROCEDURAL_MEMORY
 from gui_agents.s3.core.mllm import LMMAgent
@@ -14,6 +12,12 @@ from gui_agents.s3.agents.code_agent import CodeAgent
 import logging
 
 logger = logging.getLogger("desktopenv.agent")
+
+
+def _load_pytesseract():
+    import pytesseract  # type: ignore
+
+    return pytesseract
 
 
 class ACI:
@@ -296,7 +300,10 @@ class OSWorldACI(ACI):
     # Calls pytesseract to generate word level bounding boxes for text grounding
     def get_ocr_elements(self, b64_image_data: str) -> Tuple[str, List]:
         image = Image.open(BytesIO(b64_image_data))
-        image_data = pytesseract.image_to_data(image, output_type=Output.DICT)
+        pytesseract = _load_pytesseract()
+        image_data = pytesseract.image_to_data(
+            image, output_type=pytesseract.Output.DICT
+        )
 
         # Clean text by removing leading and trailing spaces and non-alphabetical characters, but keeping punctuation
         for i, word in enumerate(image_data["text"]):

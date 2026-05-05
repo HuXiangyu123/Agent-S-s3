@@ -1,7 +1,7 @@
 """Windows + Feishu/Lark ACI extension of the upstream OSWorldACI.
 
 Adds:
-- Multi-monitor virtual screen offset in resize_coordinates()
+- Primary-screen grounded coordinate alignment for Feishu runtime
 - Enhanced grounding tracing in generate_coords()
 - CJK-compatible OCR regex in get_ocr_elements()
 - Feishu-specific agent actions: feishu_focus, feishu_click, feishu_type, feishu_doc_click
@@ -15,7 +15,10 @@ from typing import Dict, List, Optional
 
 from PIL import Image, ImageGrab
 
+from gui_agents.feishu.pages.registry import get_page_descriptor
+from gui_agents.feishu.tooling.tool_router import build_feishu_tool_guidance
 from gui_agents.s3.agents.grounding import OSWorldACI, agent_action
+from gui_agents.s3.memory.procedural_memory import PROCEDURAL_MEMORY
 from gui_agents.s3.agents._feishu_exec import (
     REPO_ROOT,
     build_feishu_doc_click_code,
@@ -34,16 +37,6 @@ class WindowsFeishuACI(OSWorldACI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.virtual_screen_left = 0
-        self.virtual_screen_top = 0
-        if self.platform == "windows":
-            try:
-                import ctypes
-
-                self.virtual_screen_left = ctypes.windll.user32.GetSystemMetrics(76)
-                self.virtual_screen_top = ctypes.windll.user32.GetSystemMetrics(77)
-            except Exception:
-                pass
 
     # ------------------------------------------------------------------
     # Overrides
@@ -59,7 +52,7 @@ class WindowsFeishuACI(OSWorldACI):
             grounding_height = self.engine_params_for_grounding["grounding_height"]
             image_x = round(coordinates[0] * self.width / grounding_width)
             image_y = round(coordinates[1] * self.height / grounding_height)
-        return [image_x + self.virtual_screen_left, image_y + self.virtual_screen_top]
+        return [image_x, image_y]
 
     def generate_coords(self, ref_expr: str, obs: Dict) -> List[int]:
         model_name = self.engine_params_for_grounding.get("model", "").lower()
@@ -213,6 +206,116 @@ class WindowsFeishuACI(OSWorldACI):
         except Exception:
             pass
 
+    def capture_observation(self, scaled_width: int, scaled_height: int) -> Dict:
+        screenshot = ImageGrab.grab()
+        captured_width, captured_height = screenshot.size
+        resized = screenshot.resize((scaled_width, scaled_height), Image.LANCZOS)
+        buffered = BytesIO()
+        resized.save(buffered, format="PNG")
+        observation = {
+            "screenshot": buffered.getvalue(),
+            "image_width": scaled_width,
+            "image_height": scaled_height,
+            "source_image_width": captured_width,
+            "source_image_height": captured_height,
+        }
+        self._trace_execution(
+            "FEISHU_CAPTURE_OBS: "
+            + repr(
+                {
+                    "captured_size": (captured_width, captured_height),
+                    "resized_size": (scaled_width, scaled_height),
+                    "capture_mode": "primary_screen",
+                }
+            )
+        )
+        return observation
+
+    def _extract_obs_ocr_text(self, obs: Dict) -> str:
+        if not isinstance(obs, dict):
+            return ""
+
+        cached = obs.get("ocr_text")
+        if isinstance(cached, str) and cached.strip():
+            return cached
+
+        screenshot = obs.get("screenshot")
+        if not screenshot:
+            return ""
+
+        try:
+            _, ocr_elements = self.get_ocr_elements(screenshot)
+        except Exception as exc:
+            self._trace_execution(f"FEISHU_OCR_ENRICH_ERROR: {exc!r}")
+            return ""
+
+        words = [elem.get("text", "").strip() for elem in ocr_elements]
+        ocr_text = "\n".join(word for word in words if word)
+        if ocr_text:
+            obs["ocr_text"] = ocr_text
+            self._trace_execution(
+                "FEISHU_OCR_ENRICHED: " + repr({"word_count": len(words)})
+            )
+        return ocr_text
+
+    def build_dynamic_guidance(self, instruction: str, obs: Dict) -> str:
+        try:
+            self._extract_obs_ocr_text(obs)
+            guidance = build_feishu_tool_guidance(instruction, obs)
+        except Exception as exc:
+            self._trace_execution(f"FEISHU_TOOL_GUIDANCE_ERROR: {exc!r}")
+            return ""
+
+        if guidance:
+            self._trace_execution("FEISHU_TOOL_GUIDANCE: " + repr(guidance))
+        return guidance
+
+    def _relative_bounds_center(self, bounds: List[float]) -> List[int]:
+        x1, y1, x2, y2 = bounds
+        center_x = round(((x1 + x2) / 2.0) * self.width)
+        center_y = round(((y1 + y2) / 2.0) * self.height)
+        return [center_x, center_y]
+
+    def _absolute_click_code(
+        self, x: int, y: int, num_clicks: int = 1, button_type: str = "left"
+    ) -> str:
+        return (
+            "import pyautogui\n"
+            f"pyautogui.click({x}, {y}, clicks={num_clicks}, button={button_type!r})\n"
+        )
+
+    def _relative_region_click_code(
+        self,
+        page_id: str,
+        region_name: str,
+        num_clicks: int = 1,
+        button_type: str = "left",
+    ) -> str:
+        descriptor = get_page_descriptor(page_id)
+        if not descriptor:
+            raise ValueError(f"unknown page descriptor: {page_id}")
+        region = descriptor["key_regions"].get(region_name)
+        if not isinstance(region, dict):
+            raise ValueError(f"unknown region: {page_id}.{region_name}")
+        bounds = region.get("relative_bounds")
+        if not isinstance(bounds, list) or len(bounds) != 4:
+            raise ValueError(f"invalid bounds: {page_id}.{region_name}")
+        x, y = self._relative_bounds_center(bounds)
+        self._trace_execution(
+            "FEISHU_PRIOR_REGION_CLICK: "
+            + repr(
+                {
+                    "page_id": page_id,
+                    "region_name": region_name,
+                    "bounds": bounds,
+                    "point": (x, y),
+                }
+            )
+        )
+        return self._absolute_click_code(
+            x, y, num_clicks=num_clicks, button_type=button_type
+        )
+
     def _focus_feishu_now(self) -> bool:
         """Bring the Feishu/Lark window to the foreground using ctypes only.
 
@@ -358,57 +461,71 @@ class WindowsFeishuACI(OSWorldACI):
         return repaired
 
     def _extract_feishu_target_text(self, element_description: str) -> str:
-        """Extract the most likely UI element text from a natural-language description."""
+        """Extract UIA target text conservatively.
+
+        Wrongly collapsing a long relational description into a short context token
+        causes incorrect clicks. For UIA helpers, a miss is safer than a false hit,
+        so only shorten inputs that already look like explicit visible text.
+        """
         text = self._repair_text_mojibake(element_description).strip()
-        quoted = []
-        for match in re.finditer(r"""['"]([^'"]{1,80})['"]""", text):
-            candidate = match.group(1).strip()
-            if candidate:
-                quoted.append(candidate)
-
-        def normalize(value: str) -> str:
-            return value.strip(" \t\r\n.,!?;:()[]{}")
-
-        if quoted:
-            quoted_candidates = [c for c in (normalize(c) for c in quoted) if c]
-            if not quoted_candidates:
-                return text
-
-            def quoted_score(idx: int, value: str):
-                has_cjk = any("一" <= ch <= "鿿" for ch in value)
-                has_ascii = any(ch.isascii() and ch.isalnum() for ch in value)
-                mixed = has_ascii and has_cjk
-                return (2 if has_cjk else 0) + (1 if mixed else 0), -idx
-
-            return max(
-                ((quoted_score(i, v), v) for i, v in enumerate(quoted_candidates)),
-                key=lambda x: x[0],
-            )[1]
-
-        mixed_chunks = re.findall(r"[A-Za-z0-9一-鿿]{2,20}", text)
-        cjk_chunks = re.findall(r"[一-鿿]{1,20}", text)
-        ascii_chunks = re.findall(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,40}", text)
-
-        candidates = []
-        for candidate in mixed_chunks + cjk_chunks + ascii_chunks:
-            candidate = normalize(candidate)
-            if candidate and candidate not in candidates:
-                candidates.append(candidate)
-
-        if not candidates:
+        if not text:
             return text
 
-        def fallback_score(value: str):
-            has_cjk = any("一" <= ch <= "鿿" for ch in value)
-            has_ascii = any(ch.isascii() and ch.isalnum() for ch in value)
-            mixed = has_ascii and has_cjk
-            return (
-                (2 if has_cjk else 0) + (1 if mixed else 0),
-                -len(value),
-                -value.count(" "),
-            )
+        def normalize(value: str) -> str:
+            return value.strip(" \t\r\n.,!?;:;()[]{}<>")
 
-        return max(candidates, key=fallback_score)
+        normalized = normalize(text)
+        if not normalized:
+            return text
+
+        # Long relational descriptions should pass through unchanged. This avoids
+        # mis-extracting nearby context words such as chat titles or "Aa".
+        relation_markers = (
+            "right of",
+            "left of",
+            "next to",
+            "immediately",
+            "bottom",
+            "top",
+            "inside",
+            "at the",
+            "旁边",
+            "右侧",
+            "左侧",
+            "底部",
+            "顶部",
+            "附近",
+            "聊天框",
+            "输入框",
+            "button",
+            "icon",
+            "chat window",
+        )
+        lower_text = normalized.lower()
+        if (
+            len(normalized) > 32
+            or any(marker in lower_text for marker in relation_markers)
+            or normalized.count(" ") >= 4
+        ):
+            return normalized
+
+        quoted = [
+            normalize(match.group(1))
+            for match in re.finditer(r"""['"]([^'"]{1,80})['"]""", normalized)
+            if normalize(match.group(1))
+        ]
+
+        # Only collapse to quoted text when the whole input is effectively that
+        # exact label, not when the quote is merely a reference object.
+        if len(quoted) == 1:
+            quoted_text = quoted[0]
+            stripped = normalize(
+                re.sub(r"""['"]([^'"]{1,80})['"]""", quoted_text, normalized)
+            )
+            if stripped == quoted_text:
+                return quoted_text
+
+        return normalized
 
     # ------------------------------------------------------------------
     # Feishu-specific agent actions
@@ -441,6 +558,59 @@ class WindowsFeishuACI(OSWorldACI):
             + repr({"description": element_description, "target_text": target_text})
         )
         return build_feishu_uia_click_code(target_text, num_clicks, button_type)
+
+    @agent_action
+    def feishu_click_message_input(self):
+        """Click the IM composer input using the known chat_main page region.
+        Use this when the Feishu IM chat main page is already visible and you need
+        to focus the message input without relying on OCR text or visual grounding.
+        Args:
+        """
+        return self._relative_region_click_code("im_chat_main", "message_input_area")
+
+    @agent_action
+    def feishu_type_message(
+        self,
+        text: str,
+        overwrite: bool = False,
+        enter: bool = False,
+        focus_first: bool = True,
+    ):
+        """Paste text into the IM composer, optionally clicking it first.
+        Prefer this over generic type tools when sending a normal IM message in
+        the Feishu desktop chat main page.
+        Args:
+            text:str, text to paste into the chat composer
+            overwrite:bool, whether to select existing draft before pasting
+            enter:bool, whether to press Enter after pasting
+            focus_first:bool, whether to click the message-input region first (default True; set False when composer is already focused)
+        """
+        focus_code = self.feishu_click_message_input() if focus_first else ""
+        overwrite_code = (
+            "pyautogui.hotkey('ctrl', 'a'); pyautogui.press('backspace');\n"
+            if overwrite
+            else ""
+        )
+        enter_code = "pyautogui.press('enter')\n" if enter else ""
+        return (
+            "import pyautogui\n"
+            "import pyperclip\n"
+            + focus_code
+            + "pyperclip.copy("
+            + repr(text)
+            + ")\n"
+            + overwrite_code
+            + "pyautogui.hotkey('ctrl', 'v')\n"
+            + enter_code
+        )
+
+    @agent_action
+    def feishu_click_send_button(self):
+        """Click the IM send button using the known chat_main page region.
+        Prefer this when Enter is unsuitable and the send button is visible.
+        Args:
+        """
+        return self._relative_region_click_code("im_chat_main", "send_button_area")
 
     @agent_action
     def feishu_type(
@@ -536,3 +706,155 @@ pyautogui.hotkey('ctrl', 'v')
         text = self._repair_text_mojibake(text)
         self._trace_execution("FEISHU_DOC_TYPE: " + repr({"text": text}))
         return build_feishu_doc_type_code(text)
+
+    def build_worker_system_prompt(self, instruction: str, platform: str) -> str:
+        skipped_actions = {
+            "set_cell_values",
+            "drag_and_drop",
+            "highlight_text_span",
+            "save_to_knowledge",
+            "call_code_agent",
+            "hold_and_press",
+        }
+
+        lower_instruction = instruction.lower()
+        is_im_task = any(
+            keyword in instruction
+            for keyword in ("消息", "群", "聊天", "会话", "发送", "回复", "表情", "@")
+        )
+        is_doc_task = any(
+            keyword in instruction for keyword in ("文档", "云文档", "分享", "浏览器")
+        ) or any(
+            keyword in lower_instruction for keyword in ("document", "browser", "share")
+        )
+
+        if is_im_task and not is_doc_task:
+            skipped_actions.update(
+                {
+                    "feishu_doc_click",
+                    "feishu_doc_type",
+                    "scroll",
+                    "switch_applications",
+                    "type",
+                }
+            )
+        elif (
+            not any(keyword in instruction for keyword in ("切换", "打开"))
+            and "open" not in lower_instruction
+        ):
+            skipped_actions.add("switch_applications")
+
+        sys_prompt = PROCEDURAL_MEMORY.construct_simple_worker_procedural_memory(
+            type(self), skipped_actions=sorted(skipped_actions)
+        ).replace("CURRENT_OS", platform)
+        sys_prompt = sys_prompt.replace("TASK_DESCRIPTION", instruction)
+
+        if is_im_task and not is_doc_task:
+            sys_prompt += (
+                "\n\n## Feishu IM Prior Tool Strategy\n"
+                "- First reason from the screenshot before choosing a tool.\n"
+                "- If the IM composer is already visible, prefer `agent.feishu_type_message(...)` "
+                "or `agent.feishu_click_message_input()` over long natural-language element descriptions.\n"
+                "- When the composer is already focused (blinking cursor, placeholder gone), "
+                "call `agent.feishu_type_message(text, focus_first=False)` to skip the redundant click.\n"
+                "- Use `agent.feishu_click(...)` only for controls with exact visible text.\n"
+                "- For icon-only controls such as emoji, plus, image, or picker items, prefer grounded `agent.click(...)`.\n"
+                "- If the task asks for both typing and emoji, finish composing the draft first and then open the emoji picker.\n"
+            )
+
+        return sys_prompt
+
+    def build_dynamic_guidance(self, instruction: str, obs: Dict) -> str:
+        try:
+            self._extract_obs_ocr_text(obs)
+            return build_feishu_tool_guidance(instruction, obs)
+        except Exception as exc:
+            self._trace_execution(f"FEISHU_TOOL_GUIDANCE_ERROR: {exc!r}")
+            return ""
+
+    def _should_prepare_grounded_fallback(
+        self, element_description: str, target_text: str
+    ) -> bool:
+        lower_description = element_description.lower()
+        relation_markers = (
+            "right of",
+            "left of",
+            "next to",
+            "immediately",
+            "inside",
+            "bottom",
+            "top",
+            "icon",
+            "emoji",
+            "picker",
+            "toolbar",
+            "右侧",
+            "左侧",
+            "旁边",
+            "图标",
+            "表情",
+        )
+        return (
+            len(element_description.strip()) > 32
+            or element_description.strip() != target_text.strip()
+            or any(marker in lower_description for marker in relation_markers)
+        )
+
+    @agent_action
+    def feishu_click(
+        self,
+        element_description: str,
+        num_clicks: int = 1,
+        button_type: str = "left",
+    ):
+        """Focus Feishu/Lark, then click an element using UIA text matching.
+        For icon-like relational descriptions, prepare a grounded click fallback
+        that runs only if UIA text matching misses.
+        Args:
+            element_description:str, a detailed visual description of the Feishu element to click. Include exact visible text when selecting a chat, row, button, tab, or menu item.
+            num_clicks:int, number of times to click the element
+            button_type:str, mouse button to press, such as left, middle, or right
+        """
+        element_description = self._repair_text_mojibake(element_description)
+        target_text = self._extract_feishu_target_text(element_description)
+        fallback_code = None
+        if self.obs is not None and self._should_prepare_grounded_fallback(
+            element_description, target_text
+        ):
+            try:
+                coords = self.generate_coords(element_description, self.obs)
+                x, y = self.resize_coordinates(coords)
+                fallback_code = build_win32_click_code(
+                    x, y, num_clicks=num_clicks, button_type=button_type
+                )
+                self._trace_execution(
+                    "FEISHU_CLICK_GROUNDED_FALLBACK_READY: "
+                    + repr(
+                        {
+                            "description": element_description,
+                            "target_text": target_text,
+                            "point": (x, y),
+                        }
+                    )
+                )
+            except Exception as exc:
+                self._trace_execution(
+                    "FEISHU_CLICK_GROUNDED_FALLBACK_ERROR: "
+                    + repr({"description": element_description, "error": repr(exc)})
+                )
+        self._trace_execution(
+            "FEISHU_CLICK_UIA_ONLY: "
+            + repr(
+                {
+                    "description": element_description,
+                    "target_text": target_text,
+                    "has_grounded_fallback": fallback_code is not None,
+                }
+            )
+        )
+        return build_feishu_uia_click_code(
+            target_text,
+            num_clicks,
+            button_type,
+            fallback_code=fallback_code,
+        )

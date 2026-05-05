@@ -1,0 +1,162 @@
+{
+  "fixture_id": "im_chat_search_result_context_jump",
+  "image_file": "im_chat_search_result_context_jump.png",
+  "product": "im",
+  "page_id": "im_chat_search_panel",
+  "page_type": "chat_search_panel",
+  "display_name": "Feishu IM Search Result Context Jump",
+  "scenario": "conversation-local search panel remains open after selecting a search result and the main chat jumps to the corresponding message context",
+  "chat_name": "bot功能测试",
+  "capture_context": {
+    "platform": "windows",
+    "app_name": "feishu_desktop",
+    "ui_theme": "dark",
+    "language": "zh-CN",
+    "window_state": "maximized"
+  },
+  "expected_state": {
+    "product": "im",
+    "page_type": "chat_search_panel",
+    "chat_name": "bot功能测试",
+    "message_input_visible": false,
+    "message_input_focused": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "search_result_list_visible": true,
+    "modal_type": null,
+    "last_error_banner": null,
+    "wrong_page": false
+  },
+  "product_state": {
+    "local_search_panel_visible": true,
+    "local_search_filters_visible": true,
+    "local_search_empty_hint_visible": false,
+    "local_search_result_list_visible": true,
+    "visible_conversation_search_results": [
+      "ui如果改了会变吧",
+      "前端有，ui可能也有",
+      "有写ui的skills吧",
+      "确实，gemini的ui确实好看"
+    ],
+    "search_scope": "conversation",
+    "search_query": "ui",
+    "search_time_range_hint_visible": false,
+    "search_result_context_in_chat_visible": true,
+    "selected_conversation_search_result_text": "ui我感觉gemini就可以",
+    "highlighted_message_context_text": "ui我感觉gemini就可以"
+  },
+  "visible_targets": [
+    "conversation_search_entry",
+    "conversation_search_close_button",
+    "conversation_search_result_item"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "搜索会话内容",
+      "role": "panel_title",
+      "required": true
+    },
+    {
+      "text": "ui",
+      "role": "search_query",
+      "required": true
+    },
+    {
+      "text": "来自用户",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "时间",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "ui我感觉gemini就可以",
+      "role": "highlighted_message_context",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "search_panel_area": {
+      "relative_bounds": [0.80, 0.06, 0.995, 0.995],
+      "annotation_status": "coarse",
+      "notes": "Right-side conversation-local search panel remains visible"
+    },
+    "conversation_search_close_button_area": {
+      "relative_bounds": [0.96, 0.08, 0.99, 0.12],
+      "annotation_status": "coarse",
+      "notes": "Close button in the top-right corner of the local search panel"
+    },
+    "conversation_search_entry_area": {
+      "relative_bounds": [0.82, 0.18, 0.97, 0.22],
+      "annotation_status": "coarse",
+      "notes": "Search input containing the active query"
+    },
+    "search_filters_row_area": {
+      "relative_bounds": [0.82, 0.22, 0.97, 0.26],
+      "annotation_status": "coarse",
+      "notes": "Sender and time filter row"
+    },
+    "conversation_search_result_list_area": {
+      "relative_bounds": [0.81, 0.31, 0.99, 0.98],
+      "annotation_status": "coarse",
+      "notes": "Visible search result list for the current conversation"
+    },
+    "conversation_search_result_item_area": {
+      "relative_bounds": [0.82, 0.43, 0.97, 0.48],
+      "annotation_status": "coarse",
+      "notes": "Fallback region for a visible message-result card"
+    },
+    "highlighted_message_context_area": {
+      "relative_bounds": [0.00, 0.53, 0.80, 0.62],
+      "annotation_status": "coarse",
+      "notes": "Main chat area showing the jumped-to message context"
+    }
+  },
+  "named_regions": {
+    "conversation_search_result_items": {
+      "ui如果改了会变吧": {
+        "relative_bounds": [0.82, 0.42, 0.98, 0.47]
+      },
+      "前端有，ui可能也有": {
+        "relative_bounds": [0.82, 0.46, 0.98, 0.51]
+      },
+      "有写ui的skills吧": {
+        "relative_bounds": [0.82, 0.49, 0.98, 0.54]
+      },
+      "确实，gemini的ui确实好看": {
+        "relative_bounds": [0.82, 0.52, 0.98, 0.58]
+      }
+    },
+    "main_chat_context_messages": {
+      "ui我感觉gemini就可以": {
+        "relative_bounds": [0.03, 0.54, 0.22, 0.61]
+      }
+    }
+  },
+  "negative_assertions": [
+    "not_shell_search",
+    "not_plain_empty_search_panel",
+    "not_wrong_page"
+  ],
+  "detector_usage": {
+    "suitable_for_page_detection": true,
+    "suitable_for_chat_title_extraction": false,
+    "suitable_for_input_visibility_detection": false,
+    "suitable_for_send_button_visibility_detection": false,
+    "suitable_for_search_box_detection": true,
+    "suitable_for_message_sent_verification": false,
+    "suitable_for_focus_state_verification": false
+  },
+  "locator_usage": {
+    "supports_conversation_search_entry": true,
+    "supports_conversation_search_close_button": true,
+    "supports_conversation_search_result_item": true,
+    "supports_highlighted_message_context_annotation": "metadata-only"
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed",
+  "notes": "This fixture represents a composite state: local search remains open while the main chat has already jumped to a selected message context."
+}

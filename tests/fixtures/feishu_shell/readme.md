@@ -1,0 +1,6 @@
+- `global_search_results.png`
+  - Feishu desktop global search overlay with the top search entry and visible result list.
+  - Used for `open_chat` search-branch detection and coarse locator grounding.
+  - Visible search results currently annotated:
+    - `bot功能测试`
+    - `孙思超`

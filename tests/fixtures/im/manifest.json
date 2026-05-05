@@ -1,0 +1,19 @@
+{
+  "suite_id": "feishu_im_mvp",
+  "page_id": "im_chat_main",
+  "files": [
+    "im_chat_main_full.png",
+    "im_chat_search_result_context_jump.png",
+    "im_message_placeholder_visible.png",
+    "im_message_draft_visible.png",
+    "im_message_sent_visible.png",
+    "im_message_searchchat_visible.png",
+    "im_message_searchresult_visible.png"
+  ],
+  "purpose": "Minimal IM send_message fixture set for Track B MVP",
+  "notes": [
+    "Use semantic metadata, not machine-specific pixel values, as the stable contract.",
+    "This set covers page detection, composer placeholder, draft state, sent state, and in-chat search panel recognition.",
+    "In-chat search panel now includes empty state, result-list state, and selected-result context-jump state fixtures."
+  ]
+}

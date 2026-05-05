@@ -1,0 +1,12 @@
+{
+  "suite_id": "feishu_shell_search_mvp",
+  "page_id": "feishu_shell_search",
+  "files": [
+    "global_search_results.png"
+  ],
+  "purpose": "Minimal Feishu shell global search fixture set for Track B open_chat support",
+  "notes": [
+    "This fixture models the top-level Feishu search overlay, not an IM chat page.",
+    "Use relative regions and visible result labels as the stable contract."
+  ]
+}

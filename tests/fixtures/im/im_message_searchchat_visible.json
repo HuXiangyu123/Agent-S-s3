@@ -1,0 +1,135 @@
+{
+  "fixture_id": "im_message_searchchat_visible",
+  "image_file": "im_message_searchchat_visible.png",
+  "product": "im",
+  "page_id": "im_chat_search_panel",
+  "page_type": "chat_search_panel",
+  "display_name": "Feishu IM In-Chat Search Panel",
+  "scenario": "conversation-local search panel opened from the chat page top-right search action",
+  "chat_name": "bot功能测试",
+  "capture_context": {
+    "platform": "windows",
+    "app_name": "feishu_desktop",
+    "ui_theme": "dark",
+    "language": "zh-CN",
+    "window_state": "maximized"
+  },
+  "expected_state": {
+    "product": "im",
+    "page_type": "chat_search_panel",
+    "chat_name": "bot功能测试",
+    "message_input_visible": false,
+    "message_input_focused": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "search_result_list_visible": false,
+    "modal_type": null,
+    "last_error_banner": null,
+    "wrong_page": false
+  },
+  "product_state": {
+    "local_search_panel_visible": true,
+    "local_search_filters_visible": true,
+    "local_search_empty_hint_visible": true,
+    "local_search_result_list_visible": false,
+    "visible_conversation_search_results": [],
+    "search_scope": "conversation"
+  },
+  "visible_targets": [
+    "conversation_search_entry",
+    "conversation_search_close_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "搜索会话内容",
+      "role": "panel_title",
+      "required": true
+    },
+    {
+      "text": "搜索",
+      "role": "search_placeholder",
+      "required": true
+    },
+    {
+      "text": "来自用户",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "时间",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "高级搜索",
+      "role": "search_filter",
+      "required": false
+    },
+    {
+      "text": "输入关键词或使用过滤器查找消息记录",
+      "role": "empty_hint",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "search_panel_area": {
+      "relative_bounds": [0.05, 0.08, 0.95, 0.98],
+      "annotation_status": "coarse",
+      "notes": "Right-side local search panel for the current conversation"
+    },
+    "conversation_search_close_button_area": {
+      "relative_bounds": [0.86, 0.12, 0.94, 0.20],
+      "annotation_status": "coarse",
+      "notes": "Close button in the top-right corner of the local search panel"
+    },
+    "conversation_search_entry_area": {
+      "relative_bounds": [0.10, 0.23, 0.90, 0.28],
+      "annotation_status": "coarse",
+      "notes": "Primary search input for searching within the current conversation"
+    },
+    "search_filters_row_area": {
+      "relative_bounds": [0.10, 0.29, 0.70, 0.35],
+      "annotation_status": "coarse",
+      "notes": "Row containing sender/time/advanced search filters"
+    },
+    "search_empty_hint_area": {
+      "relative_bounds": [0.26, 0.62, 0.82, 0.78],
+      "annotation_status": "coarse",
+      "notes": "Empty-state hint area shown before any search results appear"
+    },
+    "conversation_search_result_list_area": {
+      "relative_bounds": [0.09, 0.36, 0.92, 0.82],
+      "annotation_status": "coarse",
+      "notes": "Area that will contain search results once the query returns matches"
+    },
+    "conversation_search_result_item_area": {
+      "relative_bounds": [0.10, 0.37, 0.90, 0.45],
+      "annotation_status": "coarse",
+      "notes": "Fallback region for the first visible conversation-search result item"
+    }
+  },
+  "negative_assertions": [
+    "not_shell_search",
+    "not_chat_main_composer_visible",
+    "not_wrong_page"
+  ],
+  "detector_usage": {
+    "suitable_for_page_detection": true,
+    "suitable_for_chat_title_extraction": false,
+    "suitable_for_input_visibility_detection": false,
+    "suitable_for_send_button_visibility_detection": false,
+    "suitable_for_search_box_detection": true,
+    "suitable_for_message_sent_verification": false,
+    "suitable_for_focus_state_verification": false
+  },
+  "locator_usage": {
+    "supports_conversation_search_entry": true,
+    "supports_conversation_search_close_button": true,
+    "supports_conversation_search_result_item": "metadata-only",
+    "requires_followup_fixtures_for_precise_annotation": true
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed",
+  "notes": "This panel belongs to an already-open IM chat and is semantically different from Feishu shell/global search."
+}

@@ -1,0 +1,131 @@
+{
+  "fixture_id": "feishu_shell_global_search_results",
+  "image_file": "global_search_results.png",
+  "product": "feishu",
+  "page_id": "feishu_shell_search",
+  "page_type": "shell_search",
+  "display_name": "Feishu Global Search Results",
+  "scenario": "global search overlay open with visible chat-related results",
+  "capture_context": {
+    "platform": "windows",
+    "app_name": "feishu_desktop",
+    "ui_theme": "dark",
+    "language": "zh-CN",
+    "window_state": "maximized"
+  },
+  "expected_state": {
+    "product": "feishu",
+    "page_type": "shell_search",
+    "chat_name": null,
+    "message_input_visible": false,
+    "message_input_focused": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "search_result_list_visible": true,
+    "modal_type": null,
+    "last_error_banner": null,
+    "wrong_page": false
+  },
+  "product_state": {
+    "search_result_list_visible": true,
+    "visible_search_results": [
+      "bot功能测试",
+      "孙思超"
+    ],
+    "search_scope": "消息",
+    "search_overlay_visible": true
+  },
+  "visible_targets": [
+    "global_search_entry",
+    "search_result_item"
+  ],
+  "supported_workflows": [
+    "open_chat"
+  ],
+  "text_anchors": [
+    {
+      "text": "问你想问的问题，或搜索关键词",
+      "role": "global_search_placeholder",
+      "required": true
+    },
+    {
+      "text": "消息",
+      "role": "search_scope_tab",
+      "required": true
+    },
+    {
+      "text": "联系人",
+      "role": "search_scope_tab",
+      "required": false
+    },
+    {
+      "text": "群组",
+      "role": "search_scope_tab",
+      "required": false
+    },
+    {
+      "text": "bot功能测试",
+      "role": "search_result_item",
+      "required": true
+    },
+    {
+      "text": "孙思超",
+      "role": "search_result_item",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "global_search_entry_area": {
+      "relative_bounds": [0.02, 0.02, 0.96, 0.08],
+      "annotation_status": "coarse",
+      "notes": "Top global search input in the shell overlay"
+    },
+    "search_scope_tab_row": {
+      "relative_bounds": [0.01, 0.08, 0.82, 0.15],
+      "annotation_status": "coarse",
+      "notes": "Top row of search category tabs"
+    },
+    "search_result_list_area": {
+      "relative_bounds": [0.0, 0.15, 0.34, 0.62],
+      "annotation_status": "coarse",
+      "notes": "Visible left-side result list in the overlay"
+    },
+    "search_result_item_area": {
+      "relative_bounds": [0.01, 0.19, 0.28, 0.34],
+      "annotation_status": "coarse",
+      "notes": "Fallback region covering the first visible result area"
+    }
+  },
+  "named_regions": {
+    "search_result_items": {
+      "bot功能测试": {
+        "relative_bounds": [0.01, 0.18, 0.21, 0.27]
+      },
+      "孙思超": {
+        "relative_bounds": [0.01, 0.27, 0.17, 0.36]
+      }
+    }
+  },
+  "negative_assertions": [
+    "not_im_chat_main",
+    "not_modal_page",
+    "not_wrong_page"
+  ],
+  "detector_usage": {
+    "suitable_for_page_detection": true,
+    "suitable_for_chat_title_extraction": false,
+    "suitable_for_input_visibility_detection": false,
+    "suitable_for_send_button_visibility_detection": false,
+    "suitable_for_search_box_detection": true,
+    "suitable_for_message_sent_verification": false,
+    "suitable_for_focus_state_verification": false
+  },
+  "locator_usage": {
+    "supports_global_search_entry": true,
+    "supports_search_result_item": true,
+    "requires_followup_fixtures_for_precise_annotation": true
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed",
+  "notes": "Shell-level search overlay fixture. This is used by open_chat before entering an IM conversation."
+}

@@ -1,0 +1,149 @@
+{
+  "fixture_id": "im_message_searchresult_visible",
+  "image_file": "im_message_searchresult_visible.png",
+  "product": "im",
+  "page_id": "im_chat_search_panel",
+  "page_type": "chat_search_panel",
+  "display_name": "Feishu IM In-Chat Search Results",
+  "scenario": "conversation-local search panel with visible message search results",
+  "chat_name": "bot功能测试",
+  "capture_context": {
+    "platform": "windows",
+    "app_name": "feishu_desktop",
+    "ui_theme": "dark",
+    "language": "zh-CN",
+    "window_state": "maximized"
+  },
+  "expected_state": {
+    "product": "im",
+    "page_type": "chat_search_panel",
+    "chat_name": "bot功能测试",
+    "message_input_visible": false,
+    "message_input_focused": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "search_result_list_visible": true,
+    "modal_type": null,
+    "last_error_banner": null,
+    "wrong_page": false
+  },
+  "product_state": {
+    "local_search_panel_visible": true,
+    "local_search_filters_visible": true,
+    "local_search_empty_hint_visible": false,
+    "local_search_result_list_visible": true,
+    "visible_conversation_search_results": [
+      "…实现了然后还要实现哪些需求",
+      "还没做完需求啊。bug随时修就好",
+      "…完成的功能需求出发，让三个agent—…",
+      "…比较难的进阶需求能不能实现"
+    ],
+    "search_scope": "conversation",
+    "search_query": "需求",
+    "search_time_range_hint_visible": true
+  },
+  "visible_targets": [
+    "conversation_search_entry",
+    "conversation_search_close_button",
+    "conversation_search_result_item"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "搜索会话内容",
+      "role": "panel_title",
+      "required": true
+    },
+    {
+      "text": "需求",
+      "role": "search_query",
+      "required": true
+    },
+    {
+      "text": "来自用户",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "时间",
+      "role": "search_filter",
+      "required": true
+    },
+    {
+      "text": "已展示最近 1 年消息，查看更多消息",
+      "role": "search_time_range_hint",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "search_panel_area": {
+      "relative_bounds": [0.03, 0.01, 0.99, 0.98],
+      "annotation_status": "coarse",
+      "notes": "Conversation-local search panel"
+    },
+    "conversation_search_close_button_area": {
+      "relative_bounds": [0.86, 0.01, 0.96, 0.05],
+      "annotation_status": "coarse",
+      "notes": "Close button in the panel top-right corner"
+    },
+    "conversation_search_entry_area": {
+      "relative_bounds": [0.04, 0.11, 0.97, 0.18],
+      "annotation_status": "coarse",
+      "notes": "Search input currently containing the query text"
+    },
+    "search_filters_row_area": {
+      "relative_bounds": [0.04, 0.19, 0.64, 0.25],
+      "annotation_status": "coarse",
+      "notes": "Sender/time/advanced-search filter row"
+    },
+    "conversation_search_result_list_area": {
+      "relative_bounds": [0.00, 0.26, 1.00, 0.68],
+      "annotation_status": "coarse",
+      "notes": "Visible search result list for the current conversation"
+    },
+    "conversation_search_result_item_area": {
+      "relative_bounds": [0.03, 0.35, 0.98, 0.44],
+      "annotation_status": "coarse",
+      "notes": "Fallback region for the first visible message result card"
+    }
+  },
+  "named_regions": {
+    "conversation_search_result_items": {
+      "…实现了然后还要实现哪些需求": {
+        "relative_bounds": [0.00, 0.34, 1.00, 0.44]
+      },
+      "还没做完需求啊。bug随时修就好": {
+        "relative_bounds": [0.10, 0.45, 0.97, 0.52]
+      },
+      "…完成的功能需求出发，让三个agent—…": {
+        "relative_bounds": [0.10, 0.56, 0.97, 0.63]
+      },
+      "…比较难的进阶需求能不能实现": {
+        "relative_bounds": [0.10, 0.67, 0.97, 0.74]
+      }
+    }
+  },
+  "negative_assertions": [
+    "not_shell_search",
+    "not_chat_main_composer_visible",
+    "not_wrong_page"
+  ],
+  "detector_usage": {
+    "suitable_for_page_detection": true,
+    "suitable_for_chat_title_extraction": false,
+    "suitable_for_input_visibility_detection": false,
+    "suitable_for_send_button_visibility_detection": false,
+    "suitable_for_search_box_detection": true,
+    "suitable_for_message_sent_verification": false,
+    "suitable_for_focus_state_verification": false
+  },
+  "locator_usage": {
+    "supports_conversation_search_entry": true,
+    "supports_conversation_search_close_button": true,
+    "supports_conversation_search_result_item": true,
+    "requires_followup_fixtures_for_precise_annotation": true
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed",
+  "notes": "Real in-chat search result fixture. Includes a knowledge-answer card near the top, but Track B currently models only message result cards as actionable search results."
+}

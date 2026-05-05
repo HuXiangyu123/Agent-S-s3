@@ -5,6 +5,8 @@ env.txt
 start_agent.ps1
 logs/
 .claude/
+AGENTS.md
+CLAUDE.md
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

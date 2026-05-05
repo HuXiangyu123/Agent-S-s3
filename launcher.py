@@ -87,6 +87,17 @@ GROUND_PROVIDER_ALIASES = {
     "doubao": "doubao_ark",
 }
 
+EXECUTION_MODES = {
+    "classic_s3": {
+        "label": "老 S3 稳定方法",
+        "summary": "classic_s3",
+    },
+    "feishu_agent": {
+        "label": "新 Feishu Agent 流程",
+        "summary": "feishu_agent",
+    },
+}
+
 
 def _default_config() -> dict:
     return {
@@ -112,6 +123,7 @@ def _default_config() -> dict:
         "reflection_mode": "on_failure",
         "reasoning_effort": "medium",
         "budget": 25,
+        "execution_mode": "classic_s3",
         "grounding_overrides": {},
         "detected_environment": None,
         "model_api_key": "",
@@ -178,9 +190,7 @@ def _apply_env_defaults(cfg: dict, had_main_routing: bool):
         or env.get("ARK_MAIN_ENDPOINT_ID")
         or env.get("ep-id", "")
     )
-    ground_ark_key = (
-        env.get("ARK_API_KEY") or env.get("GROUND_API_KEY") or main_ark_key
-    )
+    ground_ark_key = env.get("ARK_API_KEY") or env.get("GROUND_API_KEY") or main_ark_key
 
     volcano_cfg = cfg["main_providers"]["volcano"]
     current_volcano_key = volcano_cfg.get("model_api_key", "")
@@ -244,6 +254,8 @@ def load_config() -> dict:
     had_main_routing = "main_provider" in raw or "main_providers" in raw
 
     cfg.update(raw)
+    if cfg.get("execution_mode") not in EXECUTION_MODES:
+        cfg["execution_mode"] = DEFAULT_CONFIG["execution_mode"]
     cfg["main_provider"] = cfg.get("main_provider") or _infer_main_provider(raw)
     cfg["ground_provider"] = _normalize_ground_provider(
         cfg.get("ground_provider", "doubao_ark")
@@ -508,6 +520,9 @@ class Launcher:
         self.v_status = tk.StringVar()
         self.v_status_detail = tk.StringVar()
         self.v_query = tk.StringVar()
+        self.v_execution_mode = tk.StringVar(
+            value=EXECUTION_MODES[self.cfg.get("execution_mode", "classic_s3")]["label"]
+        )
         self.v_main_provider = tk.StringVar()
         self.v_model_key = tk.StringVar()
         self.v_model_id = tk.StringVar()
@@ -755,6 +770,21 @@ class Launcher:
             width=18,
         )
         self.cb_reasoning.grid(row=row, column=1, sticky="w", pady=3)
+        row += 1
+        ttk.Label(cfg, text="执行模式", style="App.TLabel").grid(
+            row=row, column=0, sticky="w", pady=3
+        )
+        self.cb_execution_mode = ttk.Combobox(
+            cfg,
+            textvariable=self.v_execution_mode,
+            values=[spec["label"] for spec in EXECUTION_MODES.values()],
+            state="readonly",
+            width=18,
+        )
+        self.cb_execution_mode.grid(row=row, column=1, sticky="w", pady=3)
+        self.cb_execution_mode.bind(
+            "<<ComboboxSelected>>", self._on_execution_mode_changed
+        )
         row += 1
         ttk.Label(cfg, text="Step Budget", style="App.TLabel").grid(
             row=row, column=0, sticky="w", pady=3
@@ -1005,11 +1035,20 @@ class Launcher:
         self.cfg["ground_provider"] = self._active_ground_key
         self.cfg["reflection_mode"] = self.v_reflection_mode.get().strip()
         self.cfg["reasoning_effort"] = self.v_reasoning_effort.get().strip()
+        self.cfg["execution_mode"] = self._execution_mode_key_from_label(
+            self.v_execution_mode.get()
+        )
         try:
             self.cfg["budget"] = max(1, int(self.v_budget.get().strip()))
         except ValueError:
             self.cfg["budget"] = DEFAULT_CONFIG["budget"]
         _sync_flat_fields(self.cfg)
+
+    def _execution_mode_key_from_label(self, label: str) -> str:
+        for key, spec in EXECUTION_MODES.items():
+            if spec["label"] == label:
+                return key
+        return DEFAULT_CONFIG["execution_mode"]
 
     def _on_main_changed(self, _event=None):
         self._persist_current_forms()
@@ -1026,6 +1065,10 @@ class Launcher:
         )
         self._apply_ground_config(self._active_ground_key)
         self._load_resolution_from_config()
+        self._refresh_summary()
+
+    def _on_execution_mode_changed(self, _event=None):
+        self._persist_current_forms()
         self._refresh_summary()
 
     def _load_resolution_from_config(self):
@@ -1061,8 +1104,12 @@ class Launcher:
         self.v_summary_ground.set(
             f"{ground_spec['label']} · {self.v_ground_model.get().strip() or ground_spec['default_model']}"
         )
+        mode_key = self._execution_mode_key_from_label(self.v_execution_mode.get())
+        mode_summary = EXECUTION_MODES.get(mode_key, EXECUTION_MODES["classic_s3"])[
+            "summary"
+        ]
         self.v_summary_runtime.set(
-            f"reflection={self.v_reflection_mode.get()} · reasoning={self.v_reasoning_effort.get()} · budget={self.v_budget.get() or 25}"
+            f"mode={mode_summary} · reflection={self.v_reflection_mode.get()} · reasoning={self.v_reasoning_effort.get()} · budget={self.v_budget.get() or 25}"
         )
 
     def _restore_doubao_legacy(self):
@@ -1196,6 +1243,8 @@ class Launcher:
         cmd = [
             sys.executable,
             CLI_APP,
+            "--execution_mode",
+            self._execution_mode_key_from_label(self.v_execution_mode.get()),
             "--provider",
             main_spec["provider"],
             "--model",
@@ -1380,7 +1429,7 @@ class Launcher:
                 ("FEISHU_UIA_CLICKED:", "success"),
                 ("EXEC_CODE_ERROR:", "warn"),
             ):
-                if prefix in line_strip:
+                if line_strip.startswith(prefix):
                     self._in_code_block = False
                     self._log(
                         "  ✓ " + line_strip.split(prefix, 1)[1].strip() + "\n", tag
@@ -1390,13 +1439,17 @@ class Launcher:
                 ("FEISHU_UIA_CLICK_MISS:", "warn"),
                 ("FEISHU_UIA_CLICK_ERROR:", "warn"),
             ):
-                if prefix in line_strip:
+                if line_strip.startswith(prefix):
                     self._in_code_block = False
                     self._log(
                         "  ⚠ " + line_strip.split(prefix, 1)[1].strip() + "\n", tag
                     )
                     return
             # Collapse: skip all other code body lines
+            return
+
+        if line_strip.startswith("FEISHU_TRACE:"):
+            self._log("  " + line_strip + "\n", "muted")
             return
 
         # Settle delay

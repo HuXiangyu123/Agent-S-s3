@@ -1,0 +1,25 @@
+- `im_chat_main_full.png`
+  - Full IM chat page with conversation list, chat header, history area, and composer.
+  - Used for page-level IM detection and coarse `conversation_list_item` grounding.
+- `im_message_placeholder_visible.png`
+  - Composer is visible with placeholder text and no draft.
+  - Used to confirm the empty-but-ready message input state.
+- `im_message_draft_visible.png`
+  - Composer already contains draft text before sending.
+  - Used to distinguish draft state from placeholder state.
+- `im_message_sent_visible.png`
+  - The sent message is visible in the chat history.
+  - Used as Track B evidence for later verifier work.
+- `im_message_searchchat_visible.png`
+  - The in-chat search panel is open from the top-right chat search action.
+  - Used to distinguish local conversation search from shell/global search.
+- `im_message_searchresult_visible.png`
+  - The in-chat search panel already contains a real result list for the current query.
+  - Used to validate `conversation_search_result_item` against a real screenshot rather than metadata-only placeholders.
+- `im_chat_search_result_context_jump.png`
+  - The in-chat search panel is still open after a result was selected, and the main chat has jumped to the corresponding message context.
+  - Used to distinguish plain result-list visibility from the richer context-jump state while keeping the same `im_chat_search_panel` page boundary.
+
+Note:
+- Global search overlay fixtures are no longer stored under `im/`.
+- Search-related fixtures under `im/` are conversation-local search states, not shell/global search.

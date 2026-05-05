@@ -133,8 +133,12 @@ ActionId = Literal[
 ]
 
 TargetId = Literal[
-    "chat_search_box",
-    "chat_result_item",
+    "global_search_entry",
+    "conversation_list_item",
+    "conversation_search_entry",
+    "conversation_search_close_button",
+    "conversation_search_result_item",
+    "search_result_item",
     "message_input",
     "send_button",
 ]
@@ -521,3 +525,39 @@ artifacts/
 1. 新增字段优先向后兼容，避免直接改名或改语义。
 2. `steps[]`、`success_gate`、`fallback`、`retry_limit` 属于稳定核心字段，不应随模块实现随意漂移。
 3. 任一并行开发模块若修改接口，必须在合并前完成调用方联调和文档更新。
+
+## 19. Track B/C 补充说明（2026-05-05）
+
+本节补充当前实现已经使用、但前文尚未单独写明的两点：
+
+### IM 会话内搜索子状态
+
+`im_chat_search_panel` 可以通过 `FeishuState.product_state` 表达多个子状态，包括：
+
+- 空搜索面板
+- 已出现结果列表
+- 结果已选中，主聊天区已跳转到对应消息上下文
+
+“结果已选中并跳转到上下文” 不引入新的 `page_id`，仍保持：
+
+- `page_id = "im_chat_search_panel"`
+- `page_type = "chat_search_panel"`
+
+推荐的 `product_state` 提示字段：
+
+```python
+{
+    "search_result_context_in_chat_visible": True,
+    "selected_conversation_search_result_text": "...",
+}
+```
+
+### Track C 最小运行时 Workflow
+
+第一版 Track C 运行时实现将 `send_message` 固定为最小显式阶段机，仅包含三个阶段：
+
+1. `ENSURE_CHAT_OPEN`
+2. `TYPE_MESSAGE`
+3. `SEND_MESSAGE`
+
+该实现复用现有共享 `ActionId / TargetId / AssertionId`，不新增顶层共享契约。

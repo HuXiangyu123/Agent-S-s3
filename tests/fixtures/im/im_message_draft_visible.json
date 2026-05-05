@@ -1,0 +1,87 @@
+{
+  "fixture_id": "im_message_draft_visible",
+  "image_file": "im_message_draft_visible.png",
+  "product": "im",
+  "page_id": "im_chat_main",
+  "page_type": "chat_main",
+  "display_name": "Feishu IM Composer With Draft",
+  "scenario": "composer contains draft text before sending",
+  "chat_name": "bot功能测试",
+  "capture_context": {
+    "platform": "windows",
+    "app_name": "feishu_desktop",
+    "ui_theme": "dark",
+    "language": "zh-CN",
+    "window_state": "maximized"
+  },
+  "expected_state": {
+    "product": "im",
+    "page_type": "chat_main",
+    "chat_name": "bot功能测试",
+    "message_input_visible": true,
+    "message_input_focused": true,
+    "send_button_visible": true,
+    "search_box_visible": false,
+    "search_result_list_visible": false,
+    "modal_type": null,
+    "last_error_banner": null,
+    "wrong_page": false
+  },
+  "product_state": {
+    "draft_present": true,
+    "draft_text": "测试文字",
+    "send_button_enabled": true,
+    "message_sent_visible": false
+  },
+  "visible_targets": [
+    "message_input",
+    "send_button"
+  ],
+  "supported_workflows": [
+    "send_message"
+  ],
+  "text_anchors": [
+    {
+      "text": "测试文字",
+      "role": "draft_text",
+      "required": true
+    },
+    {
+      "text": "发送给 bot功能测试",
+      "role": "input_placeholder",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "message_input_area": {
+      "annotation_status": "coarse",
+      "notes": "Composer input box area with draft"
+    },
+    "send_button_area": {
+      "annotation_status": "coarse",
+      "notes": "Enabled send button area"
+    }
+  },
+  "negative_assertions": [
+    "not_modal_page",
+    "not_search_results_page",
+    "not_wrong_page"
+  ],
+  "detector_usage": {
+    "suitable_for_page_detection": false,
+    "suitable_for_chat_title_extraction": false,
+    "suitable_for_input_visibility_detection": true,
+    "suitable_for_send_button_visibility_detection": true,
+    "suitable_for_search_box_detection": false,
+    "suitable_for_message_sent_verification": false,
+    "suitable_for_focus_state_verification": true
+  },
+  "locator_usage": {
+    "supports_message_input": true,
+    "supports_send_button": true,
+    "requires_followup_fixtures_for_precise_annotation": true
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed",
+  "notes": "Composer draft state. Used to distinguish typed-but-unsent from placeholder and sent states."
+}

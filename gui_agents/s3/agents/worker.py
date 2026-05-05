@@ -1,5 +1,6 @@
 from functools import partial
 import logging
+import re
 import textwrap
 from typing import Dict, List, Tuple
 
@@ -87,6 +88,7 @@ class Worker(BaseModule):
         sys_prompt = PROCEDURAL_MEMORY.construct_simple_worker_procedural_memory(
             type(self.grounding_agent), skipped_actions=skipped_actions
         ).replace("CURRENT_OS", self.platform)
+        self.base_system_prompt = sys_prompt
 
         self.generator_agent = self._create_agent(sys_prompt)
         self.reflection_agent = self._create_agent(
@@ -98,6 +100,24 @@ class Worker(BaseModule):
         self.reflections = []
         self.cost_this_turn = 0
         self.screenshot_inputs = []
+
+    def _prepare_generator_system_prompt(self, instruction: str) -> None:
+        builder = getattr(self.grounding_agent, "build_worker_system_prompt", None)
+        prompt_with_instructions = ""
+
+        if callable(builder):
+            try:
+                prompt_with_instructions = builder(instruction, self.platform)
+            except Exception as exc:
+                logger.warning("WORKER_SYSTEM_PROMPT_OVERRIDE_ERROR: %r", exc)
+                prompt_with_instructions = ""
+
+        if not prompt_with_instructions:
+            prompt_with_instructions = self.base_system_prompt.replace(
+                "TASK_DESCRIPTION", instruction
+            )
+
+        self.generator_agent.add_system_prompt(prompt_with_instructions)
 
     def flush_messages(self):
         """Flush messages based on the model's context limits.
@@ -146,6 +166,36 @@ class Worker(BaseModule):
         if self.reflection_mode == "on_failure":
             return self.last_step_failed
         return True
+
+    @staticmethod
+    def _detect_plan_failure(plan: str) -> bool:
+        """Check model's State Verification for signs the previous action failed."""
+        match = re.search(
+            r"\(State Verification\)\s*\n(.*?)(?=\(Next Action\)|\Z)",
+            plan,
+            re.DOTALL,
+        )
+        if not match:
+            return False
+        verification = match.group(1).strip()
+        # Strongest signal: explicit "Behind:" without "As expected:"
+        if re.search(r"\bBehind\s*:", verification) and not re.search(
+            r"\bAs expected\s*:", verification
+        ):
+            return True
+        # Supplementary patterns for failures the model describes differently
+        failure_patterns = (
+            r"\bno effect\b",
+            r"\bdid not\b",
+            r"\bstill empty\b",
+            r"\bremains empty\b",
+            r"\bno text entered\b",
+            r"\bnot focused\b",
+            r"\bnot working\b",
+        )
+        return any(
+            re.search(pat, verification, re.IGNORECASE) for pat in failure_patterns
+        )
 
     def _generate_reflection(self, instruction: str, obs: Dict) -> Tuple[str, str]:
         """
@@ -233,10 +283,7 @@ class Worker(BaseModule):
 
         # Load the task into the system prompt
         if self.turn_count == 0:
-            prompt_with_instructions = self.generator_agent.system_prompt.replace(
-                "TASK_DESCRIPTION", instruction
-            )
-            self.generator_agent.add_system_prompt(prompt_with_instructions)
+            self._prepare_generator_system_prompt(instruction)
 
         # Get the per-step reflection
         reflection, reflection_thoughts = self._generate_reflection(instruction, obs)
@@ -424,6 +471,12 @@ class Worker(BaseModule):
         self.worker_history.append(plan)
         self.generator_agent.add_message(plan, role="assistant")
         logger.info("PLAN:\n %s", plan)
+
+        # Detect silent failures: the model may report the previous action had no
+        # effect even though the code executed without exception.
+        if not self.last_step_failed and self._detect_plan_failure(plan):
+            self.last_step_failed = True
+            logger.info("PLAN_FAILURE_DETECTED: model reports previous action failed")
 
         # Extract the next action from the plan
         plan_code = parse_code_from_string(plan)

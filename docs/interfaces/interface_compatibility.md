@@ -23,6 +23,12 @@ from gui_agents.s3.agents.grounding import OSWorldACI
 - `agent.hotkey(...)`
 - `agent.wait(...)`
 
+补充说明：
+
+- `classic_s3` 仍走上述默认入口
+- `feishu_agent` 现在不再走独立 `feishu_worker` runtime，而是走 `AgentS3 + WindowsFeishuACI + 动态 Feishu tool guidance`
+- 因此，“飞书增强模式”与“默认通用模式”共享同一套 `AgentS3 -> Worker` 执行主链，只是 grounding agent 和运行时 guidance 不同
+
 ## 2. Feishu / Windows 专用扩展的当前状态
 
 仓库中仍保留以下 Feishu / Windows 专用实现：
@@ -38,13 +44,15 @@ from gui_agents.s3.agents.grounding import OSWorldACI
 - `feishu_doc_click(...)`
 - `feishu_doc_type(...)`
 
-但这些 helper 当前不是默认入口契约。只有在入口显式切到：
+这些 helper 仍然不是 `classic_s3` 的默认入口契约。只有在入口显式切到：
 
 ```python
 from gui_agents.s3.agents.grounding_feishu import WindowsFeishuACI as OSWorldACI
 ```
 
 时，才可以把上述方法当成可用能力。
+
+当前仓库内这个显式切换已经存在于 `feishu_agent` 执行模式中。
 
 ## 3. 兼容性口径
 
@@ -97,6 +105,7 @@ agent.feishu_click("飞书按钮")
 
 - 不要把可选扩展写成默认兼容事实
 - 如果某段文档或 prompt 使用了 `feishu_*` 方法，必须先确认当前入口是否真的接入 `WindowsFeishuACI`
+- 现在 `feishu_agent` 模式已经满足这个前提，但 `classic_s3` 仍不满足
 
 ## 4. 浏览器态与桌面态的使用边界
 
@@ -115,6 +124,7 @@ agent.feishu_click("飞书按钮")
 - [ ] 若调用方直接使用 `agent.feishu_click(...)`，先确认入口是否已切到 `grounding_feishu.py`
 - [ ] 若需求只是恢复当前可跑基线，优先使用默认 `OSWorldACI` 主线，不要先碰 UIA / Accessibility
 - [ ] 若要恢复 UIA 路线，先更新 `spec`、`interfaces`、freeze 记录，再改入口
+- [ ] 若要增强飞书桌面端能力，优先沿 `feishu_agent -> AgentS3 + WindowsFeishuACI + tool guidance` 路线扩展，不要再新增平行 runtime
 
 ## 6. 历史说明
 

@@ -243,6 +243,9 @@ Track A + B + C 可以同时启动 coding 的前提：**共享契约已冻结**�
 
 ## 5. Track 拆分与交接门禁
 
+本节定义的是 **Track 边界、交接门禁和完成定义**，不表示这些 Track 在当前仓库状态里已经完成。
+当前实际进度、已完成范围和下一步安排，请看 `docs/process/project_state.md` 与 `docs/implementation/`。
+
 ### 5.1 Track Map
 
 | Track | 模块 | Consumes | Produces | Start Gate | Done Gate | Blocks |
@@ -257,30 +260,30 @@ Track A + B + C 可以同时启动 coding 的前提：**共享契约已冻结**�
 
 内部顺序：`testcases/` → `planner/`
 
-- `testcases/` done：schema、preconditions、assertions、正反例齐全
-- `planner/` done：`WorkflowPlan`、workflow 选路、params、preconditions 透传、失败原因固定
+- `testcases/` 完成定义：schema、preconditions、assertions、正反例齐全
+- `planner/` 完成定义：`WorkflowPlan`、workflow 选路、params、preconditions 透传、失败原因固定
 
 ### 5.3 Track B（pages + detectors + locators）
 
 内部顺序：`pages/` → `detectors/` → `locators/`
 
-- `pages/` done：`page_id`、anchor、detector 消费字段固定
-- `detectors/` done：`FeishuState` 公共字段和扩展策略固定
-- `locators/` done：成功/失败返回格式、`bbox` 格式、`page_id` 失败语义固定
+- `pages/` 完成定义：`page_id`、anchor、detector 消费字段固定
+- `detectors/` 完成定义：`FeishuState` 公共字段和扩展策略固定
+- `locators/` 完成定义：成功/失败返回格式、`bbox` 格式、`page_id` 失败语义固定
 
 ### 5.4 Track C（workflows + verifiers）
 
 内部顺序：`workflows/` → `verifiers/`
 
-- `workflows/` done：stage、retry、fallback、阶段输出固定
-- `verifiers/` done：`StepResult`、`failure_type`、断言失败语义固定
+- `workflows/` 完成定义：stage、retry、fallback、阶段输出固定
+- `verifiers/` 完成定义：`StepResult`、`failure_type`、断言失败语义固定
 
 ### 5.5 Track D（reports + maintenance）
 
 内部顺序：`reports/` → `maintenance/`
 
-- `reports/` done：`summary.json`、`report.md`、artifact path 固定
-- `maintenance/` start：报告和产物结构稳定
+- `reports/` 完成定义：`summary.json`、`report.md`、artifact path 固定
+- `maintenance/` 进入条件：报告和产物结构稳定
 
 ### 5.6 Serial Track
 

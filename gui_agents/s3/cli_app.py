@@ -11,10 +11,15 @@ import signal
 import sys
 import time
 
-from PIL import Image
+from PIL import Image, ImageGrab
 
 from gui_agents.s3.agents.grounding import OSWorldACI
 from gui_agents.s3.agents.agent_s import AgentS3
+
+try:
+    from gui_agents.s3.agents.grounding_feishu import WindowsFeishuACI
+except ImportError:  # pragma: no cover - runtime dependency only
+    WindowsFeishuACI = None
 
 current_platform = platform.system().lower()
 
@@ -131,6 +136,18 @@ logger.addHandler(sdebug_handler)
 platform_os = platform.system()
 
 
+def _get_primary_screen_size() -> tuple[int, int]:
+    return pyautogui.size()
+
+
+def _get_feishu_primary_capture_size() -> tuple[int, int]:
+    try:
+        screenshot = ImageGrab.grab()
+        return screenshot.size
+    except Exception:
+        return pyautogui.size()
+
+
 def show_permission_dialog(code: str, action_description: str):
     """Show a platform-specific permission dialog and return True if approved."""
     if platform.system() == "Darwin":
@@ -201,18 +218,27 @@ def run_agent(
         # Check if we're in paused state and wait
         while paused:
             time.sleep(0.1)
-        # Get screen shot using pyautogui
-        screenshot = pyautogui.screenshot()
-        screenshot = screenshot.resize((scaled_width, scaled_height), Image.LANCZOS)
+        capture_observation = getattr(
+            agent.grounding_agent, "capture_observation", None
+        )
+        if callable(capture_observation):
+            obs = capture_observation(scaled_width, scaled_height)
+        else:
+            # Get screen shot using pyautogui
+            screenshot = pyautogui.screenshot()
+            screenshot = screenshot.resize((scaled_width, scaled_height), Image.LANCZOS)
 
-        # Save the screenshot to a BytesIO object
-        buffered = io.BytesIO()
-        screenshot.save(buffered, format="PNG")
+            # Save the screenshot to a BytesIO object
+            buffered = io.BytesIO()
+            screenshot.save(buffered, format="PNG")
 
-        # Get the byte value of the screenshot
-        screenshot_bytes = buffered.getvalue()
-        # Convert to base64 string.
-        obs["screenshot"] = screenshot_bytes
+            # Get the byte value of the screenshot
+            screenshot_bytes = buffered.getvalue()
+            obs = {
+                "screenshot": screenshot_bytes,
+                "image_width": scaled_width,
+                "image_height": scaled_height,
+            }
 
         # Check again for pause state before prediction
         while paused:
@@ -284,6 +310,13 @@ def main():
         type=str,
         default="openai",
         help="Specify the provider to use (e.g., openai, anthropic, etc.)",
+    )
+    parser.add_argument(
+        "--execution_mode",
+        type=str,
+        default="classic_s3",
+        choices=["classic_s3", "feishu_agent"],
+        help="Execution branch: legacy AgentS3 or Feishu-enhanced AgentS3.",
     )
     parser.add_argument(
         "--model",
@@ -393,11 +426,7 @@ def main():
     args = parser.parse_args()
 
     # Re-scales screenshot size to ensure it fits in UI-TARS context limit
-    screen_width, screen_height = pyautogui.size()
     max_dim = max(args.grounding_width, args.grounding_height)
-    scaled_width, scaled_height = scale_screen_dimensions(
-        screen_width, screen_height, max_dim_size=max_dim
-    )
 
     # Load the general engine params
     engine_params = {
@@ -422,13 +451,36 @@ def main():
     if args.ground_coord_scale is not None:
         engine_params_for_grounding["ground_coord_scale"] = args.ground_coord_scale
 
-    grounding_agent = OSWorldACI(
-        platform=current_platform,
-        engine_params_for_generation=engine_params,
-        engine_params_for_grounding=engine_params_for_grounding,
-        width=screen_width,
-        height=screen_height,
-    )
+    if args.execution_mode == "feishu_agent":
+        if current_platform != "windows":
+            raise RuntimeError("feishu_agent mode currently supports Windows only")
+        if WindowsFeishuACI is None:
+            raise RuntimeError(
+                "feishu_agent mode requires gui_agents.s3.agents.grounding_feishu"
+            )
+        screen_width, screen_height = _get_feishu_primary_capture_size()
+        scaled_width, scaled_height = scale_screen_dimensions(
+            screen_width, screen_height, max_dim_size=max_dim
+        )
+        grounding_agent = WindowsFeishuACI(
+            platform=current_platform,
+            engine_params_for_generation=engine_params,
+            engine_params_for_grounding=engine_params_for_grounding,
+            width=screen_width,
+            height=screen_height,
+        )
+    else:
+        screen_width, screen_height = pyautogui.size()
+        scaled_width, scaled_height = scale_screen_dimensions(
+            screen_width, screen_height, max_dim_size=max_dim
+        )
+        grounding_agent = OSWorldACI(
+            platform=current_platform,
+            engine_params_for_generation=engine_params,
+            engine_params_for_grounding=engine_params_for_grounding,
+            width=screen_width,
+            height=screen_height,
+        )
 
     agent = AgentS3(
         engine_params,
@@ -440,7 +492,6 @@ def main():
 
     while True:
         query = input("Query: ")
-
         agent.reset()
 
         # Run the agent on your own device

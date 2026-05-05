@@ -21,8 +21,12 @@ ActionId = Literal[
 ]
 
 TargetId = Literal[
-    "chat_search_box",
-    "chat_result_item",
+    "global_search_entry",
+    "conversation_list_item",
+    "conversation_search_entry",
+    "conversation_search_close_button",
+    "conversation_search_result_item",
+    "search_result_item",
     "message_input",
     "send_button",
 ]

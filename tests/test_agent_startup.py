@@ -28,6 +28,7 @@ class AgentStartupTest(unittest.TestCase):
             StepResult,
             RuntimeContext,
         )
+
         self.assertIsNotNone(FailureType)
         self.assertIsNotNone(TestCase)
         self.assertIsNotNone(WorkflowPlan)
@@ -45,9 +46,19 @@ class AgentStartupTest(unittest.TestCase):
     def test_feishu_planner_import(self) -> None:
         from gui_agents.feishu.planner.task_planner import plan_testcase
         from gui_agents.feishu.planner.workflow_selector import select_workflow
+        from gui_agents.feishu.tooling.tool_router import build_feishu_tool_guidance
+        from gui_agents.feishu.workflows.send_message_workflow import (
+            SendMessageWorkflow,
+        )
+        from gui_agents.feishu.verifiers.assertion_verifier import AssertionVerifier
+        from gui_agents.feishu.agents.feishu_worker import FeishuWorker
 
         self.assertTrue(callable(plan_testcase))
         self.assertTrue(callable(select_workflow))
+        self.assertTrue(callable(build_feishu_tool_guidance))
+        self.assertIsNotNone(SendMessageWorkflow)
+        self.assertIsNotNone(AssertionVerifier)
+        self.assertIsNotNone(FeishuWorker)
 
     def test_s3_agents_import(self) -> None:
         try:
@@ -76,7 +87,9 @@ def load_tests(loader, standard_tests, pattern):
     """Aggregate startup checks + all existing feishu tests."""
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromTestCase(AgentStartupTest))
-    suite.addTests(loader.discover("tests/feishu", pattern="test_*.py", top_level_dir="."))
+    suite.addTests(
+        loader.discover("tests/feishu", pattern="test_*.py", top_level_dir=".")
+    )
     return suite
 
 

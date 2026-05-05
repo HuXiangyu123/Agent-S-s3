@@ -4,6 +4,7 @@ All functions return strings; none depend on instance state.
 """
 
 from pathlib import Path
+import textwrap
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -183,8 +184,22 @@ def build_feishu_uia_click_code(
     target_text: str,
     num_clicks: int = 1,
     button_type: str = "left",
+    fallback_code: str | None = None,
 ) -> str:
     """Return code that locates a UIA element by text inside Feishu windows and clicks it."""
+    fallback_block = ""
+    if fallback_code:
+        fallback_block = (
+            '        _fallback_line = "FEISHU_UIA_CLICK_FALLBACK: " + repr(target_text)\n'
+            "        print(_fallback_line)\n"
+            "        try:\n"
+            "            import pathlib as _pl\n"
+            '            with open(_pl.Path("logs") / "execution-trace.log", "a", encoding="utf-8") as _tf:\n'
+            '                _tf.write(_fallback_line + "\\n")\n'
+            "        except Exception:\n"
+            "            pass\n"
+            + textwrap.indent(fallback_code.rstrip() + "\n", "        ")
+        )
     return f"""
 import ctypes
 import time
@@ -307,6 +322,7 @@ try:
                 _tf.write(_miss_line + "\\n")
         except Exception:
             pass
+{fallback_block}
 except Exception as exc:
     _err_line = "FEISHU_UIA_CLICK_ERROR: " + repr(exc)
     print(_err_line)
