@@ -2,6 +2,7 @@ from pathlib import Path
 import unittest
 
 from gui_agents.feishu.detectors.base_state_detector import detect_base_state
+from gui_agents.feishu.detectors.calendar_state_detector import detect_calendar_state
 from gui_agents.feishu.detectors.docs_state_detector import detect_docs_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
 from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
@@ -11,6 +12,7 @@ from gui_agents.feishu.verifiers.assertion_verifier import AssertionVerifier
 IM_FIXTURE_DIR = Path("tests/fixtures/im")
 DOCS_FIXTURE_DIR = Path("tests/fixtures/docs")
 BASE_FIXTURE_DIR = Path("tests/fixtures/base")
+CALENDAR_FIXTURE_DIR = Path("tests/fixtures/calendar")
 VC_FIXTURE_DIR = Path("tests/fixtures/vc")
 
 
@@ -26,6 +28,9 @@ class TestAssertionVerifier(unittest.TestCase):
 
     def _base_observation(self, filename: str) -> dict:
         return {"image_path": str(BASE_FIXTURE_DIR / filename)}
+
+    def _calendar_observation(self, filename: str) -> dict:
+        return {"image_path": str(CALENDAR_FIXTURE_DIR / filename)}
 
     def _vc_observation(self, filename: str) -> dict:
         return {"image_path": str(VC_FIXTURE_DIR / filename)}
@@ -239,6 +244,41 @@ class TestAssertionVerifier(unittest.TestCase):
 
         self.assertTrue(result["passed"])
         self.assertIn("body_text=本周完成联调", result["evidence"])
+
+    def test_verifies_calendar_home_ready(self) -> None:
+        observation = self._calendar_observation("日历主页.png")
+        state = detect_calendar_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "calendar_home_ready", state, observation
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["assertion"], "calendar_home_ready")
+        self.assertIn("page_type=calendar_home", result["evidence"])
+
+    def test_verifies_calendar_event_modal_ready(self) -> None:
+        observation = self._calendar_observation("点击创建日程后.png")
+        state = detect_calendar_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "calendar_event_modal_ready", state, observation
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["assertion"], "calendar_event_modal_ready")
+        self.assertIn("page_type=calendar_event_modal", result["evidence"])
+
+    def test_verifies_calendar_home_not_ready_with_wrong_product(self) -> None:
+        observation = self._vc_observation("会议主页面.png")
+        state = detect_vc_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "calendar_home_ready", state, observation
+        )
+
+        self.assertFalse(result["passed"])
+        self.assertEqual(result["failure_type"], "verification")
 
     def test_verifies_vc_home_ready(self) -> None:
         observation = self._vc_observation("会议主页面.png")

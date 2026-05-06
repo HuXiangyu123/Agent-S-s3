@@ -137,10 +137,10 @@ Implemented:
 - Calendar detector
 - semantic-only fixture constraints
 - Calendar tool-router guidance
+- Calendar verifier branches: `calendar_home_ready`, `calendar_event_modal_ready`
 
 Missing:
 
-- dedicated verifier branches
 - validated end-to-end create-event runtime path
 
 ### Base

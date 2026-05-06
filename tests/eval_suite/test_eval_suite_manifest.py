@@ -6,9 +6,7 @@ import json
 import os
 import unittest
 
-MANIFEST_PATH = os.path.join(
-    os.path.dirname(__file__), "feishu_eval_suite.json"
-)
+MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "feishu_eval_suite.json")
 
 KNOWN_ASSERTIONS = {
     "chat_title_matched",
@@ -24,6 +22,8 @@ KNOWN_ASSERTIONS = {
     "base_new_menu_opened",
     "base_template_gallery_ready",
     "base_editor_ready",
+    "calendar_home_ready",
+    "calendar_event_modal_ready",
     "vc_home_ready",
     "vc_start_preview_ready",
     "vc_meeting_active",
@@ -47,7 +47,9 @@ class EvalSuiteManifestTest(unittest.TestCase):
     def test_manifest_has_test_cases(self):
         cases = self.data.get("test_cases", [])
         self.assertIsInstance(cases, list)
-        self.assertGreater(len(cases), 0, "manifest must contain at least one test case")
+        self.assertGreater(
+            len(cases), 0, "manifest must contain at least one test case"
+        )
 
     def test_every_case_has_required_fields(self):
         required = {"id", "product", "title", "instruction", "priority", "enabled"}

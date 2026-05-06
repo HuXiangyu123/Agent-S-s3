@@ -59,22 +59,20 @@
       "product": "calendar",
       "title": "创建日程",
       "instruction": "打开日历，创建明天下午 2 点的日程，标题为“项目同步”，并邀请张三",
-      "assertions": [],
+      "assertions": ["calendar_home_ready", "calendar_event_modal_ready"],
       "priority": "high",
-      "enabled": false,
-      "verifier_coverage": "missing",
-      "note": "Calendar verifier branches not yet implemented; enable after calendar assertion support lands"
+      "enabled": true,
+      "verifier_coverage": "full"
     },
     {
       "id": "tc_calendar_view_today",
       "product": "calendar",
       "title": "查看今日日程",
       "instruction": "打开日历主页，查看今天的日程安排并确认日历页面已打开",
-      "assertions": [],
+      "assertions": ["calendar_home_ready"],
       "priority": "medium",
-      "enabled": false,
-      "verifier_coverage": "missing",
-      "note": "Calendar verifier branches not yet implemented; enable after calendar assertion support lands"
+      "enabled": true,
+      "verifier_coverage": "full"
     },
     {
       "id": "tc_base_create_table",
