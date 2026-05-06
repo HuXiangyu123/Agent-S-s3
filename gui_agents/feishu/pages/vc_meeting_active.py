@@ -37,6 +37,5 @@ VC_MEETING_ACTIVE_DESCRIPTOR: PageDescriptor = {
         "AI 总结",
         "孙思超",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-vc-active",
 }

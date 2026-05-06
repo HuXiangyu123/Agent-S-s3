@@ -16,7 +16,6 @@ from typing import Dict, List, Optional
 
 from PIL import Image, ImageGrab
 
-from gui_agents.feishu.pages.registry import get_page_descriptor
 from gui_agents.feishu.tooling.tool_router import build_feishu_tool_guidance
 from gui_agents.s3.agents.grounding import OSWorldACI, agent_action
 from gui_agents.s3.memory.procedural_memory import PROCEDURAL_MEMORY
@@ -260,50 +259,12 @@ class WindowsFeishuACI(OSWorldACI):
             )
         return ocr_text
 
-    def _relative_bounds_center(self, bounds: List[float]) -> List[int]:
-        x1, y1, x2, y2 = bounds
-        center_x = round(((x1 + x2) / 2.0) * self.width)
-        center_y = round(((y1 + y2) / 2.0) * self.height)
-        return [center_x, center_y]
-
     def _absolute_click_code(
         self, x: int, y: int, num_clicks: int = 1, button_type: str = "left"
     ) -> str:
         return (
             "import pyautogui\n"
             f"pyautogui.click({x}, {y}, clicks={num_clicks}, button={button_type!r})\n"
-        )
-
-    def _relative_region_click_code(
-        self,
-        page_id: str,
-        region_name: str,
-        num_clicks: int = 1,
-        button_type: str = "left",
-    ) -> str:
-        descriptor = get_page_descriptor(page_id)
-        if not descriptor:
-            raise ValueError(f"unknown page descriptor: {page_id}")
-        region = descriptor["key_regions"].get(region_name)
-        if not isinstance(region, dict):
-            raise ValueError(f"unknown region: {page_id}.{region_name}")
-        bounds = region.get("relative_bounds")
-        if not isinstance(bounds, list) or len(bounds) != 4:
-            raise ValueError(f"invalid bounds: {page_id}.{region_name}")
-        x, y = self._relative_bounds_center(bounds)
-        self._trace_execution(
-            "FEISHU_PRIOR_REGION_CLICK: "
-            + repr(
-                {
-                    "page_id": page_id,
-                    "region_name": region_name,
-                    "bounds": bounds,
-                    "point": (x, y),
-                }
-            )
-        )
-        return self._absolute_click_code(
-            x, y, num_clicks=num_clicks, button_type=button_type
         )
 
     def _focus_feishu_now(self) -> bool:
@@ -535,12 +496,14 @@ class WindowsFeishuACI(OSWorldACI):
 
     @agent_action
     def feishu_click_message_input(self):
-        """Click the IM composer input using the known chat_main page region.
+        """Click the IM composer input using semantic runtime grounding.
         Use this when the Feishu IM chat main page is already visible and you need
-        to focus the message input without relying on OCR text or visual grounding.
+        to focus the message input without static page-descriptor coordinates.
         Args:
         """
-        return self._relative_region_click_code("im_chat_main", "message_input_area")
+        return self.click(
+            "Feishu IM message composer input at the bottom of the current chat"
+        )
 
     @agent_action
     def feishu_type_message(
@@ -580,11 +543,91 @@ class WindowsFeishuACI(OSWorldACI):
 
     @agent_action
     def feishu_click_send_button(self):
-        """Click the IM send button using the known chat_main page region.
-        Prefer this when Enter is unsuitable and the send button is visible.
+        """Click the IM send button using semantic runtime grounding.
+        Prefer this when Enter is unsuitable and the send_button / send button is visible.
         Args:
         """
-        return self._relative_region_click_code("im_chat_main", "send_button_area")
+        return self.click("Feishu IM send button in the current chat composer")
+
+    @agent_action
+    def feishu_vc_click_start_card(self):
+        """Click the Start Meeting entry on the Feishu VC home page.
+        Prefer this when the VC home surface shows both Start and Join cards.
+        Args:
+        """
+        return self.feishu_click("发起会议")
+
+    @agent_action
+    def feishu_vc_click_join_card(self):
+        """Click the Join Meeting entry on the Feishu VC home page.
+        Prefer this when the user wants to join an existing meeting by meeting ID.
+        Args:
+        """
+        return self.feishu_click("加入会议")
+
+    @agent_action
+    def feishu_vc_click_start_button(self):
+        """Click the Start Meeting primary button from the VC start preview.
+        Use this after confirming the preview window is already visible.
+        Args:
+        """
+        return self.feishu_click("开始会议")
+
+    @agent_action
+    def feishu_vc_type_meeting_id(
+        self,
+        meeting_id: str,
+        overwrite: bool = True,
+        focus_first: bool = True,
+    ):
+        """Type the meeting ID into the VC join preview input.
+        Prefer this over long natural-language descriptions for the meeting-ID box.
+        Args:
+            meeting_id:str, the meeting ID to paste
+            overwrite:bool, whether to clear the input first
+            focus_first:bool, whether to target the visible meeting ID input first
+        """
+        return self.feishu_type(
+            meeting_id,
+            "会议 ID" if focus_first else None,
+            overwrite=overwrite,
+            enter=False,
+        )
+
+    @agent_action
+    def feishu_vc_click_join_button(self):
+        """Click the Join Meeting primary button from the VC join preview.
+        Use this after the meeting ID has been entered.
+        Args:
+        """
+        return self.feishu_click("加入会议")
+
+    @agent_action
+    def feishu_vc_click_invite_button(self):
+        """Click the invite/participants control in an active VC meeting.
+        Prefer grounded visual clicking because this toolbar control may not always
+        expose stable UIA text.
+        Args:
+        """
+        return self.click(
+            "the invite or participants control in the active Feishu video meeting toolbar"
+        )
+
+    @agent_action
+    def feishu_vc_click_invite_entry(self):
+        """Click the visible Invite entry after the active-meeting invite popover opens.
+        Use this when the small invite popover shows options such as 邀请 and 复制邀请链接.
+        Args:
+        """
+        return self.feishu_click("邀请")
+
+    @agent_action
+    def feishu_vc_click_share_button(self):
+        """Click the Share button inside the VC invite dialog.
+        Use this only after the invite dialog is already open and the recipient is selected.
+        Args:
+        """
+        return self.feishu_click("分享")
 
     @agent_action
     def feishu_type(
@@ -701,6 +744,20 @@ pyautogui.hotkey('ctrl', 'v')
         ) or any(
             keyword in lower_instruction for keyword in ("document", "browser", "share")
         )
+        is_vc_task = any(
+            keyword in instruction
+            for keyword in (
+                "视频会议",
+                "发起会议",
+                "开始会议",
+                "加入会议",
+                "会议 ID",
+                "会议ID",
+                "会议号",
+                "分享邀请",
+                "复制邀请",
+            )
+        )
 
         if is_im_task and not is_doc_task:
             skipped_actions.update(
@@ -734,6 +791,18 @@ pyautogui.hotkey('ctrl', 'v')
                 "- Use `agent.feishu_click(...)` only for controls with exact visible text.\n"
                 "- For icon-only controls such as emoji, plus, image, or picker items, prefer grounded `agent.click(...)`.\n"
                 "- If the task asks for both typing and emoji, finish composing the draft first and then open the emoji picker.\n"
+            )
+
+        if is_vc_task:
+            sys_prompt += (
+                "\n\n## Feishu VC Prior Tool Strategy\n"
+                "- First reason from the screenshot before choosing a tool; do not assume a fixed start->preview->meeting chain.\n"
+                "- On the VC home page, prefer `agent.feishu_vc_click_start_card()` or `agent.feishu_vc_click_join_card()` instead of long natural-language card descriptions.\n"
+                "- On the start preview, prefer `agent.feishu_vc_click_start_button()` when the visible primary button is the next required action.\n"
+                "- On the join preview, prefer `agent.feishu_vc_type_meeting_id(...)` for the meeting-ID input and `agent.feishu_vc_click_join_button()` for the visible primary button.\n"
+                "- In an active meeting, prefer `agent.feishu_vc_click_invite_button()` for the toolbar invite control.\n"
+                "- If a small invite popover appears, use `agent.feishu_vc_click_invite_entry()` to continue into the full invite dialog.\n"
+                "- Inside the invite dialog, use visible controls and prefer `agent.feishu_vc_click_share_button()` only when the recipient is already selected.\n"
             )
 
         return sys_prompt

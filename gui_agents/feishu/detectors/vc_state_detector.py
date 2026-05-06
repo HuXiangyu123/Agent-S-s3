@@ -12,6 +12,7 @@ from gui_agents.feishu.pages.registry import get_page_descriptor
 VC_HOME_KEYWORDS = ("视频会议", "发起会议", "加入会议", "历史记录")
 VC_START_PREVIEW_KEYWORDS = ("开始会议", "麦克风", "摄像头")
 VC_ACTIVE_KEYWORDS = ("会议信息", "布局", "AI 总结")
+VC_INVITE_POPOVER_KEYWORDS = ("复制邀请链接",)
 VC_INVITE_DIALOG_KEYWORDS = ("分享邀请", "电话邀请", "复制入会信息")
 
 
@@ -44,7 +45,20 @@ def _fallback_state(observation: dict[str, Any]) -> FeishuState:
     if _contains_any(ocr_text, VC_INVITE_DIALOG_KEYWORDS):
         page_id = "vc_invite_dialog"
         modal_type = "vc_invite_dialog"
-        product_state = {"invite_dialog_visible": True}
+        product_state = {
+            "invite_dialog_visible": True,
+            "invite_search_visible": "搜索" in ocr_text,
+            "share_button_visible": "分享" in ocr_text,
+        }
+    elif _contains_any(ocr_text, VC_INVITE_POPOVER_KEYWORDS) and "邀请" in ocr_text:
+        page_id = "vc_meeting_active"
+        modal_type = "vc_invite_popover"
+        product_state = {
+            "meeting_active": True,
+            "invite_popover_visible": True,
+            "invite_entry_visible": "邀请" in ocr_text,
+            "copy_invite_link_visible": "复制邀请链接" in ocr_text,
+        }
     elif "会议 ID" in ocr_text or "会议ID" in ocr_text:
         page_id = "vc_join_preview"
         product_state = {

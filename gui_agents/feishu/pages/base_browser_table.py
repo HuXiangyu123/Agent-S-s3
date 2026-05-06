@@ -44,6 +44,5 @@ BASE_BROWSER_TABLE_DESCRIPTOR: PageDescriptor = {
         "分享",
         "自动化",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-browser-base-table",
 }

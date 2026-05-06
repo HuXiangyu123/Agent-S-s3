@@ -33,6 +33,5 @@ VC_START_PREVIEW_DESCRIPTOR: PageDescriptor = {
         "摄像头",
         "开始会议",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-vc-preview",
 }

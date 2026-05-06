@@ -15,20 +15,20 @@ DOCS_NEW_DROPDOWN_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "new_dropdown_area": {
-            "relative_bounds": [0.0, 0.0, 1.0, 1.0],
             "role": "new_type_dropdown",
+            "semantic_position": "opened_new_menu",
         },
         "document_option_area": {
-            "relative_bounds": [0.0, 0.18, 1.0, 0.29],
             "role": "document_type_option",
+            "semantic_position": "visible_menu_option",
         },
         "folder_option_area": {
-            "relative_bounds": [0.0, 0.62, 1.0, 0.72],
             "role": "folder_type_option",
+            "semantic_position": "visible_menu_option",
         },
         "more_types_area": {
-            "relative_bounds": [0.0, 0.52, 1.0, 0.62],
             "role": "more_types_option",
+            "semantic_position": "visible_menu_option",
         },
     },
     "text_anchors": [
@@ -37,6 +37,5 @@ DOCS_NEW_DROPDOWN_DESCRIPTOR: PageDescriptor = {
         "多维表格",
         "文件夹",
     ],
-    "supported_workflows": ["create_doc_and_edit"],
     "ui_version_tag": "feishu-desktop-cloud-docs",
 }

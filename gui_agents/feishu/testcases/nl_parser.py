@@ -5,7 +5,17 @@ from __future__ import annotations
 import re
 
 from gui_agents.feishu.contracts import TestCase
-from gui_agents.feishu.testcases.scenario_schema import build_testcase
+from gui_agents.feishu.testcases.scenario_schema import (
+    build_guidance_testcase,
+    build_testcase,
+)
+
+
+SEMANTIC_TESTCASE_ARTIFACTS = {
+    "runtime_contract": "semantic_validation_only",
+    "active_executor": "feishu_agent",
+    "ordered_steps_role": "acceptance_scaffold_not_workflow",
+}
 
 
 QUOTED_TEXT_PATTERN = re.compile(r"""["'“”‘’]([^"'“”‘’]+)["'“”‘’]""")
@@ -31,6 +41,19 @@ def _extract_quoted_texts(instruction: str) -> list[str]:
 
 
 def _detect_product(instruction: str) -> str:
+    if any(
+        keyword in instruction
+        for keyword in (
+            "视频会议",
+            "会议 ID",
+            "会议ID",
+            "会议号",
+            "会议码",
+            "发起会议",
+            "加入会议",
+        )
+    ):
+        return "vc"
     if any(
         keyword in instruction for keyword in ("多维表格", "Base", "base", "数据表")
     ):
@@ -187,14 +210,43 @@ def _parse_docs_instruction(instruction: str, quoted_texts: list[str]) -> TestCa
         product="docs",
         title=f"创建云文档并编辑标题 {doc_title}",
         steps=steps,
+        artifacts=dict(SEMANTIC_TESTCASE_ARTIFACTS),
     )
 
 
 def _parse_base_instruction(instruction: str, quoted_texts: list[str]) -> TestCase:
+    title = quoted_texts[0] if quoted_texts else "Base semantic task"
+    return build_guidance_testcase(
+        product="base",
+        title=f"Base 语义指导任务 {title}",
+        intent="base_semantic_task",
+        params={"instruction": instruction, "title_hint": title},
+        assertions=["base_home_ready"],
+    )
+
+
+def _parse_vc_instruction(instruction: str, quoted_texts: list[str]) -> TestCase:
     del quoted_texts
-    raise ValueError(
-        "Base instructions are handled by feishu_agent prior guidance, "
-        "not fixed TestCase parsing"
+    if any(
+        keyword in instruction
+        for keyword in ("加入会议", "会议 ID", "会议ID", "会议号", "会议码")
+    ):
+        intent = "join_video_meeting"
+        assertions = ["vc_join_preview_ready", "vc_joined"]
+    elif any(
+        keyword in instruction for keyword in ("邀请", "分享邀请", "复制入会信息")
+    ):
+        intent = "invite_video_meeting"
+        assertions = ["vc_meeting_active"]
+    else:
+        intent = "start_video_meeting"
+        assertions = ["vc_start_preview_ready", "vc_meeting_active"]
+    return build_guidance_testcase(
+        product="vc",
+        title=f"VC 语义指导任务 {intent}",
+        intent=intent,
+        params={"instruction": instruction},
+        assertions=assertions,
     )
 
 
@@ -204,25 +256,12 @@ def parse_instruction(instruction: str) -> TestCase:
         raise ValueError("instruction cannot be empty")
 
     _reject_unsupported_intents(normalized)
-    if any(
-        keyword in normalized
-        for keyword in (
-            "视频会议",
-            "会议 ID",
-            "会议ID",
-            "会议号",
-            "会议码",
-            "发起会议",
-            "加入会议",
-        )
-    ):
-        raise ValueError(
-            "VC tasks are handled by feishu_agent tool guidance, not deterministic TestCase steps"
-        )
     product = _detect_product(normalized)
     quoted_texts = _extract_quoted_texts(normalized)
     if product == "base":
         return _parse_base_instruction(normalized, quoted_texts)
+    if product == "vc":
+        return _parse_vc_instruction(normalized, quoted_texts)
     if product == "docs":
         return _parse_docs_instruction(normalized, quoted_texts)
 
@@ -258,4 +297,5 @@ def parse_instruction(instruction: str) -> TestCase:
                 "assertion": "message_sent",
             },
         ],
+        artifacts=dict(SEMANTIC_TESTCASE_ARTIFACTS),
     )

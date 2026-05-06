@@ -11,6 +11,7 @@ FailureType = Literal[
     "verification",
     "timeout",
     "precondition",
+    "runtime",
 ]
 
 ActionId = Literal[
@@ -66,6 +67,7 @@ AssertionId = Literal[
     "message_input_contains_text",
     "message_sent",
     "vc_home_ready",
+    "vc_invite_dialog_opened",
     "vc_start_preview_ready",
     "vc_meeting_active",
     "vc_join_preview_ready",
@@ -99,7 +101,7 @@ class PageDescriptor(TypedDict):
     layout_hints: dict[str, Any]
     key_regions: dict[str, Any]
     text_anchors: list[str]
-    supported_workflows: list[str]
+    supported_workflows: NotRequired[list[str]]
     ui_version_tag: str
 
 
@@ -118,11 +120,9 @@ class FeishuState(TypedDict):
 class LocatorResult(TypedDict):
     matched: bool
     strategy: str
-    x: int | None
-    y: int | None
-    confidence: float
-    bbox: list[int] | None
     page_id: str | None
+    target: NotRequired[str | None]
+    action_target: NotRequired[dict[str, Any] | None]
     failure_type: NotRequired[FailureType | None]
     failure_reason: NotRequired[str | None]
 
@@ -152,8 +152,8 @@ class StepResult(TypedDict):
 class RuntimeContext(TypedDict):
     run_id: str
     status: str
-    workflow: str | None
-    workflow_params: dict[str, Any]
+    intent: str | None
+    params: dict[str, Any]
     page_id: str | None
     precondition_results: list[dict[str, Any]]
     action_logs: list[ActionLog]
@@ -162,3 +162,10 @@ class RuntimeContext(TypedDict):
     failure_type: FailureType | None
     failure_reason: str | None
     started_at: str
+    product: NotRequired[str | None]
+    task_id: NotRequired[str | None]
+    task_title: NotRequired[str | None]
+    assertion_plan: NotRequired[list[dict[str, Any]]]
+    recovery_attempts: NotRequired[int]
+    anomaly_events: NotRequired[list[dict[str, Any]]]
+    semantic_steps: NotRequired[list[dict[str, Any]]]

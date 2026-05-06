@@ -39,6 +39,5 @@ BASE_HOME_DESCRIPTOR: PageDescriptor = {
         "新建",
         "全部多维表格",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-base-home",
 }

@@ -16,20 +16,20 @@ FEISHU_SHELL_SEARCH_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "global_search_entry_area": {
-            "relative_bounds": [0.02, 0.02, 0.96, 0.08],
             "role": "global_search_entry",
+            "semantic_position": "top_search_overlay",
         },
         "search_scope_tab_row": {
-            "relative_bounds": [0.01, 0.08, 0.82, 0.15],
             "role": "search_scope_tabs",
+            "semantic_position": "below_global_search_entry",
         },
         "search_result_list_area": {
-            "relative_bounds": [0.0, 0.15, 0.34, 0.62],
             "role": "search_result_list",
+            "semantic_position": "left_results_panel",
         },
         "search_result_item_area": {
-            "relative_bounds": [0.01, 0.19, 0.28, 0.34],
             "role": "search_result_item",
+            "semantic_position": "first_visible_result",
         },
     },
     "text_anchors": [
@@ -39,6 +39,5 @@ FEISHU_SHELL_SEARCH_DESCRIPTOR: PageDescriptor = {
         "联系人",
         "群组",
     ],
-    "supported_workflows": ["open_chat"],
     "ui_version_tag": "feishu-desktop-dark",
 }

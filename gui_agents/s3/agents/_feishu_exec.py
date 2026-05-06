@@ -347,137 +347,16 @@ except Exception as exc:
 
 
 def build_feishu_doc_click_code(button_name: str) -> str:
-    """Return code that clicks a toolbar button in a Feishu cloud document in the browser.
-
-    Uses window geometry + optional vision detection instead of visual grounding.
-    """
-    # (pixels_from_window_right, pixels_from_window_top)
-    OFFSETS = {
-        "分享": (302, 111),
-        "评论": (250, 93),
-        "更多": (55, 93),
-        "分析": (330, 93),
-    }
-    log_path = str(REPO_ROOT / LOG_DIR)
+    """Return code that clicks a Docs toolbar button through runtime grounding."""
     return f"""
-import ctypes
-import ctypes.wintypes
 import time
-import pathlib
 
 button_name = {button_name!r}
-_OFFSETS = {OFFSETS!r}
-
-try:
-    ctypes.windll.user32.SetProcessDPIAware()
-except Exception:
-    pass
-
-_GW_HWNDNEXT = 2
-_browser_hwnd = None
-_all_browser_titles = []
-_FEISHU_KEYS = ('feishu', '\\u98de\\u4e66', 'lark', 'bytedance', 'larksuite')
-
-def _get_win_text(hwnd, _ct=ctypes):
-    _l = _ct.windll.user32.GetWindowTextLengthW(hwnd)
-    if _l <= 0:
-        return ""
-    _b = _ct.create_unicode_buffer(_l + 1)
-    _ct.windll.user32.GetWindowTextW(hwnd, _b, _l + 1)
-    return _b.value
-
-def _get_win_class(hwnd, _ct=ctypes):
-    _b = _ct.create_unicode_buffer(256)
-    _ct.windll.user32.GetClassNameW(hwnd, _b, 256)
-    return _b.value
-
-try:
-    _fg = ctypes.windll.user32.GetForegroundWindow()
-    if _fg and 'Chrome_WidgetWin_1' in _get_win_class(_fg):
-        _fg_title = _get_win_text(_fg)
-        _all_browser_titles.append(_fg_title[:80])
-        _fg_title_lower = _fg_title.lower()
-        for _key in _FEISHU_KEYS:
-            if _key in _fg_title_lower:
-                _browser_hwnd = _fg
-                break
-
-    if _browser_hwnd is None:
-        _hwnd = ctypes.windll.user32.GetTopWindow(0)
-        while _hwnd:
-            try:
-                if ctypes.windll.user32.IsWindowVisible(_hwnd) and 'Chrome_WidgetWin_1' in _get_win_class(_hwnd):
-                    _title = _get_win_text(_hwnd)
-                    if _title:
-                        _all_browser_titles.append(_title[:80])
-                        _title_lower = _title.lower()
-                        for _key in _FEISHU_KEYS:
-                            if _key in _title_lower:
-                                _browser_hwnd = _hwnd
-                                break
-                        if _browser_hwnd is not None:
-                            break
-            except Exception:
-                pass
-            _hwnd = ctypes.windll.user32.GetWindow(_hwnd, _GW_HWNDNEXT)
-
-    if _browser_hwnd is None:
-        _largest_area = 0
-        _hwnd2 = ctypes.windll.user32.GetTopWindow(0)
-        while _hwnd2:
-            try:
-                if ctypes.windll.user32.IsWindowVisible(_hwnd2) and 'Chrome_WidgetWin_1' in _get_win_class(_hwnd2):
-                    _title2 = _get_win_text(_hwnd2)
-                    if _title2:
-                        _r2 = ctypes.wintypes.RECT()
-                        ctypes.windll.user32.GetWindowRect(_hwnd2, ctypes.byref(_r2))
-                        _area2 = max(0, _r2.right - _r2.left) * max(0, _r2.bottom - _r2.top)
-                        if _area2 > _largest_area:
-                            _largest_area = _area2
-                            _browser_hwnd = _hwnd2
-            except Exception:
-                pass
-            _hwnd2 = ctypes.windll.user32.GetWindow(_hwnd2, _GW_HWNDNEXT)
-        if _browser_hwnd is not None:
-            _all_browser_titles.append('FALLBACK_ANY_BROWSER:' + _get_win_text(_browser_hwnd)[:60])
-except Exception as _browser_exc:
-    _all_browser_titles.append('BROWSER_DETECT_ERROR:' + repr(_browser_exc)[:100])
-
-if _browser_hwnd is None:
-    _browser_hwnd = ctypes.windll.user32.GetForegroundWindow()
-    _all_browser_titles.append('FINAL_FALLBACK_FG')
-
-_r = ctypes.wintypes.RECT()
-
-ctypes.windll.user32.ShowWindow(_browser_hwnd, 3)
-ctypes.windll.user32.SetForegroundWindow(_browser_hwnd)
+description = "Feishu cloud document toolbar button named " + button_name
+agent.click(description)
 time.sleep(0.5)
-ctypes.windll.user32.GetWindowRect(_browser_hwnd, ctypes.byref(_r))
-
-_off = _OFFSETS.get(button_name, (170, 93))
-_cx = _r.right - _off[0]
-_cy = _r.top + _off[1]
-
-ctypes.windll.user32.SetCursorPos(_cx, _cy)
-time.sleep(0.05)
-ctypes.windll.user32.mouse_event(0x0002, 0, 0, 0, 0)
-time.sleep(0.05)
-ctypes.windll.user32.mouse_event(0x0004, 0, 0, 0, 0)
-time.sleep(1.5)
-
-_log = (
-    f'FEISHU_DOC_CLICKED: {{button_name!r}} at ({{_cx}}, {{_cy}})'
-    f' window=({{_r.left}},{{_r.top}},{{_r.right}},{{_r.bottom}})'
-    f' browser_titles={{_all_browser_titles!r}}'
-)
-print(_log)
-try:
-    _lp = pathlib.Path({log_path!r}) / "feishu-doc-click.log"
-    _lp.parent.mkdir(exist_ok=True)
-    with open(_lp, "a", encoding="utf-8") as _f:
-        _f.write(_log + "\\n")
-except Exception as _e:
-    print(f"FEISHU_DOC_CLICK_LOG_ERROR: {{_e!r}}")
+print("FEISHU_DOC_CLICKED: " + repr(button_name))
+print("FEISHU_DOC_CLICK_SEMANTIC: " + repr({{"button": button_name, "description": description}}))
 """
 
 

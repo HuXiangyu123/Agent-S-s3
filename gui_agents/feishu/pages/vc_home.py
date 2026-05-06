@@ -34,6 +34,5 @@ VC_HOME_DESCRIPTOR: PageDescriptor = {
         "加入会议",
         "历史记录",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-vc",
 }

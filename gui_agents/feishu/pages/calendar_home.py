@@ -35,6 +35,5 @@ CALENDAR_HOME_DESCRIPTOR: PageDescriptor = {
         "创建日程",
         "今天",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-calendar",
 }

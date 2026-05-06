@@ -39,6 +39,5 @@ CALENDAR_EVENT_MODAL_DESCRIPTOR: PageDescriptor = {
         "保存",
         "取消",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-calendar",
 }

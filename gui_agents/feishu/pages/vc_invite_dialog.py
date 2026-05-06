@@ -38,6 +38,5 @@ VC_INVITE_DIALOG_DESCRIPTOR: PageDescriptor = {
         "复制入会信息",
         "分享",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-vc-invite-dialog",
 }

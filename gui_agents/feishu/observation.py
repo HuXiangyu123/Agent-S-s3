@@ -43,35 +43,41 @@ def get_image_size(observation: dict[str, Any]) -> tuple[int | None, int | None]
         return image.size
 
 
-def _extract_relative_bounds(region: dict[str, Any]) -> list[float] | None:
-    bounds = region.get("relative_bounds")
+def _extract_runtime_bounds(region: dict[str, Any]) -> list[int] | None:
+    bounds = region.get("bounds")
     if (
         isinstance(bounds, list)
         and len(bounds) == 4
-        and all(isinstance(value, (int, float)) for value in bounds)
+        and all(isinstance(value, int) for value in bounds)
     ):
-        return [float(value) for value in bounds]
+        return bounds
     return None
 
 
-def get_region_bounds(
+def get_runtime_region_bounds(
     observation: dict[str, Any], region_name: str
-) -> list[float] | None:
-    metadata = normalize_observation(observation)
-    key_regions = metadata.get("key_regions", {})
-    region = key_regions.get(region_name)
+) -> list[int] | None:
+    """Read runtime-only absolute bounds.
+
+    Static fixture metadata and page descriptors are intentionally ignored here:
+    persisted Feishu semantic data must not carry coordinates.
+    """
+    runtime_regions = observation.get("runtime_regions", {})
+    if not isinstance(runtime_regions, dict):
+        return None
+    region = runtime_regions.get(region_name)
     if not isinstance(region, dict):
         return None
-    return _extract_relative_bounds(region)
+    return _extract_runtime_bounds(region)
 
 
-def get_named_region_bounds(
+def get_named_runtime_region_bounds(
     observation: dict[str, Any],
     collection_name: str,
     item_name: str,
-) -> list[float] | None:
-    metadata = normalize_observation(observation)
-    named_regions = metadata.get("named_regions", {})
+) -> list[int] | None:
+    """Read runtime-only absolute bounds for a named detected item."""
+    named_regions = observation.get("runtime_named_regions", {})
     if not isinstance(named_regions, dict):
         return None
 
@@ -83,4 +89,4 @@ def get_named_region_bounds(
     if not isinstance(region, dict):
         return None
 
-    return _extract_relative_bounds(region)
+    return _extract_runtime_bounds(region)

@@ -232,6 +232,26 @@ def run_agent(
     recorder=None,
 ):
     global paused
+
+    def _capture_current_observation() -> dict:
+        capture_observation = getattr(
+            agent.grounding_agent, "capture_observation", None
+        )
+        if callable(capture_observation):
+            return capture_observation(scaled_width, scaled_height)
+
+        screenshot = pyautogui.screenshot()
+        screenshot = screenshot.resize((scaled_width, scaled_height), Image.LANCZOS)
+
+        buffered = io.BytesIO()
+        screenshot.save(buffered, format="PNG")
+        screenshot_bytes = buffered.getvalue()
+        return {
+            "screenshot": screenshot_bytes,
+            "image_width": scaled_width,
+            "image_height": scaled_height,
+        }
+
     obs = {}
     traj = "Task:\n" + instruction
     subtask_traj = ""
@@ -246,29 +266,7 @@ def run_agent(
             # Check if we're in paused state and wait
             while paused:
                 time.sleep(0.1)
-            capture_observation = getattr(
-                agent.grounding_agent, "capture_observation", None
-            )
-            if callable(capture_observation):
-                obs = capture_observation(scaled_width, scaled_height)
-            else:
-                # Get screen shot using pyautogui
-                screenshot = pyautogui.screenshot()
-                screenshot = screenshot.resize(
-                    (scaled_width, scaled_height), Image.LANCZOS
-                )
-
-                # Save the screenshot to a BytesIO object
-                buffered = io.BytesIO()
-                screenshot.save(buffered, format="PNG")
-
-                # Get the byte value of the screenshot
-                screenshot_bytes = buffered.getvalue()
-                obs = {
-                    "screenshot": screenshot_bytes,
-                    "image_width": scaled_width,
-                    "image_height": scaled_height,
-                }
+            obs = _capture_current_observation()
             if recorder is not None:
                 recorder.record_observation(step_index, obs)
 
@@ -365,7 +363,25 @@ def run_agent(
                     )
     finally:
         if recorder is not None:
-            artifact_paths = recorder.finalize(final_status, final_failure_reason)
+            final_observation = obs if isinstance(obs, dict) and obs else None
+            try:
+                refreshed_observation = _capture_current_observation()
+            except Exception:
+                refreshed_observation = None
+            if isinstance(refreshed_observation, dict) and refreshed_observation:
+                final_observation = refreshed_observation
+
+            enrich_ocr = getattr(agent.grounding_agent, "_extract_obs_ocr_text", None)
+            if callable(enrich_ocr) and isinstance(final_observation, dict):
+                try:
+                    enrich_ocr(final_observation)
+                except Exception:
+                    pass
+            artifact_paths = recorder.finalize(
+                final_status,
+                final_failure_reason,
+                final_observation=final_observation,
+            )
             if artifact_paths:
                 _print("FEISHU_RUNTIME_ARTIFACTS:", repr(artifact_paths))
 

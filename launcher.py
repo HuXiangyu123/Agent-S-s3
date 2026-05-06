@@ -28,10 +28,23 @@ CLI_APP = os.path.join(PROJECT_DIR, "gui_agents", "s3", "cli_app.py")
 CONFIG_FILE = os.path.join(PROJECT_DIR, "config.json")
 ENV_FILE = os.path.join(PROJECT_DIR, "env.txt")
 HISTORY_FILE = os.path.join(PROJECT_DIR, "command_history.json")
+EVAL_SUITE_FILE = os.path.join(
+    PROJECT_DIR, "tests", "eval_suite", "feishu_eval_suite.json"
+)
 
 CANDIDATE_COMMANDS = [
-    "打开消息中的 bot 功能测试群聊，在消息发送框输入 hello，并在聊天框点击右侧表情图标，随机选择一个表情并发送",
-    "打开云文档页面，点击新建按钮，创建空白文档",
+    "打开消息中的 bot 功能测试群聊，发送“Hello World”，并确认消息已发送",
+    "在消息中搜索“项目周报”，打开相关会话并停留在搜索结果上下文",
+    "新建一个云文档，标题为“项目周报”，正文输入“2026年M2项目进展”",
+    "打开云文档首页，找到“项目周报”文档并进入编辑页面",
+    "打开云文档中的“项目周报”，点击分享并检查分享弹窗是否出现",
+    "打开日历，创建明天下午 2 点的日程，标题为“项目同步”，并邀请张三",
+    "打开日历主页，查看今天的日程安排并确认日历页面已打开",
+    "新建一个多维表格，标题为“测试用例记录表”",
+    "打开多维表格主页，进入最近的表格并确认编辑器可用",
+    "发起视频会议并验证进入会议中页面",
+    "加入会议 ID 为 123456789 的视频会议并验证进入会议",
+    "在当前视频会议中打开邀请面板并确认邀请入口可见",
 ]
 
 MAIN_PROVIDERS = {
@@ -238,9 +251,6 @@ def _apply_env_defaults(cfg: dict, had_main_routing: bool):
         and cfg["reflection_mode"] == DEFAULT_CONFIG["reflection_mode"]
     ):
         cfg["reflection_mode"] = env["reflection_mode"]
-
-    if not had_main_routing and gpt_cfg["model_api_key"] and gpt_cfg["model_id"]:
-        cfg["main_provider"] = "openai_gpt"
 
     _sync_flat_fields(cfg)
 
@@ -1059,12 +1069,14 @@ class Launcher:
         )
         self.cb_query.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         self.cb_query.bind("<Return>", lambda _event: self._send_query())
-        ttk.Button(
+        self.btn_pull = ttk.Button(
             inp,
-            text="插入示例",
+            text="拉取示例",
             style="Subtle.TButton",
-            command=self._insert_example_query,
-        ).grid(row=0, column=1, padx=(0, 10))
+            command=self._show_example_dialog,
+        )
+        self.btn_pull.grid(row=0, column=1, padx=(0, 10))
+        self.btn_pull.configure(state="disabled")
         self.btn_send = ttk.Button(
             inp,
             text="发送指令",
@@ -1433,6 +1445,7 @@ class Launcher:
         self.btn_stop.configure(state="normal")
         self.btn_send.configure(state="disabled")
         self.cb_query.configure(state="disabled")
+        self.btn_pull.configure(state="disabled")
         self.log.focus_set()
         self.log.see("end")
         threading.Thread(target=self._read_output, daemon=True).start()
@@ -1456,6 +1469,7 @@ class Launcher:
         self.btn_stop.configure(state="disabled")
         self.btn_send.configure(state="disabled")
         self.cb_query.configure(state="disabled")
+        self.btn_pull.configure(state="disabled")
         self.agent_ready = False
         self._set_status("已停止", "stopped", "子进程已结束或被终止")
         self._log("\n─── Agent 已停止 ───\n", "warn")
@@ -1512,6 +1526,7 @@ class Launcher:
                     self._startup_timeout_id = None
                 self.btn_send.configure(state="normal")
                 self.cb_query.configure(state="normal")
+                self.btn_pull.configure(state="normal")
                 self.cb_query.focus()
                 self._set_status("就绪", "ready", "Agent 已完成初始化，可发送任务")
                 self._log("✅ Agent 就绪，请在下方输入任务\n", "success")
@@ -1626,7 +1641,15 @@ class Launcher:
                 with open(HISTORY_FILE, "r", encoding="utf-8") as handle:
                     data = json.load(handle)
                 if isinstance(data, list):
-                    return data
+                    values = [
+                        item.strip()
+                        for item in data
+                        if isinstance(item, str) and item.strip()
+                    ]
+                    for command in CANDIDATE_COMMANDS:
+                        if command not in values:
+                            values.append(command)
+                    return values
             except Exception as exc:
                 _warn(f"load command history failed: {exc!r}")
         return list(CANDIDATE_COMMANDS)
@@ -1646,10 +1669,148 @@ class Launcher:
         self.cb_query["values"] = values[:50]
         self._save_command_history(list(self.cb_query["values"]))
 
+    def _load_eval_suite_manifest(self) -> list[dict]:
+        """Load test cases from the eval suite manifest."""
+        if not os.path.exists(EVAL_SUITE_FILE):
+            return []
+        try:
+            with open(EVAL_SUITE_FILE, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            if isinstance(data, dict) and isinstance(data.get("test_cases"), list):
+                return [
+                    tc
+                    for tc in data["test_cases"]
+                    if isinstance(tc, dict) and tc.get("instruction")
+                ]
+        except Exception as exc:
+            _warn(f"load eval suite manifest failed: {exc!r}")
+        return []
+
     def _insert_example_query(self):
         values = list(self.cb_query["values"])
         if values:
             self.v_query.set(values[0])
+
+    def _show_example_dialog(self):
+        """Open a pull+search dialog to select from eval suite and history."""
+        dialog = tk.Toplevel(self.root)
+        dialog.title("拉取示例指令")
+        dialog.geometry("720x480")
+        dialog.configure(bg=self.colors["panel"])
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # ── search bar ──
+        search_frame = tk.Frame(dialog, bg=self.colors["panel"])
+        search_frame.pack(fill="x", padx=16, pady=(16, 8))
+        tk.Label(
+            search_frame,
+            text="搜索:",
+            fg=self.colors["text"],
+            bg=self.colors["panel"],
+            font=("Microsoft YaHei UI", 10),
+        ).pack(side="left")
+        search_var = tk.StringVar()
+        search_entry = ttk.Entry(search_frame, textvariable=search_var, font=("Microsoft YaHei UI", 10))
+        search_entry.pack(side="left", fill="x", expand=True, padx=(8, 0))
+        search_entry.focus_set()
+
+        # ── listbox with scrollbar ──
+        list_frame = tk.Frame(dialog, bg=self.colors["panel"])
+        list_frame.pack(fill="both", expand=True, padx=16, pady=(0, 8))
+        listbox = tk.Listbox(
+            list_frame,
+            bg=self.colors["surface"],
+            fg=self.colors["text"],
+            selectbackground=self.colors["accent"],
+            selectforeground=self.colors["button_text"],
+            font=("Microsoft YaHei UI", 9),
+            activestyle="none",
+            borderwidth=0,
+            highlightthickness=0,
+        )
+        scrollbar = ttk.Scrollbar(list_frame, orient="vertical", command=listbox.yview)
+        listbox.configure(yscrollcommand=scrollbar.set)
+        listbox.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # ── load candidates from manifest + history ──
+        manifest_entries: list[dict] = self._load_eval_suite_manifest()
+        manifest_map: dict[str, dict] = {}
+        candidate_texts: list[str] = []
+
+        # Eval suite entries first (grouped by priority)
+        for priority in ("high", "medium", "low"):
+            for tc in manifest_entries:
+                if tc.get("priority") != priority:
+                    continue
+                inst = tc["instruction"].strip()
+                if inst not in manifest_map:
+                    tag = (
+                        f"[{tc['product'].upper()}] "
+                        if tc.get("product")
+                        else ""
+                    )
+                    label = f"{tag}{inst}"
+                    manifest_map[label] = tc
+                    candidate_texts.append(label)
+
+        # History entries (filter out dupes that match manifest instructions)
+        manifest_instructions = {tc["instruction"].strip() for tc in manifest_entries}
+        for hist in self.cb_query["values"]:
+            if hist not in manifest_instructions:
+                candidate_texts.append(hist)
+
+        def _refresh_list(*_args):
+            query = search_var.get().strip().lower()
+            listbox.delete(0, "end")
+            for text in candidate_texts:
+                if not query or query in text.lower():
+                    listbox.insert("end", text)
+
+        search_var.trace_add("write", _refresh_list)
+
+        # ── selection → insert ──
+        def _on_select():
+            sel = listbox.curselection()
+            if not sel:
+                return
+            text = listbox.get(sel[0])
+            tc = manifest_map.get(text)
+            if tc:
+                self.v_query.set(tc["instruction"])
+            else:
+                self.v_query.set(text)
+            dialog.destroy()
+
+        def _on_double_click(_event):
+            _on_select()
+
+        listbox.bind("<Double-Button-1>", _on_double_click)
+        listbox.bind("<Return>", lambda _e: _on_select())
+        search_entry.bind("<Return>", lambda _e: _on_select())
+        search_entry.bind("<Down>", lambda _e: listbox.focus_set() or listbox.select_set(0))
+
+        # ── action buttons ──
+        btn_frame = tk.Frame(dialog, bg=self.colors["panel"])
+        btn_frame.pack(fill="x", padx=16, pady=(0, 16))
+        ttk.Button(
+            btn_frame,
+            text="插入选中",
+            style="Primary.TButton",
+            command=_on_select,
+        ).pack(side="right", padx=(8, 0))
+        ttk.Button(
+            btn_frame,
+            text="取消",
+            style="Subtle.TButton",
+            command=dialog.destroy,
+        ).pack(side="right")
+
+        _refresh_list()
+
+        # ── keyboard: escape to close ──
+        dialog.bind("<Escape>", lambda _e: dialog.destroy())
 
     def _send_query(self):
         query = self.v_query.get().strip()
@@ -1661,6 +1822,7 @@ class Launcher:
         self.v_query.set("")
         self.btn_send.configure(state="disabled")
         self.cb_query.configure(state="disabled")
+        self.btn_pull.configure(state="disabled")
         self.agent_ready = False
         self._set_status("处理中", "running", "任务已发送，等待下一轮 Query")
 

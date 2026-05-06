@@ -15,20 +15,20 @@ DOCS_BROWSER_EDITOR_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "title_input_area": {
-            "relative_bounds": [0.38, 0.18, 0.62, 0.32],
             "role": "document_title_input",
+            "semantic_position": "document_title",
         },
         "body_editor_area": {
-            "relative_bounds": [0.36, 0.38, 0.66, 0.54],
             "role": "document_body_editor",
+            "semantic_position": "document_body",
         },
         "share_button_area": {
-            "relative_bounds": [0.835, 0.02, 0.895, 0.085],
             "role": "share_button",
+            "semantic_position": "top_toolbar",
         },
         "toolbar_area": {
-            "relative_bounds": [0.72, 0.0, 1.0, 0.10],
             "role": "top_toolbar",
+            "semantic_position": "top_toolbar",
         },
     },
     "text_anchors": [
@@ -37,6 +37,5 @@ DOCS_BROWSER_EDITOR_DESCRIPTOR: PageDescriptor = {
         "输入 / 快速插入内容",
         "分享",
     ],
-    "supported_workflows": ["create_doc_and_edit"],
     "ui_version_tag": "feishu-browser-cloud-docs",
 }

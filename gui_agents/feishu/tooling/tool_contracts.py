@@ -19,6 +19,8 @@ class FeishuToolSpec:
 class FeishuToolRecommendation:
     page_type: str
     product: str
+    intent: str
+    params: dict[str, str]
     state_summary: str
     next_step_focus: str
     enabled_tools: tuple[str, ...]

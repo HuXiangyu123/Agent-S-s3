@@ -17,7 +17,6 @@ BASE_SHARE_PANEL_DESCRIPTOR: PageDescriptor = {
         }
     },
     "text_anchors": ["分享", "链接分享", "邀请", "权限"],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-browser-base-share-panel",
 }
 
@@ -33,7 +32,6 @@ BASE_DASHBOARD_DESCRIPTOR: PageDescriptor = {
         }
     },
     "text_anchors": ["仪表盘", "添加组件"],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-browser-base-dashboard",
 }
 
@@ -49,7 +47,6 @@ BASE_AUTOMATION_DESCRIPTOR: PageDescriptor = {
         }
     },
     "text_anchors": ["自动化", "创建自动化流程", "工作流"],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-browser-base-automation",
 }
 
@@ -65,6 +62,5 @@ BASE_APP_MARKET_DESCRIPTOR: PageDescriptor = {
         }
     },
     "text_anchors": ["应用", "热门应用", "应用市场", "添加组件"],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-base-app-market",
 }

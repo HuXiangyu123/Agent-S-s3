@@ -39,6 +39,5 @@ BASE_TEMPLATE_GALLERY_DESCRIPTOR: PageDescriptor = {
         "今天你想搭建什么呢",
         "新建多维表格",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-base-template-gallery",
 }

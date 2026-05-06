@@ -38,6 +38,5 @@ BASE_NEW_MENU_DESCRIPTOR: PageDescriptor = {
         "新建仪表盘",
         "导入 Excel/在线表格",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-base-new-menu",
 }

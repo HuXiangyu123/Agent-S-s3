@@ -36,7 +36,14 @@ class ReportBuilder:
         testcase: dict[str, Any] | None,
         runtime_context: dict[str, Any],
     ) -> list[dict[str, Any]]:
-        assertions = (testcase or {}).get("assertions", [])
+        if testcase is not None:
+            assertions = testcase.get("assertions", [])
+        else:
+            assertions = [
+                item.get("assertion")
+                for item in runtime_context.get("assertion_plan", [])
+                if item.get("assertion")
+            ]
         step_results = runtime_context.get("step_results", [])
         seen: dict[str, dict[str, Any]] = {}
         for step_result in step_results:
@@ -77,9 +84,11 @@ class ReportBuilder:
         passed_steps = len(step_results) - len(failed_steps)
 
         return {
-            "task_id": (testcase or {}).get("id"),
-            "product": (testcase or {}).get("product"),
-            "workflow": runtime_context.get("workflow"),
+            "task_id": (testcase or {}).get("id") or runtime_context.get("task_id"),
+            "product": (testcase or {}).get("product")
+            or runtime_context.get("product"),
+            "intent": runtime_context.get("intent"),
+            "params": runtime_context.get("params", {}),
             "status": runtime_context.get("status"),
             "steps": len((testcase or {}).get("steps", [])) or len(step_results),
             "passed_steps": passed_steps,
@@ -106,7 +115,7 @@ class ReportBuilder:
             f"- Run ID: `{summary.get('run_id')}`",
             f"- Task ID: `{summary.get('task_id')}`",
             f"- Product: `{summary.get('product')}`",
-            f"- Workflow: `{summary.get('workflow')}`",
+            f"- Intent: `{summary.get('intent')}`",
             f"- Status: `{summary.get('status')}`",
             f"- Duration (s): `{summary.get('duration_sec')}`",
             f"- Failure Type: `{summary.get('failure_type')}`",
@@ -141,6 +150,14 @@ class ReportBuilder:
         if testcase is not None:
             lines.extend(
                 ["", "## Original Task", f"- Title: `{testcase.get('title')}`"]
+            )
+        elif runtime_context.get("task_title"):
+            lines.extend(
+                [
+                    "",
+                    "## Original Task",
+                    f"- Title: `{runtime_context.get('task_title')}`",
+                ]
             )
 
         return "\n".join(lines) + "\n"

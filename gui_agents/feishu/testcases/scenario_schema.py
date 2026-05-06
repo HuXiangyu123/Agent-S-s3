@@ -13,6 +13,7 @@ DEFAULT_PRECONDITIONS = {
     "base": ["飞书桌面端已登录"],
     "docs": ["飞书桌面端已登录"],
     "im": ["飞书桌面端已登录"],
+    "vc": ["飞书桌面端已登录"],
 }
 
 VALID_ACTION_IDS = {
@@ -107,13 +108,40 @@ def build_testcase(
     return testcase
 
 
+def build_guidance_testcase(
+    *,
+    product: str,
+    title: str,
+    intent: str,
+    params: dict[str, Any] | None = None,
+    preconditions: list[str] | None = None,
+    assertions: list[str] | None = None,
+) -> TestCase:
+    testcase = TestCase(
+        id=make_testcase_id(product, title),
+        product=product,
+        title=title,
+        preconditions=preconditions or DEFAULT_PRECONDITIONS.get(product, []),
+        steps=[],
+        assertions=assertions or [],
+        artifacts={
+            "semantic_guidance_only": True,
+            "intent": intent,
+            "params": params or {},
+        },
+    )
+    validate_testcase(testcase)
+    return testcase
+
+
 def validate_testcase(testcase: TestCase) -> None:
     required_fields = ["id", "product", "title", "preconditions", "steps", "assertions"]
     for field in required_fields:
         if field not in testcase:
             raise ValueError(f"testcase missing field: {field}")
 
-    if not testcase["steps"]:
+    guidance_only = bool(testcase.get("artifacts", {}).get("semantic_guidance_only"))
+    if not testcase["steps"] and not guidance_only:
         raise ValueError("testcase must contain at least one step")
 
     for index, step in enumerate(testcase["steps"], start=1):

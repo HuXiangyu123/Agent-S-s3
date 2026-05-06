@@ -6,38 +6,29 @@ from typing import Any
 
 from gui_agents.feishu.contracts import FailureType, FeishuState, LocatorResult
 from gui_agents.feishu.observation import (
-    get_image_size,
-    get_named_region_bounds,
-    get_region_bounds,
+    get_named_runtime_region_bounds,
+    get_runtime_region_bounds,
     normalize_observation,
 )
 from gui_agents.feishu.pages.registry import get_page_descriptor
 
 
-def _scale_bounds(bounds: list[float], width: int, height: int) -> list[int]:
-    x1, y1, x2, y2 = bounds
-    return [
-        round(x1 * width),
-        round(y1 * height),
-        round(x2 * width),
-        round(y2 * height),
-    ]
-
-
 def _success_result(
     target: str,
     page_id: str | None,
-    bbox: list[int],
-    confidence: float,
+    bounds: list[int],
 ) -> LocatorResult:
+    x1, y1, x2, y2 = bounds
     return LocatorResult(
         matched=True,
-        strategy="page_descriptor",
-        x=round((bbox[0] + bbox[2]) / 2),
-        y=round((bbox[1] + bbox[3]) / 2),
-        confidence=confidence,
-        bbox=bbox,
+        strategy="runtime_region",
         page_id=page_id,
+        target=target,
+        action_target={
+            "kind": "point",
+            "point": [round((x1 + x2) / 2), round((y1 + y2) / 2)],
+            "source": "runtime_observation",
+        },
     )
 
 
@@ -48,12 +39,10 @@ def _failure_result(
 ) -> LocatorResult:
     return LocatorResult(
         matched=False,
-        strategy="page_descriptor",
-        x=None,
-        y=None,
-        confidence=0.0,
-        bbox=None,
+        strategy="runtime_region",
         page_id=page_id,
+        target=None,
+        action_target=None,
         failure_type=failure_type,
         failure_reason=reason,
     )
@@ -122,14 +111,14 @@ def locate_target(
     if not page_descriptor:
         return _failure_result("recognition", "page descriptor unavailable")
 
-    def region_bounds(name: str) -> list[float]:
-        metadata_bounds = get_region_bounds(observation, name)
-        if metadata_bounds:
-            return metadata_bounds
+    def region_bounds(name: str) -> list[int]:
+        runtime_bounds = get_runtime_region_bounds(observation, name)
+        if runtime_bounds:
+            return runtime_bounds
         region = page_descriptor["key_regions"].get(name)
         if not isinstance(region, dict):
             raise KeyError(name)
-        return region["relative_bounds"]
+        raise KeyError(name)
 
     if state.get("product") == "base" or target.startswith("base_"):
         return _failure_result(
@@ -145,19 +134,19 @@ def locate_target(
                 "message input unsupported on current page",
                 page_descriptor["page_id"],
             )
-        region = region_bounds("message_input_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            bounds = region_bounds("message_input_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.92,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location", "image dimensions unavailable", page_descriptor["page_id"]
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for message_input_area",
+                page_descriptor["page_id"],
+            )
 
     if target == "send_button":
         if page_descriptor["page_id"] != "im_chat_main":
@@ -170,19 +159,19 @@ def locate_target(
             return _failure_result(
                 "location", "send button not visible", page_descriptor["page_id"]
             )
-        region = region_bounds("send_button_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            bounds = region_bounds("send_button_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.90,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location", "image dimensions unavailable", page_descriptor["page_id"]
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for send_button_area",
+                page_descriptor["page_id"],
+            )
 
     if target == "conversation_list_item":
         if page_descriptor["page_id"] != "im_chat_main":
@@ -216,26 +205,27 @@ def locate_target(
 
         named_region = None
         if target_text:
-            named_region = get_named_region_bounds(
+            named_region = get_named_runtime_region_bounds(
                 observation,
                 "conversation_list_items",
                 target_text,
             )
-        region = named_region or region_bounds("active_chat_list_item_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            if named_region:
+                bounds = named_region
+            else:
+                bounds = region_bounds("active_chat_list_item_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.84,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for conversation_list_item",
+                page_descriptor["page_id"],
+            )
 
     if target == "conversation_search_close_button":
         if page_descriptor["page_id"] != "im_chat_search_panel":
@@ -244,21 +234,19 @@ def locate_target(
                 "conversation search close button unsupported on current page",
                 page_descriptor["page_id"],
             )
-        region = region_bounds("conversation_search_close_button_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            bounds = region_bounds("conversation_search_close_button_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.85,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for conversation_search_close_button_area",
+                page_descriptor["page_id"],
+            )
 
     if target == "conversation_search_entry":
         if page_descriptor["page_id"] != "im_chat_search_panel":
@@ -273,21 +261,19 @@ def locate_target(
                 "conversation search entry not visible in current state",
                 page_descriptor["page_id"],
             )
-        region = region_bounds("conversation_search_entry_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            bounds = region_bounds("conversation_search_entry_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.87,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for conversation_search_entry_area",
+                page_descriptor["page_id"],
+            )
 
     if target == "conversation_search_result_item":
         if page_descriptor["page_id"] != "im_chat_search_panel":
@@ -316,26 +302,27 @@ def locate_target(
             )
         named_region = None
         if target_text:
-            named_region = get_named_region_bounds(
+            named_region = get_named_runtime_region_bounds(
                 observation,
                 "conversation_search_result_items",
                 target_text,
             )
-        region = named_region or region_bounds("conversation_search_result_item_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            if named_region:
+                bounds = named_region
+            else:
+                bounds = region_bounds("conversation_search_result_item_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.84,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for conversation_search_result_item",
+                page_descriptor["page_id"],
+            )
 
     if target == "global_search_entry":
         if page_descriptor["page_id"] != "feishu_shell_search":
@@ -350,21 +337,19 @@ def locate_target(
                 "global search entry not visible in current state",
                 page_descriptor["page_id"],
             )
-        region = region_bounds("global_search_entry_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            bounds = region_bounds("global_search_entry_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.88,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for global_search_entry_area",
+                page_descriptor["page_id"],
+            )
 
     if target == "search_result_item":
         if page_descriptor["page_id"] != "feishu_shell_search":
@@ -396,26 +381,27 @@ def locate_target(
 
         named_region = None
         if target_text:
-            named_region = get_named_region_bounds(
+            named_region = get_named_runtime_region_bounds(
                 observation,
                 "search_result_items",
                 target_text,
             )
-        region = named_region or region_bounds("search_result_item_area")
-        width, height = get_image_size(observation)
-        if width and height:
-            bbox = _scale_bounds(region, width, height)
+        try:
+            if named_region:
+                bounds = named_region
+            else:
+                bounds = region_bounds("search_result_item_area")
             return _success_result(
                 target=target,
                 page_id=page_descriptor["page_id"],
-                bbox=bbox,
-                confidence=0.86,
+                bounds=bounds,
             )
-        return _failure_result(
-            "location",
-            "image dimensions unavailable",
-            page_descriptor["page_id"],
-        )
+        except KeyError:
+            return _failure_result(
+                "location",
+                "runtime region unavailable for search_result_item",
+                page_descriptor["page_id"],
+            )
 
     return _failure_result(
         "location",

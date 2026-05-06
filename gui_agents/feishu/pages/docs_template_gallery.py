@@ -15,20 +15,20 @@ DOCS_TEMPLATE_GALLERY_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "template_search_area": {
-            "relative_bounds": [0.36, 0.015, 0.642, 0.05],
             "role": "template_search_entry",
+            "semantic_position": "top_gallery_search",
         },
         "blank_doc_card_area": {
-            "relative_bounds": [0.18, 0.13, 0.365, 0.39],
             "role": "blank_document_card",
+            "semantic_position": "visible_template_card",
         },
         "template_grid_area": {
-            "relative_bounds": [0.18, 0.13, 0.98, 0.98],
             "role": "template_grid",
+            "semantic_position": "gallery_grid",
         },
         "close_button_area": {
-            "relative_bounds": [0.965, 0.015, 0.99, 0.045],
             "role": "close_button",
+            "semantic_position": "top_right_close",
         },
     },
     "text_anchors": [
@@ -37,6 +37,5 @@ DOCS_TEMPLATE_GALLERY_DESCRIPTOR: PageDescriptor = {
         "新建空白文档",
         "为你推荐",
     ],
-    "supported_workflows": ["create_doc_and_edit"],
     "ui_version_tag": "feishu-desktop-cloud-docs",
 }

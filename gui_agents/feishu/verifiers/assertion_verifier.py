@@ -1,4 +1,4 @@
-"""Minimal assertion verifier for Track C send_message."""
+"""Semantic assertion verifier for Feishu agentic runtime."""
 
 from __future__ import annotations
 
@@ -228,6 +228,98 @@ class AssertionVerifier:
                 assertion,
                 f"doc body mismatch: expected={expected_text!r}, actual={actual_body!r}",
             )
+
+        if assertion == "vc_home_ready":
+            if state.get("product") == "vc" and (
+                state.get("page_type") == "vc_home"
+                or product_state.get("vc_home_visible")
+            ):
+                return _success(assertion, ["product=vc", "page_type=vc_home"])
+            return _failure(
+                assertion,
+                f"VC home not ready: product={state.get('product')!r}, page_type={state.get('page_type')!r}",
+            )
+
+        if assertion == "vc_start_preview_ready":
+            if state.get("page_type") == "vc_start_preview" or product_state.get(
+                "start_preview_visible"
+            ):
+                evidence = ["page_type=vc_start_preview"]
+                if product_state.get("start_button_visible"):
+                    evidence.append("start_button_visible=True")
+                return _success(assertion, evidence)
+            return _failure(assertion, "VC start preview is not visible")
+
+        if assertion == "vc_meeting_active":
+            if state.get("page_type") == "vc_meeting_active" or product_state.get(
+                "meeting_active"
+            ):
+                evidence = ["page_type=vc_meeting_active"]
+                runtime_hint = product_state.get("runtime_semantic_hint")
+                if runtime_hint:
+                    evidence.append(f"runtime_semantic_hint={runtime_hint}")
+                if product_state.get("invite_button_visible"):
+                    evidence.append("invite_button_visible=True")
+                return _success(assertion, evidence)
+            return _failure(assertion, "VC meeting is not active")
+
+        if assertion == "vc_join_preview_ready":
+            if state.get("page_type") == "vc_join_preview" or product_state.get(
+                "join_preview_visible"
+            ):
+                evidence = ["page_type=vc_join_preview"]
+                if product_state.get("meeting_id_input_visible"):
+                    evidence.append("meeting_id_input_visible=True")
+                return _success(assertion, evidence)
+            return _failure(assertion, "VC join preview is not visible")
+
+        if assertion == "vc_meeting_id_entered":
+            expected_meeting_id = (
+                expected.get("meeting_id")
+                or expected.get("text")
+                or (expected.get("params") or {}).get("meeting_id")
+                or (expected.get("payload") or {}).get("meeting_id")
+            )
+            actual_meeting_id = product_state.get("meeting_id")
+            if expected_meeting_id and actual_meeting_id == expected_meeting_id:
+                return _success(assertion, [f"meeting_id={actual_meeting_id}"])
+            if expected_meeting_id and expected_meeting_id in ocr_text:
+                return _success(
+                    assertion,
+                    [f"ocr_contains={expected_meeting_id}", "source=ocr_fallback"],
+                )
+            if product_state.get("meeting_id_entered"):
+                return _success(assertion, ["meeting_id_entered=True"])
+            return _failure(
+                assertion,
+                f"meeting ID not confirmed: expected={expected_meeting_id!r}, actual={actual_meeting_id!r}",
+            )
+
+        if assertion == "vc_joined":
+            if state.get("page_type") == "vc_meeting_active" or product_state.get(
+                "meeting_active"
+            ):
+                evidence = ["page_type=vc_meeting_active", "joined=True"]
+                runtime_hint = product_state.get("runtime_semantic_hint")
+                if runtime_hint:
+                    evidence.append(f"runtime_semantic_hint={runtime_hint}")
+                if product_state.get("invite_button_visible"):
+                    evidence.append("invite_button_visible=True")
+                return _success(assertion, evidence)
+            return _failure(assertion, "VC join did not reach an active meeting")
+
+        if assertion == "vc_invite_dialog_opened":
+            if state.get("page_type") == "vc_invite_dialog" or product_state.get(
+                "invite_dialog_visible"
+            ):
+                evidence = ["page_type=vc_invite_dialog"]
+                runtime_hint = product_state.get("runtime_semantic_hint")
+                if runtime_hint:
+                    evidence.append(f"runtime_semantic_hint={runtime_hint}")
+                if product_state.get("share_button_visible"):
+                    evidence.append("share_button_visible=True")
+                return _success(assertion, evidence)
+            return _failure(assertion, "VC invite dialog is not visible")
 
         return _failure(assertion, f"unsupported assertion: {assertion}")
 

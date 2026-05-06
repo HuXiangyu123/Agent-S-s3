@@ -16,28 +16,28 @@ IM_CHAT_MAIN_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "conversation_list_area": {
-            "relative_bounds": [0.03, 0.06, 0.21, 0.98],
             "role": "conversation_list",
+            "semantic_position": "left_sidebar",
         },
         "active_chat_list_item_area": {
-            "relative_bounds": [0.034, 0.112, 0.205, 0.175],
             "role": "conversation_list_item",
+            "semantic_position": "left_sidebar_selected_item",
         },
         "header": {
-            "relative_bounds": [0.15, 0.0, 1.0, 0.14],
             "role": "chat_header",
+            "semantic_position": "top_of_chat_pane",
         },
         "chat_body": {
-            "relative_bounds": [0.15, 0.14, 1.0, 0.9],
             "role": "message_history",
+            "semantic_position": "main_chat_pane",
         },
         "message_input_area": {
-            "relative_bounds": [0.16, 0.9, 0.995, 0.985],
             "role": "composer_input",
+            "semantic_position": "bottom_composer",
         },
         "send_button_area": {
-            "relative_bounds": [0.95, 0.9, 0.995, 0.985],
             "role": "composer_send",
+            "semantic_position": "right_side_of_composer",
         },
     },
     "text_anchors": [
@@ -45,6 +45,5 @@ IM_CHAT_MAIN_DESCRIPTOR: PageDescriptor = {
         "文件",
         "发送给",
     ],
-    "supported_workflows": ["open_chat", "send_message"],
     "ui_version_tag": "feishu-desktop-dark",
 }

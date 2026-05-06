@@ -8,6 +8,7 @@ from typing import Iterable
 from gui_agents.feishu.contracts import FeishuState
 from gui_agents.feishu.detectors.calendar_state_detector import detect_calendar_state
 from gui_agents.feishu.detectors.base_state_detector import detect_base_state
+from gui_agents.feishu.detectors.docs_state_detector import detect_docs_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
 from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
 
@@ -59,6 +60,16 @@ BROWSER_SURFACE_KEYWORDS = (
     "云文档",
     "分享",
     "浏览器",
+)
+
+DOCS_KEYWORDS = (
+    "云文档",
+    "飞书云文档",
+    "新建文档",
+    "空白文档",
+    "文档页面",
+    "文档中",
+    "文档标题",
 )
 
 CALENDAR_KEYWORDS = (
@@ -118,6 +129,12 @@ def _detect_intents(instruction: str) -> set[str]:
         intents.add("open_chat")
     if _contains_any(instruction, BROWSER_SURFACE_KEYWORDS):
         intents.add("browser_surface")
+    if _contains_any(instruction, DOCS_KEYWORDS):
+        intents.add("docs")
+    if _contains_any(instruction, ("创建", "新建")) and _contains_any(
+        instruction, DOCS_KEYWORDS
+    ):
+        intents.add("create_doc")
     if _contains_any(instruction, CALENDAR_KEYWORDS):
         intents.add("calendar")
     if _contains_any(instruction, VC_KEYWORDS):
@@ -153,6 +170,8 @@ def _build_state_summary(state: FeishuState) -> str:
         f"page_type={state.get('page_type', 'unknown')}",
         f"product={state.get('product', 'unknown')}",
     ]
+    if state.get("modal_type"):
+        parts.append(f"modal={state['modal_type']}")
     if state.get("chat_name"):
         parts.append(f"chat={state['chat_name']}")
     if state.get("message_input_visible"):
@@ -181,6 +200,18 @@ def _build_state_summary(state: FeishuState) -> str:
         parts.append("title_input_visible")
     if product_state.get("save_button_visible"):
         parts.append("save_button_visible")
+    if product_state.get("meeting_active"):
+        parts.append("meeting_active")
+    if product_state.get("start_button_visible"):
+        parts.append("start_button_visible")
+    if product_state.get("join_button_visible"):
+        parts.append("join_button_visible")
+    if product_state.get("join_button_enabled"):
+        parts.append("join_button_enabled")
+    if product_state.get("invite_popover_visible"):
+        parts.append("invite_popover_visible")
+    if product_state.get("invite_dialog_visible"):
+        parts.append("invite_dialog_visible")
 
     return ", ".join(parts)
 
@@ -193,6 +224,8 @@ def route_feishu_tools(
     if state is None:
         if _contains_any(instruction, VC_KEYWORDS):
             state = detect_vc_state(observation)
+        elif _contains_any(instruction, DOCS_KEYWORDS):
+            state = detect_docs_state(observation)
         elif _contains_any(instruction, CALENDAR_KEYWORDS):
             state = detect_calendar_state(observation)
         elif _contains_any(instruction, ("多维表格", "Base", "base")):
@@ -201,6 +234,7 @@ def route_feishu_tools(
             state = detect_feishu_state(observation)
     page_type = state.get("page_type", "unknown")
     intents = _detect_intents(instruction)
+    primary_intent = sorted(intents)[0] if intents else "general_feishu_task"
     target_chat_name = _extract_target_chat_name(instruction)
     detected_chat_name = state.get("chat_name")
     product_state = state.get("product_state", {})
@@ -229,8 +263,60 @@ def route_feishu_tools(
         if target_chat_name:
             hints.append(f"Instruction target chat hint: {target_chat_name}.")
 
+    elif state.get("product") == "docs":
+        enabled_tools.extend(["click", "type", "feishu_doc_click", "feishu_doc_type"])
+        preferred_tools.extend(["feishu_doc_click", "feishu_doc_type", "click", "type"])
+        next_step_focus = "docs_visible_control"
+        rationale.append(
+            "Docs should be handled as agent-guided visible-state navigation, not a fixed create-document workflow."
+        )
+        hints.append(
+            "Use Docs page-state cues from the current screenshot; do not assume the next step from a prebuilt ordered TestCase."
+        )
+        if page_type == "docs_home":
+            next_step_focus = "docs_home_new_entry"
+            hints.append(
+                "On Docs home, use the visible New entry point or document list controls, then re-check the screenshot before choosing the document type."
+            )
+        elif page_type == "docs_new_dropdown":
+            next_step_focus = "docs_new_document_option"
+            hints.append(
+                "The Docs new menu is visible. Choose the visible Document option if the task asks for a normal cloud document."
+            )
+        elif page_type == "docs_template_gallery":
+            next_step_focus = "docs_blank_document_template"
+            hints.append(
+                "The template gallery is visible. Prefer the visible blank document template when the user asks to create a blank document."
+            )
+        elif page_type == "docs_browser_editor":
+            next_step_focus = "docs_editor_title_or_body"
+            hints.append(
+                "The Docs editor is visible. Use the visible title/body fields; prefer `agent.feishu_doc_type(...)` for focused Docs text entry when appropriate."
+            )
+            if "create_doc" in intents:
+                hints.append(
+                    "If the editor is already open, skip earlier create-menu steps and continue with the title or body requested by the user."
+                )
+        else:
+            hints.append(
+                "First classify whether Docs home, new menu, template gallery, or editor is visible, then act only on current visible controls."
+            )
+
     elif state.get("product") == "vc":
-        enabled_tools.extend(["click", "type"])
+        enabled_tools.extend(
+            [
+                "click",
+                "type",
+                "feishu_vc_click_start_card",
+                "feishu_vc_click_join_card",
+                "feishu_vc_click_start_button",
+                "feishu_vc_type_meeting_id",
+                "feishu_vc_click_join_button",
+                "feishu_vc_click_invite_button",
+                "feishu_vc_click_invite_entry",
+                "feishu_vc_click_share_button",
+            ]
+        )
         preferred_tools.extend(["feishu_click", "feishu_type", "click", "type"])
         next_step_focus = "video_meeting_visible_control"
         rationale.append(
@@ -239,45 +325,70 @@ def route_feishu_tools(
         if page_type == "vc_home":
             if "join_video_meeting" in intents:
                 next_step_focus = "join_meeting_card"
+                preferred_tools.insert(1, "feishu_vc_click_join_card")
+                preferred_tools.insert(2, "feishu_vc_type_meeting_id")
+                preferred_tools.insert(3, "feishu_vc_click_join_button")
                 hints.append(
-                    "On the VC home page, choose the visible Join Meeting card, then type the meeting ID into the visible input."
+                    "On the VC home page, prefer `agent.feishu_vc_click_join_card()` for the entry card, then continue from the visible join preview."
                 )
             elif "start_video_meeting" in intents:
                 next_step_focus = "start_meeting_card"
+                preferred_tools.insert(1, "feishu_vc_click_start_card")
+                preferred_tools.insert(2, "feishu_vc_click_start_button")
                 hints.append(
-                    "On the VC home page, choose the visible Start Meeting card and wait for the preview window before starting."
+                    "On the VC home page, prefer `agent.feishu_vc_click_start_card()` for the entry card and re-check the preview window before starting the meeting."
                 )
             else:
+                preferred_tools.insert(1, "feishu_vc_click_start_card")
+                preferred_tools.insert(2, "feishu_vc_click_join_card")
                 hints.append(
                     "Use the visible VC entry card that matches the user's intent; do not assume a prebuilt step sequence."
                 )
         elif page_type == "vc_start_preview":
             next_step_focus = "start_meeting_button"
+            preferred_tools.insert(1, "feishu_vc_click_start_button")
             hints.append(
-                "The start preview is visible. Confirm microphone/camera state from the screen, then use the visible Start Meeting button if appropriate."
+                "The start preview is visible. Prefer `agent.feishu_vc_click_start_button()` for the primary action after checking the current visible preview state."
             )
         elif page_type == "vc_join_preview":
             next_step_focus = "meeting_id_input_or_join_button"
+            preferred_tools.insert(1, "feishu_vc_type_meeting_id")
+            preferred_tools.insert(2, "feishu_vc_click_join_button")
+            discouraged_tools.append("type")
             hints.append(
-                "The join preview is visible. Type the meeting ID if the input is empty; otherwise use the visible Join Meeting button."
+                "The join preview is visible. Prefer `agent.feishu_vc_type_meeting_id(...)` for the meeting-ID input and `agent.feishu_vc_click_join_button()` for the primary button."
+            )
+        elif page_type == "vc_meeting_active" and (
+            state.get("modal_type") == "vc_invite_popover"
+            or product_state.get("invite_popover_visible")
+        ):
+            next_step_focus = "invite_popover_entry"
+            preferred_tools.insert(1, "feishu_vc_click_invite_entry")
+            hints.append(
+                "The invite popover is already open. Prefer `agent.feishu_vc_click_invite_entry()` to continue into the full invite dialog."
             )
         elif page_type == "vc_meeting_active":
             if "invite_video_meeting" in intents:
                 next_step_focus = "meeting_invite_control"
+                preferred_tools.insert(1, "feishu_vc_click_invite_button")
                 hints.append(
-                    "The meeting is active. Use the visible invite/participants control and follow the current dialog state."
+                    "The meeting is active. Prefer `agent.feishu_vc_click_invite_button()` for the invite toolbar control, then re-check whether a popover or full dialog opened."
                 )
             else:
                 next_step_focus = "active_meeting_toolbar"
+                preferred_tools.insert(1, "click")
                 hints.append(
                     "The meeting is already active. Continue from visible toolbar controls instead of restarting the meeting."
                 )
         elif page_type == "vc_invite_dialog":
             next_step_focus = "invite_dialog_search_or_share"
+            preferred_tools.insert(1, "feishu_type")
+            preferred_tools.insert(2, "feishu_vc_click_share_button")
             hints.append(
-                "The invite dialog is open. Use visible search/share controls and verify the selected recipient before sharing."
+                "The invite dialog is open. Use the visible search field or result list first, and prefer `agent.feishu_vc_click_share_button()` only after the recipient is already selected."
             )
         else:
+            preferred_tools.insert(1, "click")
             hints.append(
                 "For VC tasks, first classify the visible screen, then act through visible controls with Feishu helpers or grounded clicks."
             )
@@ -452,6 +563,8 @@ def route_feishu_tools(
     return FeishuToolRecommendation(
         page_type=page_type,
         product=state.get("product", "unknown"),
+        intent=primary_intent,
+        params={"instruction": instruction},
         state_summary=_build_state_summary(state),
         next_step_focus=next_step_focus,
         enabled_tools=enabled,
@@ -475,6 +588,7 @@ def build_feishu_tool_guidance(
         "Re-check the current screenshot before choosing the next tool.",
         "Prefer the listed tools when they match what you see, but do not override the screenshot.",
         f"Detected state: {recommendation.state_summary}",
+        f"Intent: {recommendation.intent}",
         f"Next-step focus: {recommendation.next_step_focus}",
         "Preferred tools: " + ", ".join(recommendation.preferred_tools),
         "Allowed tools: " + ", ".join(recommendation.enabled_tools),

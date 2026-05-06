@@ -37,6 +37,5 @@ VC_JOIN_PREVIEW_DESCRIPTOR: PageDescriptor = {
         "摄像头",
         "加入会议",
     ],
-    "supported_workflows": [],
     "ui_version_tag": "feishu-desktop-vc-join-preview",
 }

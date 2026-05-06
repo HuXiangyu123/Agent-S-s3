@@ -16,24 +16,24 @@ DOCS_HOME_DESCRIPTOR: PageDescriptor = {
     },
     "key_regions": {
         "search_entry_area": {
-            "relative_bounds": [0.035, 0.08, 0.19, 0.14],
             "role": "search_entry",
+            "semantic_position": "left_sidebar_top",
         },
         "new_card_area": {
-            "relative_bounds": [0.215, 0.145, 0.36, 0.245],
             "role": "new_document_entry",
+            "semantic_position": "top_action_card",
         },
         "upload_card_area": {
-            "relative_bounds": [0.375, 0.145, 0.515, 0.245],
             "role": "upload_entry",
+            "semantic_position": "top_action_card",
         },
         "template_card_area": {
-            "relative_bounds": [0.535, 0.145, 0.67, 0.245],
             "role": "template_entry",
+            "semantic_position": "top_action_card",
         },
         "document_list_area": {
-            "relative_bounds": [0.205, 0.32, 0.96, 0.98],
             "role": "document_list",
+            "semantic_position": "main_document_table",
         },
     },
     "text_anchors": [
@@ -43,6 +43,5 @@ DOCS_HOME_DESCRIPTOR: PageDescriptor = {
         "上传",
         "模板库",
     ],
-    "supported_workflows": ["create_doc_and_edit"],
     "ui_version_tag": "feishu-desktop-cloud-docs",
 }
