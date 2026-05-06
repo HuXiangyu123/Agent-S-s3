@@ -1,0 +1,29 @@
+{
+  "fixture_id": "docs_browser_share_permission",
+  "image_file": "网页端文档分享修改权限.png",
+  "product": "docs",
+  "page_id": "docs_share_dialog",
+  "page_type": "docs_share_dialog",
+  "display_name": "Feishu Docs Share Permission Dialog",
+  "scenario": "Share permission options in the browser editor.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_share_dialog",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "share_permission",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "share_dialog_visible": true,
+    "permission_menu_visible": true,
+    "workflow_support": "deferred"
+  },
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "权限", "role": "permission_menu", "required": false}
+  ],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

@@ -1,0 +1,17 @@
+{
+  "suite_id": "feishu_vc_semantic_fixtures",
+  "product": "vc",
+  "files": [
+    "会议主页面.png",
+    "发起会议.png",
+    "正在会议的页面.png",
+    "选择加入会议.png",
+    "会议邀请点击后.png",
+    "会议进行邀请.png"
+  ],
+  "purpose": "Semantic VC fixtures for page detection and feishu_agent guidance.",
+  "notes": [
+    "Metadata records visible semantic controls only.",
+    "No numeric visual annotations are stored."
+  ]
+}

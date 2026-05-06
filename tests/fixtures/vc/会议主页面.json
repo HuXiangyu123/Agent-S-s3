@@ -1,0 +1,39 @@
+{
+  "fixture_id": "vc_home_main",
+  "image_file": "会议主页面.png",
+  "product": "vc",
+  "page_id": "vc_home",
+  "page_type": "vc_home",
+  "display_name": "Feishu VC Home",
+  "scenario": "Video meeting home page with start and join entries visible.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_home",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "vc_home_visible": true,
+    "start_card_visible": true,
+    "join_card_visible": true,
+    "history_visible": true,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_start_card",
+    "vc_join_card",
+    "vc_history"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "视频会议", "role": "product_title", "required": true},
+    {"text": "发起会议", "role": "entry_card", "required": true},
+    {"text": "加入会议", "role": "entry_card", "required": true},
+    {"text": "历史记录", "role": "history_heading", "required": true}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

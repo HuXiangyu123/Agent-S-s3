@@ -81,25 +81,30 @@ FailureType = Literal[
 - `failure_reason` 用于补充具体失败原因，可为自然语言或结构化短句。
 - `failure_reason` 不能替代 `failure_type`。
 
-## 5. Planner / Workflow Selector Interface
+## 5. Tool Guidance Interface
 
-该输出结构统一命名为 `WorkflowPlan`。
+该输出结构统一命名为 `FeishuToolGuidance`。它是给 `feishu_agent` 的语义先验，不是固定执行计划。
 
 ### 输入
 
 - `testcase: dict`
 - `state: FeishuState | None`
+- `observation: dict | None`
 
 ### 输出
 
 ```python
 {
-    "workflow": "send_message",
-    "reason": "matched product=im and action intent=send_message",
-    "workflow_params": {
+    "product": "im",
+    "intent": "send_message",
+    "reason": "matched product=im and task intent=send_message",
+    "params": {
         "chat_name": "测试群",
         "message_text": "Hello World"
     },
+    "preferred_tools": ["click", "type", "hotkey"],
+    "next_step_focus": "message_input",
+    "verification_hints": ["chat_title_matched", "message_sent"],
     "entry_assertions": ["chat_title_matched"],
     "preconditions": ["飞书桌面端已登录"],
     "failure_type": None,
@@ -107,18 +112,19 @@ FailureType = Literal[
 }
 ```
 
-### `WorkflowPlan` 类型别名
+### `FeishuToolGuidance` 类型别名
 
 ```python
-WorkflowPlan = dict
+FeishuToolGuidance = dict
 ```
 
 说明：
 
-- `Planner` 保留并透传 `preconditions`，但不负责最终执行检查。
-- `Planner` 若在执行前失败，`failure_type` 必须复用共享 `FailureType` 枚举。
-- `Planner` 只负责选择 `workflow`、绑定业务参数、给出进入执行前的约束，不负责产出运行时 `fallback` / `retry` / 每轮下一步。
-- 若未命中 workflow，`workflow` 为空，`failure_reason` 需要给出可审阅原因。
+- `Tool Router` 保留并透传 `preconditions`，但不负责最终执行检查。
+- `Tool Router` 若在执行前失败，`failure_type` 必须复用共享 `FailureType` 枚举。
+- `Tool Router` 只给出工具子集、业务参数提示、下一步关注点和验证提示，不产出 ordered steps。
+- 若未命中产品意图，`intent` 为空，`failure_reason` 需要给出可审阅原因。
+- 所有执行必须继续经过 `feishu_agent = AgentS3 + WindowsFeishuACI`。
 
 ## 5.1 Shared Id Contracts
 
@@ -130,6 +136,12 @@ ActionId = Literal[
     "focus_message_input",
     "type_message",
     "send_message",
+    "open_docs_home",
+    "open_docs_new_menu",
+    "select_docs_document_type",
+    "select_blank_doc_template",
+    "type_doc_title",
+    "type_doc_body",
 ]
 
 TargetId = Literal[
@@ -141,18 +153,29 @@ TargetId = Literal[
     "search_result_item",
     "message_input",
     "send_button",
+    "docs_new_card",
+    "docs_document_option",
+    "docs_blank_doc_card",
+    "docs_title_input",
+    "docs_body_editor",
 ]
 
 AssertionId = Literal[
     "chat_title_matched",
     "message_input_contains_text",
     "message_sent",
+    "docs_home_ready",
+    "docs_new_menu_opened",
+    "docs_template_gallery_ready",
+    "doc_editor_ready",
+    "doc_title_contains_text",
+    "doc_body_contains_text",
 ]
 ```
 
 约定：
 
-- `Parser`、`Workflow`、`Locator`、`Verifier` 共享同一套 `ActionId / TargetId / AssertionId`。
+- `Parser`、`Tool Router`、`Locator`、`Verifier` 共享同一套 `ActionId / TargetId / AssertionId`。
 - 新增共享标识前，先更新本文档，再允许并行开发模块引用。
 
 ## 6. StateDetector Interface
@@ -251,6 +274,12 @@ class BaseLocator:
 - `AccessibilityLocator`：仅保留接口占位，当前默认入口不启用
 - `HybridLocator`：仅保留接口占位，当前默认入口不启用
 
+截图 fixture / 页面语义抽取约束：
+
+- 静态 fixture 只保存语义事实，例如可见控件、页面类型、弹窗状态、文字锚点。
+- 静态 fixture 不保存 `bbox`、`relative_bounds`、`confidence`、图片宽高等量化图像指标。
+- 坐标和置信度只允许作为 runtime locator 的即时结果，不允许沉淀为产品域语义数据。
+
 ## 8. FeishuACI Interface
 
 ```python
@@ -271,86 +300,60 @@ class FeishuACI:
 - 因此默认主线只应假设通用动作存在，例如 `open`、`click`、`type`、`hotkey`、`wait`
 - 若后续恢复或重新接线 Feishu / Windows 专用 helper（含 UIA 路线），应视为可选扩展，不得默认写成已接入事实，除非入口与调用链已同步更新
 
-## 9. FeishuWorker Interface
+## 9. AgentS3 Execution Interface
+
+当前执行统一通过 `cli_app.py` 的 `run_agent()` 函数驱动 `AgentS3` LLM agent loop，不再存在独立的 `FeishuWorker` 类。
+
+### `run_agent` 签名
 
 ```python
-class FeishuWorker:
-    def run_testcase(self, testcase: dict) -> RuntimeContext: ...
-    def check_preconditions(self, testcase: dict) -> list[dict]: ...
+def run_agent(
+    agent: AgentS3,
+    instruction: str,
+    scaled_width: int,
+    scaled_height: int,
+    max_steps: int = 15,
+    recorder: S3RuntimeRecorder | None = None,
+) -> None:
+    ...
 ```
 
-### `check_preconditions` 输出
+### `S3RuntimeRecorder` (via Track D)
+
+`S3RuntimeRecorder` 被动记录 AgentS3 每步 action 和最终状态，并产出 Track D 产物：
 
 ```python
-[
-    {
-        "name": "飞书桌面端已登录",
-        "status": "passed",
-        "failure_type": None,
-        "failure_reason": None
-    },
-    {
-        "name": "测试群已存在",
-        "status": "assumed",
-        "failure_type": None,
-        "failure_reason": "not automated in M1"
-    }
-]
+class S3RuntimeRecorder:
+    def start(self, instruction: str) -> None: ...
+    def record_observation(self, step_index: int, obs: dict) -> None: ...
+    def record_action(self, step_index: int, code: str, status: str, failure_reason: str | None = None) -> None: ...
+    def finalize(self, final_status: str, final_failure_reason: str | None = None) -> dict | None: ...
 ```
 
-### `run_testcase` 最小职责
+### `finalize` 输出产物
 
-1. 执行前置条件检查
-2. 获取 workflow 选择结果
-3. 逐步调度 `StateDetector / Locator / FeishuACI / Verifier`
-4. 聚合 `RuntimeContext`
-5. 调用 `ReportBuilder`
-
-### `run_testcase` 输出
-
-```python
-{
-    "run_id": "2026-05-04_153000",
-    "status": "passed",
-    "workflow": "send_message",
-    "precondition_results": [
-        {"name": "飞书桌面端已登录", "status": "passed"}
-    ],
-    "step_results": [],
-    "failure_type": None,
-    "failure_reason": None
-}
+```text
+artifacts/test_runs/<run_id>/
+  screenshots/
+  actions.jsonl
+  summary.json
+  report.md
 ```
 
-## 10. Workflow Interface
+### 前置条件策略
 
-```python
-class BaseWorkflow:
-    workflow_id: str
+当前 M0-M2 阶段允许部分前置条件通过人工保证，未自动化校验的项在运行结果中标记为 `assumed`，避免误报为已验证。
 
-    def next_step(self, state, runtime_context) -> dict: ...
-    def is_done(self, state, runtime_context) -> bool: ...
-```
+## 10. Deprecated Workflow Interface
 
-### `next_step` 输出
+产品级 Workflow Interface 已废弃。
 
-```python
-{
-    "step_id": "step_2",
-    "stage": "TYPE_MESSAGE",
-    "action": "type_message",
-    "target": "message_input",
-    "params": {"text": "Hello World"},
-    "success_gate": "message_input_contains_text",
-    "fallback": "refocus_input",
-    "retry_limit": 1
-}
-```
+约束：
 
-说明：
-
-- `Workflow` 独占运行时阶段推进。
-- `fallback`、`retry_limit`、具体 `next_step` 产出都属于 `Workflow`，不属于 `Planner`。
+- 不再定义 `BaseWorkflow`、`next_step()`、`is_done()` 等 runtime 阶段机接口。
+- 不得新增 `*_workflow.py` 并把用户任务转成固定步骤序列执行。
+- 历史文档中的 workflow 只能作为归档参考，不作为当前接口契约。
+- 当前运行时统一通过 `AgentS3 + WindowsFeishuACI` 的 LLM loop 决策下一步 action。
 
 ## 11. Verifier Interface
 
@@ -436,7 +439,7 @@ class ReportBuilder:
 {
     "task_id": "tc_im_send_message_001",
     "product": "im",
-    "workflow": "send_message",
+    "intent": "send_message",
     "status": "passed",
     "steps": 3,
     "duration_sec": 18.4,
@@ -455,8 +458,8 @@ class ReportBuilder:
 {
     "run_id": "2026-05-04_153000",
     "status": "passed",
-    "workflow": "send_message",
-    "workflow_params": {"chat_name": "测试群", "message_text": "Hello World"},
+    "intent": "send_message",
+    "params": {"chat_name": "测试群", "message_text": "Hello World"},
     "page_id": "im_chat_main",
     "precondition_results": [],
     "action_logs": [],
@@ -476,7 +479,7 @@ class ReportBuilder:
 - 若失败发生在执行前，顶层 `failure_type` 直接记录该失败。
 - 若失败发生在步骤执行中，顶层 `failure_type` 取导致整次运行终止的首个失败步骤的 `step_results[].failure_type`。
 - 若整次运行成功，顶层 `failure_type` 为 `None`。
-- `ReportBuilder`、`review`、`regression runner` 统一消费 `RuntimeContext`，不要直接依赖 `FeishuWorker` 私有内部变量。
+- `ReportBuilder`、`review`、`regression runner` 统一消费 `RuntimeContext`，不要直接依赖 `AgentS3` 私有内部变量。
 
 ## 16. Maintenance Interfaces
 
@@ -510,7 +513,7 @@ artifacts/
 {
     "task_id": "tc_im_send_message_001",
     "product": "im",
-    "workflow": "send_message",
+    "intent": "send_message",
     "status": "passed",
     "steps": 3,
     "duration_sec": 18.4,
@@ -523,7 +526,7 @@ artifacts/
 ## 18. 接口变更规则
 
 1. 新增字段优先向后兼容，避免直接改名或改语义。
-2. `steps[]`、`success_gate`、`fallback`、`retry_limit` 属于稳定核心字段，不应随模块实现随意漂移。
+2. `steps[]`、`preferred_tools`、`next_step_focus`、`verification_hints` 属于稳定核心字段，不应随模块实现随意漂移。
 3. 任一并行开发模块若修改接口，必须在合并前完成调用方联调和文档更新。
 
 ## 19. Track B/C 补充说明（2026-05-05）
@@ -552,12 +555,8 @@ artifacts/
 }
 ```
 
-### Track C 最小运行时 Workflow
+### Track C 当前定位
 
-第一版 Track C 运行时实现将 `send_message` 固定为最小显式阶段机，仅包含三个阶段：
+Track C 不再提供运行时 Workflow。当前实现只保留 verifier / assertion 能力，并将成功判定作为 `feishu_agent` 的验证提示。
 
-1. `ENSURE_CHAT_OPEN`
-2. `TYPE_MESSAGE`
-3. `SEND_MESSAGE`
-
-该实现复用现有共享 `ActionId / TargetId / AssertionId`，不新增顶层共享契约。
+该定位复用现有共享 `ActionId / TargetId / AssertionId`，不新增固定阶段机契约。

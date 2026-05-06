@@ -1,0 +1,71 @@
+{
+  "fixture_id": "calendar_event_detail_popup",
+  "image_file": "日程安排分享点击后具体页面.png",
+  "product": "calendar",
+  "page_id": "calendar_event_detail_popup",
+  "page_type": "calendar_event_detail_popup",
+  "display_name": "Feishu Calendar Event Detail Popup",
+  "scenario": "Event detail popup shown after selecting a schedule entry.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_event_detail_popup",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "event_detail",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "event_detail_visible": true,
+    "share_schedule_visible": true,
+    "video_meeting_button_visible": true,
+    "meeting_note_link_visible": true,
+    "reminder_visible": true,
+    "owner_visible": true,
+    "workflow_support": "deferred"
+  },
+  "visible_targets": [
+    "share_schedule_button",
+    "video_meeting_button",
+    "meeting_note_link"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "分享日程",
+      "role": "toolbar_button",
+      "required": true
+    },
+    {
+      "text": "发起视频会议",
+      "role": "action_button",
+      "required": true
+    },
+    {
+      "text": "创建会议纪要",
+      "role": "action_link",
+      "required": true
+    },
+    {
+      "text": "提醒 5 分钟",
+      "role": "reminder_label",
+      "required": false
+    }
+  ],
+  "key_regions": {
+    "share_schedule_button": {
+      "role": "share_schedule_button",
+      "visible_text": "分享日程"
+    },
+    "video_meeting_button": {
+      "role": "video_meeting_button",
+      "visible_text": "发起视频会议"
+    },
+    "meeting_note_link": {
+      "role": "meeting_note_link",
+      "visible_text": "创建会议纪要"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

@@ -1,5 +1,16 @@
 # Launcher Dual-Mode S3 / Feishu Integration (2026-05-05)
 
+## Status
+
+Superseded for runtime routing.
+
+The current valid route is:
+
+- `classic_s3`: `AgentS3 + OSWorldACI`
+- `feishu_agent`: `AgentS3 + WindowsFeishuACI`
+
+Do not use this document to reintroduce a `FeishuWorker` or deterministic workflow execution path behind `feishu_agent`. See `docs/implementation/s3_feishu_agentic_tools_refactor_2026-05-05.md` and `docs/implementation/s3_feishu_agent_track_d_artifacts_2026-05-06.md` for the active route.
+
 ## Goal
 
 Integrate the new Feishu domain pipeline into the existing launcher + `s3` runtime chain without breaking the current stable path.
@@ -89,7 +100,7 @@ Add a new Feishu runtime path:
 
 - `execution_mode = "feishu_agent"`
 - prefer `WindowsFeishuACI` on Windows
-- route each query to a dedicated `FeishuWorker`
+- route each query to `AgentS3 + WindowsFeishuACI` (LLM-driven agent loop)
 
 The first new-mode milestone only targets the already-frozen IM MVP:
 
@@ -146,7 +157,7 @@ It should support OCR-text fallback for real runtime, so assertions can pass whe
 ### New Runtime Layer
 
 - `gui_agents/feishu/agents/__init__.py`
-- `gui_agents/feishu/agents/feishu_worker.py`
+- `gui_agents/feishu/agents/__init__.py`
 
 ### Existing Runtime Support
 
@@ -164,7 +175,7 @@ It should support OCR-text fallback for real runtime, so assertions can pass whe
 
 - `launcher.py`
 - `gui_agents/s3/cli_app.py`
-- `gui_agents/feishu/agents/feishu_worker.py`
+- `gui_agents/feishu/agents/__init__.py`
 - `gui_agents/feishu/verifiers/assertion_verifier.py`
 - `gui_agents/feishu/workflows/send_message_workflow.py`
 - `tests/test_agent_startup.py`
@@ -182,7 +193,7 @@ It should support OCR-text fallback for real runtime, so assertions can pass whe
 
 - launcher mode selector
 - CLI execution-mode switch
-- minimal `FeishuWorker`
+- `S3RuntimeRecorder` integration into `cli_app.py`
 - OCR-backed runtime verification fallback
 
 ### verification

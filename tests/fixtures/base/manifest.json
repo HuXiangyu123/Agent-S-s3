@@ -1,0 +1,12 @@
+﻿{
+    "product":  "base",
+    "fixture_set":  "feishu_base_desktop_and_browser",
+    "language":  "zh-CN",
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed",
+    "notes":  [
+                  "Primary fixture coverage focuses on Base home, creation entry, template center, and browser editor semantic states.",
+                  "Secondary Base surfaces are classified for context and recovery, not fixed executable workflows.",
+                  "Metadata is semantic-only and does not include coordinates, relative bounds, resolution, or other quantitative layout priors."
+              ]
+}

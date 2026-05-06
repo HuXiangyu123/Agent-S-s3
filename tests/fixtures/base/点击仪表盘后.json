@@ -1,0 +1,26 @@
+﻿{
+    "fixture_id":  "base_dashboard_open",
+    "image_file":  "点击仪表盘后.png",
+    "product":  "base",
+    "page_id":  "base_dashboard",
+    "page_type":  "base_dashboard",
+    "display_name":  "Feishu Base Dashboard",
+    "scenario":  "Dashboard view opened from Base editor.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_dashboard",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  null,
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "dashboard_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_dashboard_canvas_area"
+                        ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

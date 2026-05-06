@@ -4,6 +4,19 @@
 
 当前项目默认采用 **单 workspace、串行交付、1 code 1 review** 模式，而不是多 track 并行 coding。
 
+## Active Feishu Agent Principles
+
+以下原则优先级高于后文历史 track / workflow 设计：
+
+0. **Track ABCD 核心原则**：所有 Track 模块（`testcases/`、`tooling/`、`pages/`、`detectors/`、`locators/`、`verifiers/`、`reports/`）是 AgentS3 LLM agent loop 的 **agentic tool use 加速层**——提供领域知识、状态识别、元素定位提示和验证合约。Track ABCD 不是独立的确定性执行管线，任何时候不应串联为 `Parser -> Planner -> Workflow -> Step Executor` 绕过 AgentS3 的 LLM 决策。
+1. 截图先验提取只沉淀语义信息，不沉淀坐标、比例、分辨率、bbox、confidence、score 等量化指标。
+2. 新功能默认基于 `feishu_agent = AgentS3 + WindowsFeishuACI` 做 agentic prior / tool guidance 增强。
+3. 不新增非 LLM 的确定性 runtime 路线，不把 `WorkflowPlan -> ordered steps` 接成产品执行路径。
+4. 对新产品模块，优先交付页面语义、状态识别、工具选择提示、失败/弹窗语义；不要为了测试方便设计固定点击流程。
+5. 不新增产品级 workflow 契约；测试/审阅辅助也必须表达为 semantic guidance、fixture、verifier 或 report，不作为 runtime controller。
+6. Base、Docs、Calendar、VC 等新增产品域默认只进入 `feishu_agent` 的语义先验层；不得新增 `create_xxx` 固定 workflow 作为用户任务执行路线。
+7. Base、VC 及后续新增截图 metadata 不允许包含 `relative_bounds`、`bbox`、`confidence`、`score`、`resolution`、`image_width`、`image_height`、像素坐标或比例字段。
+
 角色分工固定为：
 
 - `Codex`: 负责 `analysis -> plan -> docs -> coding -> testing`
@@ -17,13 +30,33 @@
 python -m unittest tests.test_agent_startup -v
 ```
 
-自检通过（13 tests OK）才允许进入 coding。如果自检失败，先修复再继续。
+自检通过才允许进入 coding。如果自检失败，先修复再继续。
 
 启动自检覆盖：
 - Feishu domain layer 全部模块可导入
 - S3 execution layer 可导入
-- NL → TestCase → WorkflowPlan 核心链路可用
+- `feishu_agent` 路由和 semantic prior/tool guidance 核心链路可用
 - 所有已有 feishu 测试通过
+
+## Local CI Parity Check
+
+提交前必须执行与 GitHub workflow 对齐的本地检查：
+
+```bash
+python scripts/run_ci_checks.py
+```
+
+该入口负责统一执行：
+
+- `black --check launcher.py gui_agents tests`
+- `python -m unittest tests.test_agent_startup -v`
+- `python -m unittest tests.test_launcher_env_config -v`
+
+原则：
+
+- 本地未通过，不提交
+- GitHub workflow 必须直接复用同一个入口，避免本地和 CI 分叉
+- 若在 Windows shell 查看中文文档或测试文件，优先显式使用 UTF-8 读取，避免把正常 UTF-8 内容误判为乱码
 
 当前默认要求：
 
@@ -115,7 +148,7 @@ python -m unittest tests.test_agent_startup -v
 2. 模块完成后至少执行：
    - 该模块直接相关测试
    - 仓库已有相关测试脚本
-   - 若存在统一测试入口，则一并执行
+   - 若存在统一测试入口，则一并执行；当前统一入口为 `python scripts/run_ci_checks.py`
 3. 如果某些测试因为环境或依赖无法运行，必须在 review 证据里明确写出未运行项与原因。
 
 ## Review Rule
@@ -163,11 +196,11 @@ review 不是只看代码风格；风格问题优先级低于正确性、回归�
 
 默认并行轨道：
 
-- `Track A`: `gui_agents/feishu/testcases/` -> `gui_agents/feishu/planner/`
+- `Track A`: `gui_agents/feishu/testcases/` -> `gui_agents/feishu/tooling/`
 - `Track B`: `gui_agents/feishu/pages/` -> `gui_agents/feishu/detectors/` -> `gui_agents/feishu/locators/`
-- `Track C`: `gui_agents/feishu/workflows/` -> `gui_agents/feishu/verifiers/`
+- `Track C`: `gui_agents/feishu/verifiers/`
 - `Track D`: `gui_agents/feishu/reports/` -> `gui_agents/feishu/maintenance/`
-- `Serial Track`: `gui_agents/feishu/agents/feishu_worker.py` 以及 `s3` 高耦合集成文件
+- `Serial Track`: `s3` 高耦合集成文件 (执行统一走 `AgentS3` LLM 循环，无独立 FeishuWorker)
 
 默认顺序：
 
@@ -183,7 +216,7 @@ review 不是只看代码风格；风格问题优先级低于正确性、回归�
 - `gui_agents/s3/agents/grounding.py`
 - `gui_agents/s3/cli_app.py`
 - `gui_agents/s3/memory/procedural_memory.py`
-- `gui_agents/feishu/agents/feishu_worker.py`
+- `gui_agents/feishu/agents/__init__.py`
 
 ## Planning Standard
 

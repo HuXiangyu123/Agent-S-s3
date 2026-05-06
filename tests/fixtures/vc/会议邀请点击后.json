@@ -1,0 +1,39 @@
+{
+  "fixture_id": "vc_invite_dialog",
+  "image_file": "会议邀请点击后.png",
+  "product": "vc",
+  "page_id": "vc_invite_dialog",
+  "page_type": "vc_invite_dialog",
+  "display_name": "Feishu VC Invite Dialog",
+  "scenario": "Meeting invite dialog with share invite tab visible.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_invite_dialog",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": "vc_invite_dialog",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "invite_dialog_visible": true,
+    "invite_search_visible": true,
+    "share_button_visible": true,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_invite_search",
+    "vc_invite_contact_result",
+    "vc_share_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "分享邀请", "role": "tab", "required": true},
+    {"text": "电话邀请", "role": "tab", "required": true},
+    {"text": "搜索", "role": "search_placeholder", "required": true},
+    {"text": "复制入会信息", "role": "secondary_button", "required": false},
+    {"text": "分享", "role": "primary_button", "required": true}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

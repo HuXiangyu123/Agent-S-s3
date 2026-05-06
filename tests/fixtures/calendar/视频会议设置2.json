@@ -1,0 +1,75 @@
+{
+  "fixture_id": "calendar_vc_settings_participant_permissions",
+  "image_file": "视频会议设置2.png",
+  "product": "calendar",
+  "page_id": "calendar_vc_settings",
+  "page_type": "calendar_vc_settings_participant_permissions",
+  "display_name": "Feishu Calendar VC Settings Participant Permissions",
+  "scenario": "Video meeting settings dialog on the participant permissions tab.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_vc_settings_participant_permissions",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "video_meeting_settings",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "video_meeting_settings_visible": true,
+    "security_tab_visible": false,
+    "meeting_permissions_visible": true,
+    "recording_tab_visible": false,
+    "confirm_button_visible": true,
+    "workflow_support": "deferred"
+  },
+  "visible_targets": [
+    "security_tab",
+    "participant_permissions_tab",
+    "recording_tab",
+    "confirm_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "视频会议设置",
+      "role": "dialog_title",
+      "required": true
+    },
+    {
+      "text": "参会人权限",
+      "role": "sidebar_tab",
+      "required": true
+    },
+    {
+      "text": "会中聊天",
+      "role": "permission_item",
+      "required": true
+    },
+    {
+      "text": "确定",
+      "role": "confirm_button",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "security_tab": {
+      "role": "security_tab",
+      "visible_text": "安全"
+    },
+    "participant_permissions_tab": {
+      "role": "participant_permissions_tab",
+      "visible_text": "参会人权限"
+    },
+    "recording_tab": {
+      "role": "recording_tab",
+      "visible_text": "录制"
+    },
+    "confirm_button": {
+      "role": "confirm_button",
+      "visible_text": "确定"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

@@ -1,0 +1,23 @@
+﻿{
+    "fixture_id":  "base_add_component_panel",
+    "image_file":  "点击添加组件后.png",
+    "product":  "base",
+    "page_id":  "base_dashboard",
+    "page_type":  "base_dashboard",
+    "display_name":  "Feishu Base Add Component",
+    "scenario":  "Add dashboard component panel opened.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_dashboard",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "add_component_panel",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "add_component_panel_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

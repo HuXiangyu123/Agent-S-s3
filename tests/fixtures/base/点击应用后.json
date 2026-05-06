@@ -1,0 +1,26 @@
+﻿{
+    "fixture_id":  "base_app_market_open",
+    "image_file":  "点击应用后.png",
+    "product":  "base",
+    "page_id":  "base_app_market",
+    "page_type":  "base_app_market",
+    "display_name":  "Feishu Base App Market",
+    "scenario":  "Base app market page opened.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_app_market",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  null,
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "app_market_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_app_market_grid_area"
+                        ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

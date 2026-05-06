@@ -1,0 +1,81 @@
+{
+  "fixture_id": "calendar_event_modal_hover",
+  "image_file": "创建日程悬停.png",
+  "product": "calendar",
+  "page_id": "calendar_event_modal",
+  "page_type": "calendar_event_modal",
+  "display_name": "Feishu Calendar Event Modal Hover",
+  "scenario": "Create-event modal after hovering the create schedule entry or date control.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_event_modal",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "create_event",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "event_modal_visible": true,
+    "title_input_visible": true,
+    "attendee_input_visible": true,
+    "time_controls_visible": true,
+    "save_button_visible": true,
+    "hover_hint_visible": true,
+    "workflow_support": "primary"
+  },
+  "visible_targets": [
+    "title_input",
+    "attendee_input",
+    "time_range",
+    "save_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "创建日程",
+      "role": "dialog_title",
+      "required": true
+    },
+    {
+      "text": "添加主题",
+      "role": "title_placeholder",
+      "required": true
+    },
+    {
+      "text": "添加联系人、群或邮箱",
+      "role": "attendee_placeholder",
+      "required": true
+    },
+    {
+      "text": "保存",
+      "role": "save_button",
+      "required": true
+    },
+    {
+      "text": "取消",
+      "role": "cancel_button",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "title_input": {
+      "role": "event_title_input",
+      "visible_placeholder": "添加主题"
+    },
+    "attendee_input": {
+      "role": "attendee_input",
+      "visible_placeholder": "添加联系人、群或邮箱"
+    },
+    "time_range": {
+      "role": "event_time_range",
+      "description": "event time controls"
+    },
+    "save_button": {
+      "role": "save_event_button",
+      "visible_text": "保存"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

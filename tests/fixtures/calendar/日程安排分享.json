@@ -1,0 +1,79 @@
+{
+  "fixture_id": "calendar_share_dialog",
+  "image_file": "日程安排分享.png",
+  "product": "calendar",
+  "page_id": "calendar_share_dialog",
+  "page_type": "calendar_share_dialog",
+  "display_name": "Feishu Calendar Share Dialog",
+  "scenario": "Schedule share dialog with conversation list selection and message field visible.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_share_dialog",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": "share_schedule",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "share_dialog_visible": true,
+    "share_search_visible": true,
+    "conversation_list_visible": true,
+    "share_send_button_visible": true,
+    "workflow_support": "deferred"
+  },
+  "visible_targets": [
+    "share_search_entry",
+    "conversation_list",
+    "share_message_input",
+    "share_send_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "分享至会话",
+      "role": "dialog_title",
+      "required": true
+    },
+    {
+      "text": "日程二维码",
+      "role": "tab_anchor",
+      "required": true
+    },
+    {
+      "text": "日程链接",
+      "role": "tab_anchor",
+      "required": true
+    },
+    {
+      "text": "搜索",
+      "role": "search_placeholder",
+      "required": true
+    },
+    {
+      "text": "发送(Ctrl+Enter)",
+      "role": "send_button",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "share_search_entry": {
+      "role": "share_search_input",
+      "visible_placeholder": "搜索"
+    },
+    "conversation_list": {
+      "role": "share_conversation_list",
+      "description": "recent conversations list"
+    },
+    "share_message_input": {
+      "role": "share_message_input",
+      "visible_placeholder": "留言"
+    },
+    "share_send_button": {
+      "role": "share_send_button",
+      "visible_text": "发送(Ctrl+Enter)"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

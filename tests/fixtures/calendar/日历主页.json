@@ -1,0 +1,74 @@
+{
+  "fixture_id": "calendar_home_main",
+  "image_file": "日历主页.png",
+  "product": "calendar",
+  "page_id": "calendar_home",
+  "page_type": "calendar_home",
+  "display_name": "Feishu Calendar Home",
+  "scenario": "Calendar home page with week grid visible.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_home",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "calendar_home_visible": true,
+    "create_event_button_visible": true,
+    "week_grid_visible": true,
+    "mini_month_visible": true,
+    "workflow_support": "primary"
+  },
+  "visible_targets": [
+    "create_event_button",
+    "week_grid",
+    "mini_month"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "日历",
+      "role": "product_title",
+      "required": true
+    },
+    {
+      "text": "会议室",
+      "role": "top_nav",
+      "required": true
+    },
+    {
+      "text": "预约活动",
+      "role": "top_nav",
+      "required": true
+    },
+    {
+      "text": "创建日程",
+      "role": "create_button",
+      "required": true
+    },
+    {
+      "text": "今天",
+      "role": "nav_button",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "create_event_button": {
+      "role": "primary_create_event_button",
+      "visible_text": "创建日程"
+    },
+    "week_grid": {
+      "role": "calendar_week_grid",
+      "description": "weekly schedule grid"
+    },
+    "mini_month": {
+      "role": "mini_month_picker",
+      "description": "month navigation panel"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

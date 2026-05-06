@@ -1,0 +1,23 @@
+﻿{
+    "fixture_id":  "base_create_automation_flow",
+    "image_file":  "点击创建自动化流程.png",
+    "product":  "base",
+    "page_id":  "base_automation",
+    "page_type":  "base_automation",
+    "display_name":  "Feishu Base Create Automation",
+    "scenario":  "Create automation flow entry opened.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_automation",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "create_automation_flow",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "create_automation_flow_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

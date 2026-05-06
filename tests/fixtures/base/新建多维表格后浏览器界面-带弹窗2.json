@@ -1,0 +1,29 @@
+﻿{
+    "fixture_id":  "base_browser_table_with_onboarding_popup",
+    "image_file":  "新建多维表格后浏览器界面-带弹窗2.png",
+    "product":  "base",
+    "page_id":  "base_browser_table",
+    "page_type":  "base_browser_table",
+    "display_name":  "Feishu Base Browser Table",
+    "scenario":  "New Base table editor with alternate onboarding popup state.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_browser_table",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  "base_onboarding_popup",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "base_editor_ready":  true,
+                          "grid_visible":  true,
+                          "default_table_title":  "未命名多维表格",
+                          "onboarding_popup_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_grid_area"
+                        ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

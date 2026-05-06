@@ -1,0 +1,30 @@
+{
+  "fixture_id": "docs_library_example",
+  "image_file": "我的文档库示例.png",
+  "product": "docs",
+  "page_id": "docs_home",
+  "page_type": "docs_home",
+  "display_name": "Feishu Docs Library Example",
+  "scenario": "A user document library view inside cloud docs.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_home",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "docs_home_visible": true,
+    "doc_library_visible": true,
+    "document_list_visible": true,
+    "workflow_support": "secondary"
+  },
+  "supported_workflows": ["create_doc_and_edit"],
+  "text_anchors": [
+    {"text": "我的文档库", "role": "library_section", "required": true}
+  ],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

@@ -1,0 +1,24 @@
+﻿{
+    "fixture_id":  "base_management_panel_open",
+    "image_file":  "点击管理.png",
+    "product":  "base",
+    "page_id":  "base_browser_table",
+    "page_type":  "base_browser_table",
+    "display_name":  "Feishu Base Management Panel",
+    "scenario":  "Management panel opened in Base browser editor.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_browser_table",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "management_panel",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "base_editor_ready":  true,
+                          "management_panel_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

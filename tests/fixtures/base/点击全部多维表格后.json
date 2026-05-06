@@ -1,0 +1,25 @@
+﻿{
+    "fixture_id":  "base_all_tables_list",
+    "image_file":  "点击全部多维表格后.png",
+    "product":  "base",
+    "page_id":  "base_home",
+    "page_type":  "base_home",
+    "display_name":  "Feishu Base All Tables",
+    "scenario":  "All Base tables list visible.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_home",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  null,
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "base_home_visible":  true,
+                          "all_base_list_visible":  true,
+                          "new_button_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

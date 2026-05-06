@@ -1,5 +1,12 @@
 # Track B Closeout And Track C Entry (2026-05-05)
 
+## Status
+
+Historical implementation record. The fixed Track C workflow runtime described
+here was removed by
+`docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`.
+Track C is now verifier guidance only; it must not drive runtime steps.
+
 ## Goal
 
 Close the remaining IM fixture gap in Track B, then enter Track C with the smallest executable `send_message` runtime layer.
@@ -64,7 +71,7 @@ This matters for later runtime safety because Track C and later integration need
 ### Out Of Scope
 
 - real GUI action execution
-- worker orchestration in `gui_agents/feishu/agents/feishu_worker.py`
+- worker orchestration in `gui_agents/feishu/agents/` (agentic tools route only)
 - retries, fallback branches, recovery policies
 - non-IM products
 - advanced in-chat search interactions such as filters, knowledge-answer cards, or multi-result navigation

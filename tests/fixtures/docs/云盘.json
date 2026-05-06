@@ -1,0 +1,32 @@
+{
+  "fixture_id": "docs_drive",
+  "image_file": "云盘.png",
+  "product": "docs",
+  "page_id": "docs_home",
+  "page_type": "docs_home",
+  "display_name": "Feishu Docs Drive",
+  "scenario": "Docs drive tab under the cloud docs surface.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_home",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "docs_home_visible": true,
+    "nav_selected": "云盘",
+    "drive_page_visible": true,
+    "document_list_visible": true,
+    "workflow_support": "secondary"
+  },
+  "supported_workflows": ["create_doc_and_edit"],
+  "text_anchors": [
+    {"text": "云文档", "role": "product_title", "required": true},
+    {"text": "云盘", "role": "nav_item", "required": true}
+  ],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

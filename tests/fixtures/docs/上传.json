@@ -1,0 +1,25 @@
+{
+  "fixture_id": "docs_upload_dropdown",
+  "image_file": "上传.png",
+  "product": "docs",
+  "page_id": "docs_upload_dropdown",
+  "page_type": "docs_upload_dropdown",
+  "display_name": "Feishu Docs Upload Dropdown",
+  "scenario": "Upload dropdown under cloud docs.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_upload_dropdown",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "upload_dropdown",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "upload_dropdown_visible": true,
+    "workflow_support": "deferred"
+  },
+  "supported_workflows": [],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

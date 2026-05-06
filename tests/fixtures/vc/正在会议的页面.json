@@ -1,0 +1,39 @@
+{
+  "fixture_id": "vc_meeting_active",
+  "image_file": "正在会议的页面.png",
+  "product": "vc",
+  "page_id": "vc_meeting_active",
+  "page_type": "vc_meeting_active",
+  "display_name": "Feishu VC Active Meeting",
+  "scenario": "Active video meeting window with toolbar controls visible.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_meeting_active",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "meeting_active": true,
+    "invite_button_visible": true,
+    "microphone_toggle_visible": true,
+    "camera_toggle_visible": true,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_invite_button",
+    "vc_microphone_toggle",
+    "vc_camera_toggle",
+    "vc_leave_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "会议信息", "role": "toolbar_label", "required": true},
+    {"text": "布局", "role": "toolbar_label", "required": true},
+    {"text": "AI 总结", "role": "toolbar_control", "required": false}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

@@ -1,0 +1,50 @@
+﻿{
+    "fixture_id":  "base_browser_table_with_ai_popup",
+    "image_file":  "新建多维表格后浏览器界面-带弹窗.png",
+    "product":  "base",
+    "page_id":  "base_browser_table",
+    "page_type":  "base_browser_table",
+    "display_name":  "Feishu Base Browser Table",
+    "scenario":  "New Base table opened in browser with Base AI upgrade popup.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_browser_table",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  "base_ai_upgrade_popup",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "base_editor_ready":  true,
+                          "grid_visible":  true,
+                          "default_table_title":  "未命名多维表格",
+                          "share_button_visible":  true,
+                          "automation_button_visible":  true,
+                          "onboarding_popup_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_grid_area",
+                            "base_share_button_area",
+                            "base_automation_button_area"
+                        ],
+    "text_anchors":  [
+                         {
+                             "text":  "未命名多维表格",
+                             "role":  "title",
+                             "required":  true
+                         },
+                         {
+                             "text":  "数据表",
+                             "role":  "view",
+                             "required":  true
+                         },
+                         {
+                             "text":  "分享",
+                             "role":  "button",
+                             "required":  false
+                         }
+                     ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

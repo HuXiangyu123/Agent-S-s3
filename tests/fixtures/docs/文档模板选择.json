@@ -1,0 +1,43 @@
+{
+  "fixture_id": "docs_template_gallery",
+  "image_file": "文档模板选择.png",
+  "product": "docs",
+  "page_id": "docs_template_gallery",
+  "page_type": "docs_template_gallery",
+  "display_name": "Feishu Docs Template Gallery",
+  "scenario": "Template gallery after selecting the document type.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_template_gallery",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": "template_gallery",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "template_gallery_visible": true,
+    "blank_doc_card_visible": true,
+    "template_search_visible": true,
+    "workflow_support": "primary"
+  },
+  "visible_targets": [
+    "blank_doc_card_area",
+    "template_search_area",
+    "close_button_area"
+  ],
+  "supported_workflows": ["create_doc_and_edit"],
+  "text_anchors": [
+    {"text": "新建到", "role": "gallery_header", "required": true},
+    {"text": "搜索模板", "role": "search_placeholder", "required": true},
+    {"text": "新建空白文档", "role": "blank_document_card", "required": true},
+    {"text": "为你推荐", "role": "section_title", "required": true}
+  ],
+  "key_regions": {
+    "blank_doc_card_area": {"relative_bounds": [0.18, 0.13, 0.365, 0.39]},
+    "template_search_area": {"relative_bounds": [0.36, 0.015, 0.642, 0.05]},
+    "close_button_area": {"relative_bounds": [0.965, 0.015, 0.99, 0.045]}
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

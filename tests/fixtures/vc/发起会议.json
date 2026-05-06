@@ -1,0 +1,38 @@
+{
+  "fixture_id": "vc_start_preview",
+  "image_file": "发起会议.png",
+  "product": "vc",
+  "page_id": "vc_start_preview",
+  "page_type": "vc_start_preview",
+  "display_name": "Feishu VC Start Preview",
+  "scenario": "Start meeting preview window before entering the meeting.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_start_preview",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "vc_start_preview",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "start_preview_visible": true,
+    "start_button_visible": true,
+    "microphone_toggle_visible": true,
+    "camera_toggle_visible": true,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_start_button",
+    "vc_microphone_toggle",
+    "vc_camera_toggle"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "麦克风", "role": "control_label", "required": true},
+    {"text": "摄像头", "role": "control_label", "required": true},
+    {"text": "开始会议", "role": "primary_button", "required": true}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

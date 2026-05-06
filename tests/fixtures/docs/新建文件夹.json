@@ -1,0 +1,25 @@
+{
+  "fixture_id": "docs_new_folder_dialog",
+  "image_file": "新建文件夹.png",
+  "product": "docs",
+  "page_id": "docs_new_folder_dialog",
+  "page_type": "docs_new_folder_dialog",
+  "display_name": "Feishu Docs New Folder Dialog",
+  "scenario": "New folder dialog under cloud docs.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_new_folder_dialog",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "new_folder",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "new_folder_dialog_visible": true,
+    "workflow_support": "deferred"
+  },
+  "supported_workflows": [],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

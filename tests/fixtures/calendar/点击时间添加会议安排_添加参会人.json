@@ -1,0 +1,71 @@
+{
+  "fixture_id": "calendar_quick_add_attendee",
+  "image_file": "点击时间添加会议安排_添加参会人.png",
+  "product": "calendar",
+  "page_id": "calendar_quick_add_modal",
+  "page_type": "calendar_quick_add_attendee",
+  "display_name": "Feishu Calendar Quick Add Modal With Attendee Suggestions",
+  "scenario": "Quick add event popup with attendee input suggestion dropdown visible.",
+  "expected_state": {
+    "product": "calendar",
+    "page_type": "calendar_quick_add_attendee",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "quick_add_event",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "quick_add_visible": true,
+    "title_input_visible": true,
+    "attendee_input_visible": true,
+    "attendee_suggestions_visible": true,
+    "time_controls_visible": true,
+    "save_button_visible": true,
+    "workflow_support": "primary"
+  },
+  "visible_targets": [
+    "title_input",
+    "attendee_input",
+    "attendee_suggestion_list",
+    "save_button"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {
+      "text": "添加主题",
+      "role": "title_placeholder",
+      "required": true
+    },
+    {
+      "text": "添加联系人、群或邮箱",
+      "role": "attendee_placeholder",
+      "required": true
+    },
+    {
+      "text": "保存",
+      "role": "save_button",
+      "required": true
+    }
+  ],
+  "key_regions": {
+    "title_input": {
+      "role": "event_title_input",
+      "visible_placeholder": "添加主题"
+    },
+    "attendee_input": {
+      "role": "attendee_input",
+      "visible_placeholder": "添加联系人、群或邮箱"
+    },
+    "attendee_suggestion_list": {
+      "role": "attendee_suggestion_list",
+      "description": "dropdown suggestion panel"
+    },
+    "save_button": {
+      "role": "save_event_button",
+      "visible_text": "保存"
+    }
+  },
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

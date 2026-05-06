@@ -1,0 +1,37 @@
+{
+  "fixture_id": "vc_invite_popover",
+  "image_file": "会议进行邀请.png",
+  "product": "vc",
+  "page_id": "vc_meeting_active",
+  "page_type": "vc_meeting_active",
+  "display_name": "Feishu VC Active Meeting Invite Popover",
+  "scenario": "Active meeting window with invite menu open.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_meeting_active",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "vc_invite_popover",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "meeting_active": true,
+    "invite_popover_visible": true,
+    "invite_entry_visible": true,
+    "copy_invite_link_visible": true,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_invite_button",
+    "vc_invite_entry",
+    "vc_copy_invite_link"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "邀请", "role": "popover_entry", "required": true},
+    {"text": "复制邀请链接", "role": "popover_entry", "required": true}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

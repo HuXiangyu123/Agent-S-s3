@@ -1,0 +1,40 @@
+{
+  "fixture_id": "vc_join_preview",
+  "image_file": "选择加入会议.png",
+  "product": "vc",
+  "page_id": "vc_join_preview",
+  "page_type": "vc_join_preview",
+  "display_name": "Feishu VC Join Preview",
+  "scenario": "Join meeting dialog with meeting ID input visible.",
+  "expected_state": {
+    "product": "vc",
+    "page_type": "vc_join_preview",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "vc_join_preview",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "join_preview_visible": true,
+    "meeting_id_input_visible": true,
+    "join_button_visible": true,
+    "join_button_enabled": false,
+    "runtime_route": "feishu_agent"
+  },
+  "visible_targets": [
+    "vc_meeting_id_input",
+    "vc_join_button",
+    "vc_microphone_toggle",
+    "vc_camera_toggle"
+  ],
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "会议 ID", "role": "input_placeholder", "required": true},
+    {"text": "麦克风", "role": "control_label", "required": true},
+    {"text": "摄像头", "role": "control_label", "required": true},
+    {"text": "加入会议", "role": "primary_button", "required": true}
+  ],
+  "annotation_status": "semantic",
+  "review_status": "unreviewed"
+}

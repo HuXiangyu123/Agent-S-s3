@@ -30,7 +30,7 @@
 项目需求中的 5 个必做能力，对应当前架构应映射为：
 
 - 视觉感知 -> `StateDetector` + `PageRegistry` + `Visual Anchor`
-- 语义理解 -> `NL Testcase Parser` + `Planner`
+- 语义理解 -> `NL Testcase Parser` + `Tool Router / Guidance`
 - 自主操作 -> `FeishuACI` + `gui_agents/s3/`
 - 状态验证 -> `Verifier`
 - 评估报告 -> `ReportBuilder` + `artifacts/test_runs/`
@@ -47,12 +47,11 @@
 ```text
 Natural Language Test Case
   -> NL Testcase Parser
-  -> Planner / Workflow Selector
-  -> FeishuWorker
-  -> StateDetector
-  -> Locator
-  -> FeishuACI
-  -> Verifier
+  -> Tool Router / Domain Guidance
+  -> AgentS3 + WindowsFeishuACI (LLM-driven agent loop)
+      -> StateDetector / PageRegistry / Locator hints
+      -> Verifier hints
+  -> S3RuntimeRecorder
   -> ReportBuilder
   -> Structured Test Report
 ```
@@ -60,12 +59,47 @@ Natural Language Test Case
 职责边界：
 
 - `NL Testcase Parser`：把自然语言测试描述转成结构化测试用例
-- `Planner / Workflow Selector`：决定走哪个 workflow、绑定业务参数、保留执行前约束
+- `Tool Router / Domain Guidance`：按当前截图状态和意图提供可用工具、页面语义、下一步关注点
 - `StateDetector`：给出当前页面和关键状态
 - `Locator`：决定元素定位策略
 - `FeishuACI`：把语义动作落成 GUI 操作
-- `Verifier`：判断每步和整条用例是否成功
+- `Verifier`：提供断言判定，不控制下一步 action
 - `ReportBuilder`：生成结构化结果与可读报告
+
+## 3.1 Track ABCD 核心原则：Agentic Tool Use，非确定性执行链
+
+Track ABCD 的所有模块（`testcases/`, `tooling/`, `pages/`, `detectors/`, `locators/`, `verifiers/`, `reports/`）服务于唯一目标：**在 AgentS3 LLM agent loop 基础上，通过 agentic tool use 加速识别、定位和验证任务。**
+
+### Track ABCD 是 Agent 的知识/工具层，不是独立执行路线
+
+每个 Track 模块的角色：
+
+- **Track A** (`testcases/` + `tooling/`)：将自然语言转为结构化意图提示和工具指导，供 Agent 理解任务目标。
+- **Track B** (`pages/` + `detectors/` + `locators/`)：提供页面语义描述、状态识别、元素定位提示——Agent 按当前截图状态自行决策，不按固定坐标/流程。
+- **Track C** (`verifiers/`)：提供成功判定合约和失败归因，不提供 runtime 阶段机。
+- **Track D** (`reports/` + `maintenance/`)：被动记录 Agent 执行轨迹并生成产物，不控制执行流程。
+
+### 严禁事项
+
+1. Track ABCD 模块不得串联为 `Parser -> Planner -> Workflow -> Step Executor` 的确定性执行管线。
+2. Track ABCD 不得绕过 AgentS3 的 LLM 决策循环，自行决定下一步 action。
+3. 不得新增或恢复 `WorkflowPlan -> ordered steps`、`workflow.steps()`、固定阶段机 executor 等产品运行路径。
+4. 任何模块不得引入硬编码坐标、固定点击流程、或假设特定 UI 分辨率/布局。
+5. 截图抽取信息只保留语义事实，例如可见控件、页面类型、弹窗状态、文字锚点；不得记录坐标、相对范围、置信度、图片尺寸等量化图像指标。
+
+### 正确使用方式
+
+```text
+用户指令
+  -> NL Parser (结构化意图提示)
+  -> AgentS3 LLM loop (每一步由 LLM 决策)
+      ├─ 截图 -> StateDetector (当前页面/状态识别)
+      ├─ 截图 -> Locator (元素定位建议)
+      ├─ Tool Router (按当前状态推荐可用工具子集)
+      └─ LLM 生成 action code -> 执行
+  -> S3RuntimeRecorder 被动记录
+  -> ReportBuilder 聚合产物
+```
 
 ## 4. 建议目录
 
@@ -74,26 +108,16 @@ gui_agents/feishu/
   __init__.py
   agents/
     __init__.py
-    feishu_aci.py
-    feishu_worker.py
   detectors/
     __init__.py
     state_detector.py
-  planner/
+  tooling/
     __init__.py
-    task_planner.py
-    workflow_selector.py
+    tool_router.py
   testcases/
     __init__.py
     nl_parser.py
     scenario_schema.py
-  workflows/
-    __init__.py
-    base.py
-    send_message.py
-    send_file.py
-    create_doc.py
-    create_calendar_event.py
   verifiers/
     __init__.py
     completion_gate.py
@@ -115,7 +139,7 @@ gui_agents/feishu/
     screenshot_recorder.py
 ```
 
-## 5. 规划决策层规格
+## 5. 语义意图与工具指导层规格
 
 这是当前方案里必须补齐的一层，不能只保留名字。
 
@@ -137,7 +161,7 @@ gui_agents/feishu/
 4. 识别断言目标
 5. 支持多步骤串联，不只支持单动作
 
-### 5.2 `Planner / Workflow Selector`
+### 5.2 `Tool Router / Domain Guidance`
 
 输入：
 
@@ -146,18 +170,19 @@ gui_agents/feishu/
 
 输出：
 
-- workflow 选择结果
-- workflow 参数绑定结果
+- product / intent / action hint
+- preferred tools
+- next-step focus
 - preconditions 透传结果
 - entry assertions
 - 失败原因
 
 最低要求：
 
-1. 优先命中显式 workflow
-2. 不负责运行时 `fallback` / `retry` / `next_step`
-3. 不命中时返回人工可审阅的失败原因
-4. 不允许直接把整条任务丢给黑盒 prompt 自由执行
+1. 根据自然语言、当前截图语义和 `FeishuState` 给出工具子集建议。
+2. 不输出固定步骤序列，不负责运行时 `fallback` / `retry` / `next_step`。
+3. 不命中时返回人工可审阅的失败原因。
+4. 所有产品任务继续交由 `feishu_agent` 的 AgentS3 LLM loop 决策和执行。
 
 ## 6. 测试用例模型
 
@@ -229,30 +254,18 @@ Locator
 2. 当前实现可以先只落 `VisionLocator`
 3. 不要求当前版本就依赖 Accessibility，但不能把接入口堵死
 
-## 8. workflow 与 verifier
+## 8. 工具指导与 verifier
 
-workflow 第一阶段应当是显式阶段机，不是自由规划。
+当前 runtime 不再实现产品级固定 workflow。任务推进由 `feishu_agent` 的 LLM loop 基于当前截图、状态识别和工具指导逐步决策。
 
-示例：
+工具指导示例：
 
 ```text
-SendMessageWorkflow
-  -> ENSURE_CHAT_OPEN
-  -> ENSURE_INPUT_READY
-  -> TYPE_MESSAGE
-  -> SEND_MESSAGE
-  -> VERIFY_SENT
+IM send message intent
+  -> preferred_tools: [click, type, hotkey]
+  -> next_step_focus: message_input
+  -> verification_hints: [chat_title_matched, message_sent]
 ```
-
-每个阶段必须有：
-
-- 输入条件
-- 语义动作
-- 成功判定
-- fallback
-- retry 上限
-
-这里的 `fallback` 与 `retry` 属于 `Workflow`，不属于 `Planner`。
 
 `Verifier` 最少要支持：
 
@@ -281,7 +294,7 @@ artifacts/
 
 - `task_id`
 - `product`
-- `workflow`
+- `intent`
 - `status`
 - `steps`
 - `duration_sec`
@@ -306,7 +319,7 @@ artifacts/
 
 ### M1：单步验证
 
-只做需求里的单步能力验证，不上多步 workflow。
+只做需求里的单步能力验证，不上固定多步 workflow。
 
 目标：
 
@@ -323,8 +336,7 @@ artifacts/
 目标：
 
 - 先只做 `IM`
-- `SendMessageWorkflow`
-- `SendFileWorkflow` 或 `EmojiReplyWorkflow`
+- 基于 `feishu_agent` 的发送消息、发送文件或表情回复语义指导
 - `Verifier`
 - 最小 `ReportBuilder`
 
@@ -401,8 +413,8 @@ artifacts/
 里程碑入口标准：
 
 - M0 / M1：基础运行链路可启动，最小 smoke case 可复现
-- M2：`WorkflowPlan`、`FeishuState`、`LocatorResult`、`StepResult` 已冻结
-- M3：至少一个单产品 workflow 已经稳定，运行时事实模型可复用
+- M2：`TestCase`、`FeishuToolGuidance`、`FeishuState`、`LocatorResult`、`StepResult` 已冻结
+- M3：至少一个单产品 agentic tool guidance 路径已经稳定，运行时事实模型可复用
 - M4：`RuntimeContext` 与报告产物结构已冻结
 - M5：前序链路稳定，允许引入更复杂的异常恢复与跨产品联动
 

@@ -1,5 +1,13 @@
 # Track A Foundation (2026-05-05)
 
+## Status
+
+Historical implementation record. The fixed `WorkflowPlan` / planner output
+described here was removed by
+`docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`.
+Current Track A output is semantic intent and tool guidance for
+`feishu_agent`, not an executable workflow plan.
+
 ## Goal
 
 为 `gui_agents/feishu/` 建立 Track A 的最小可用基础层，覆盖：

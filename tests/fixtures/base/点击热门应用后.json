@@ -1,0 +1,23 @@
+﻿{
+    "fixture_id":  "base_hot_apps_open",
+    "image_file":  "点击热门应用后.png",
+    "product":  "base",
+    "page_id":  "base_app_market",
+    "page_type":  "base_app_market",
+    "display_name":  "Feishu Base Hot Apps",
+    "scenario":  "Hot apps section opened from Base template center.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_app_market",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  null,
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "hot_apps_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

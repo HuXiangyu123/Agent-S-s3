@@ -96,7 +96,7 @@ It is:
 ## Target Files
 
 - `gui_agents/feishu/testcases/nl_parser.py`
-- `gui_agents/feishu/agents/feishu_worker.py`
+- `gui_agents/feishu/agents/__init__.py`
 - `launcher.py`
 - `tests/feishu/testcases/test_nl_parser.py`
 

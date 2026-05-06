@@ -1,0 +1,29 @@
+{
+  "fixture_id": "docs_browser_share_dialog",
+  "image_file": "网页端文档分享.png",
+  "product": "docs",
+  "page_id": "docs_share_dialog",
+  "page_type": "docs_share_dialog",
+  "display_name": "Feishu Docs Share Dialog",
+  "scenario": "Share dialog opened from the browser editor.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_share_dialog",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": "share_dialog",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "share_dialog_visible": true,
+    "invite_input_visible": true,
+    "workflow_support": "deferred"
+  },
+  "supported_workflows": [],
+  "text_anchors": [
+    {"text": "分享", "role": "dialog_title", "required": true}
+  ],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

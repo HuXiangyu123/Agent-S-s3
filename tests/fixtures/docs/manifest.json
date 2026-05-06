@@ -1,0 +1,25 @@
+{
+  "suite_id": "feishu_docs_track_b",
+  "product": "docs",
+  "files": [
+    "主页.png",
+    "云盘.png",
+    "我的文档库示例.png",
+    "新建.png",
+    "新建2.png",
+    "文档模板选择.png",
+    "网页端文档.png",
+    "网页端文档分享.png",
+    "网页端文档分享修改权限.png",
+    "上传.png",
+    "新建文件夹.png",
+    "智能纪要.png",
+    "知识库.png"
+  ],
+  "purpose": "Docs Track B fixture set for page detection and coarse locator grounding.",
+  "notes": [
+    "Metadata is the source of truth for Track B tests.",
+    "The first supported Docs path is create_doc_and_edit.",
+    "Share, upload, folder, minutes, and wiki states are retained as evidence but deferred from the first workflow."
+  ]
+}

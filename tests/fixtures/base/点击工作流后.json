@@ -1,0 +1,23 @@
+﻿{
+    "fixture_id":  "base_workflow_panel_open",
+    "image_file":  "点击工作流后.png",
+    "product":  "base",
+    "page_id":  "base_automation",
+    "page_type":  "base_automation",
+    "display_name":  "Feishu Base Workflow Panel",
+    "scenario":  "Workflow panel opened from Base editor.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_automation",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "workflow_panel",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "workflow_panel_visible":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

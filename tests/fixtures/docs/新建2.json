@@ -1,0 +1,30 @@
+{
+  "fixture_id": "docs_new_dropdown_variant",
+  "image_file": "新建2.png",
+  "product": "docs",
+  "page_id": "docs_new_dropdown",
+  "page_type": "docs_new_dropdown",
+  "display_name": "Feishu Docs New Dropdown Variant",
+  "scenario": "Alternative crop of the new document type dropdown.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_new_dropdown",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": false,
+    "modal_type": "new_dropdown",
+    "last_error_banner": null
+  },
+  "product_state": {
+    "new_dropdown_visible": true,
+    "document_option_visible": true,
+    "workflow_support": "primary"
+  },
+  "supported_workflows": ["create_doc_and_edit"],
+  "text_anchors": [
+    {"text": "新建", "role": "dropdown_title", "required": true},
+    {"text": "文档", "role": "document_type_option", "required": true}
+  ],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

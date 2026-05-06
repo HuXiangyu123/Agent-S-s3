@@ -17,7 +17,7 @@
 
 - 自然语言测试描述输入
 - 结构化 testcase
-- workflow 驱动执行
+- `feishu_agent` 驱动执行
 - 可插拔定位策略
 - step / case 验证
 - 报告输出
@@ -27,12 +27,11 @@
 ```text
 Natural Language Input
   -> NL Testcase Parser
-  -> Planner / Workflow Selector
-  -> FeishuWorker
-  -> StateDetector
-  -> Locator
-  -> FeishuACI
-  -> Verifier
+  -> Tool Router / Domain Guidance
+  -> AgentS3 + WindowsFeishuACI (LLM agent loop)
+      -> StateDetector / PageRegistry / Locator hints
+      -> Verifier hints
+  -> S3RuntimeRecorder
   -> ReportBuilder
   -> Test Artifacts
 ```
@@ -45,11 +44,12 @@ Natural Language Input
 - testcase schema 定义
 - testcase 校验
 
-### 4.2 `planner/`
+### 4.2 `tooling/`
 
-- workflow 选择
-- 业务参数绑定
-- 进入执行前约束整理
+- 产品意图识别
+- 工具子集建议
+- 下一步关注点和验证提示
+- 进入执行前约束透传
 
 ### 4.3 `detectors/`
 
@@ -64,13 +64,14 @@ Natural Language Input
 
 ### 4.5 `agents/`
 
-- 飞书语义动作
-- workflow 运行时上下文管理
+- `feishu_agent` runtime 接线
+- `AgentS3 + WindowsFeishuACI` 执行入口
+- 运行时上下文记录接入
 
-### 4.6 `workflows/`
+### 4.6 `workflows/` (deprecated)
 
-- 显式阶段机
-- step 级 success gate / fallback / retry
+- 已废弃；不得新增产品级固定阶段机
+- 不得提供 runtime controller 或 `workflow.steps()` 执行路径
 
 ### 4.7 `verifiers/`
 
@@ -159,33 +160,44 @@ class PageDescriptor:
     ui_version_tag: str
 ```
 
+说明：
+
+- `supported_workflows` 是兼容旧页面描述符的字段；新功能不得用它驱动 runtime。
+- 新增产品域应优先通过 `tooling/` 的 semantic guidance 表达可用工具、下一步关注点和验证提示。
+
 ## 6. 规划决策层
+
+> **Track ABCD 核心定位**：以下所有模块是 AgentS3 LLM agent loop 的 **agentic tool use 加速层**——提供领域知识、状态识别、元素定位提示和验证合约。它们不是独立的确定性执行路线，任何时候不应串联为 `Parser -> Planner -> Workflow -> Step Executor` 并绕过 AgentS3 的 LLM 决策。
 
 Parser 最低要求：
 
 - 识别 `product`
-- 识别 `workflow intent`
+- 识别 `task intent`
 - 识别 `inputs`
 - 识别 `assertions`
 - 支持多步骤串联
 
-Planner 最低要求：
+Tool guidance 最低要求：
 
-- 优先命中显式 workflow
-- 输出稳定 `workflow` 与业务参数绑定结果
+- 输出稳定 `product`、`intent` 与业务参数提示
+- 输出 preferred tools、next-step focus、verification hints
 - 保留执行前需要的 `preconditions` 和 `entry_assertions`
-- 不允许整条任务直接落入不受控自由执行
+- 不输出固定步骤序列，不绕过 `feishu_agent`
 
-Planner 输出建议最小结构：
+Tool guidance 输出建议最小结构：
 
 ```python
 {
-    "workflow": "send_message",
-    "reason": "matched product=im and action intent=send_message",
-    "workflow_params": {
+    "product": "im",
+    "intent": "send_message",
+    "reason": "matched product=im and task intent=send_message",
+    "params": {
         "chat_name": "测试群",
         "message_text": "Hello World",
     },
+    "preferred_tools": ["click", "type", "hotkey"],
+    "next_step_focus": "message_input",
+    "verification_hints": ["chat_title_matched", "message_sent"],
     "entry_assertions": ["chat_title_matched"],
     "preconditions": ["飞书桌面端已登录"],
     "failure_type": None,
@@ -195,47 +207,31 @@ Planner 输出建议最小结构：
 
 前置条件策略：
 
-- `preconditions` 由 `FeishuWorker` 在真正执行 workflow 前统一检查，不由 Parser 直接判定。
+- `preconditions` 由执行层在真正执行前统一检查，不由 Parser 直接判定。
 - 当前 M0-M1 阶段允许部分前置条件通过人工保证，未自动化校验的项在运行结果中标记为 `assumed`，避免误报为已验证。
-- `Planner` 负责保留 `TestCase.preconditions` 并将其透传给执行层，不负责具体检查执行。
-- 若 `Planner` 在执行前就判定无法进入受控 workflow，必须返回共享 `failure_type`，不能只返回自由文本 `failure_reason`。
+- `Tool Router` 负责保留 `TestCase.preconditions` 并将其透传给执行层，不负责具体检查执行。
+- 若语义指导层在执行前判定无法提供受控工具建议，必须返回共享 `failure_type`，不能只返回自由文本 `failure_reason`。
+- `AgentS3` 是唯一产品任务执行中枢；业务规则以状态、定位、工具提示和 verifier hint 的形式提供给 LLM loop。
 
-Planner / Workflow 边界：
+## 6.1 AgentS3 执行职责
 
-- `Planner` 负责“选哪条路”，即 `workflow` 选择、业务参数绑定、进入执行前的约束。
-- `Workflow` 负责“这条路每一步怎么走”，即 `next_step`、`fallback`、`retry_limit`、阶段推进。
-- `FeishuWorker` 只负责编排，不拥有业务规则；业务规则落在 `Planner` 和 `Workflow`。
+`AgentS3` (LLM 驱动的 agent loop) 是执行中枢，最低职责为：
 
-命名约定：
-
-- `Planner` 的标准输出结构在本文档与接口文档中统一称为 `WorkflowPlan`。
-- 若后续代码实现不单独定义类型别名，至少要保证 `Planner output` 与这里的 `WorkflowPlan` 字段保持一致。
-
-## 6.1 FeishuWorker 执行职责
-
-`FeishuWorker` 是执行中枢，最低职责为：
-
-1. 接收 `TestCase`
-2. 执行前置条件检查
-3. 调用 `Planner / Workflow Selector`
-4. 驱动 `StateDetector -> Locator -> FeishuACI -> Verifier` 的循环
-5. 聚合运行上下文并交给 `ReportBuilder`
+1. 接收自然语言 instruction
+2. 通过 `WindowsFeishuACI` 截取屏幕并执行 grounding
+3. 在 LLM agent loop 中逐 step 预测 action code 并执行
+4. 将运行时产物通过 `S3RuntimeRecorder` 聚合并交给 `ReportBuilder`
 
 最小执行生命周期：
 
 ```text
-run_testcase(testcase)
-  -> check_preconditions
-  -> select workflow and workflow params
-  -> for each step:
-       detect state
-       locate target if needed
-       execute action
-       verify step
-       fallback / retry if needed
-  -> verify case
-  -> build report
-  -> return RuntimeContext
+run_agent(instruction)
+  -> capture_observation (screenshot)
+  -> agent.predict(instruction, observation) -> action code
+  -> exec(action code)
+  -> settle_delay
+  -> repeat until done/fail/budget
+  -> S3RuntimeRecorder.finalize -> artifacts
 ```
 
 ## 6.2 运行时事实模型
@@ -255,7 +251,7 @@ run_testcase(testcase)
 
 `RuntimeContext.failure_type` 语义：
 
-- 当运行在执行前失败，例如 `precondition` 不满足、`workflow` 未命中时，使用顶层 `failure_type` 直接表达整次运行失败原因。
+- 当运行在执行前失败，例如 `precondition` 不满足、语义指导不可用时，使用顶层 `failure_type` 直接表达整次运行失败原因。
 - 当运行进入步骤执行后失败，顶层 `failure_type` 取“导致整次运行终止的首个失败步骤”的 `step_results[].failure_type`。
 - 当整次运行成功时，顶层 `failure_type` 为 `None`。
 - `ReportBuilder` 应优先使用顶层 `failure_type` 做 case 级聚合，步骤级明细再读取 `step_results[]`。
@@ -269,7 +265,7 @@ run_testcase(testcase)
 - screenshot
 - OCR / VLM
 - visual anchors
-- relative bounds
+- semantic anchors
 
 当前里程碑口径：
 
@@ -310,23 +306,30 @@ run_testcase(testcase)
 - 若定位失败但页面识别成功，`page_id` 返回当前已识别页面的 `PageDescriptor.page_id`。
 - 若页面本身也无法可靠识别，`page_id` 返回 `None`。
 
-## 8. workflow 规范
+截图语义抽取约束：
 
-workflow 必须是显式阶段机。
+- 页面描述符、检测 fixture、VC 截图标注只保留语义事实，例如可见控件、页面类型、弹窗状态、文字锚点。
+- 不得把截图抽取结果写成坐标、相对范围、置信度、图片宽高等量化图像指标。
+- 需要点击坐标时，只能由 runtime locator 在当前截图上即时计算，不能来自静态 fixture。
 
-每个阶段至少包含：
+## 8. Agentic Tool Guidance 规范
 
-- `entry_condition`
-- `semantic_action`
-- `success_gate`
-- `fallback`
-- `retry_limit`
+`tooling/` 提供 agentic tool guidance，不提供固定 runtime workflow。
 
-workflow 约束：
+每个产品意图至少包含：
 
-- 每个 workflow 文件只负责一个业务场景，例如 `send_message`。
-- `Workflow` 内部不得重新选择其他 workflow；切换场景必须回到 `Planner` 层。
-- 同一时刻只允许一个 agent 负责同一 workflow 文件，避免多 agent 争抢阶段机定义。
+- `product`
+- `intent`
+- `preferred_tools`
+- `next_step_focus`
+- `verification_hints`
+- `failure_type` / `failure_reason`
+
+约束：
+
+- 不得创建 `*_workflow.py` 产品阶段机文件。
+- 不得把 guidance 转换成 ordered steps 后绕过 AgentS3 执行。
+- 新产品域默认只进入 `feishu_agent` 的语义先验层。
 
 ## 9. 报告与产物
 
@@ -346,7 +349,7 @@ artifacts/
 
 - `task_id`
 - `product`
-- `workflow`
+- `intent`
 - `status`
 - `steps`
 - `duration_sec`
@@ -373,28 +376,27 @@ artifacts/
 | 模块 | 主要输出 | 直接依赖 | 并行开发建议 |
 | --- | --- | --- | --- |
 | `testcases/` | `TestCase` schema、parser | 无 | 可先行，作为其他模块输入基线 |
-| `planner/` | workflow 选择、业务参数绑定 | `TestCase` | 与 `detectors/`、`pages/` 并行，但先冻结输入输出 |
+| `tooling/` | tool guidance、业务参数提示 | `TestCase`、`FeishuState` | 与 `detectors/`、`pages/` 并行，但先冻结输入输出 |
 | `pages/` | `PageDescriptor`、页面元数据 | 无 | 可与 `detectors/` 并行 |
 | `detectors/` | `FeishuState` | `pages/` | 可与 `locators/` 并行 |
 | `locators/` | 统一定位结果 | `pages/`、`FeishuState` | 当前只承诺 `VisionLocator` 进入默认链路；`AccessibilityLocator` / `HybridLocator` 仅保留接口 |
-| `agents/` | `FeishuACI`、`FeishuWorker`、运行时调度 | `planner/`、`locators/`、`detectors/`、`verifiers/` | 尽量串行，属于高耦合层 |
-| `workflows/` | 显式阶段机、fallback、retry | `planner/`、`agents/` | 可按单 workflow 分模块并行 |
-| `verifiers/` | step/case 验证结果 | `detectors/`、`workflows/` | 可与 `reports/` 并行 |
+| `agents/` | `AgentS3`、`WindowsFeishuACI`、运行时调度 | `tooling/`、`locators/`、`detectors/`、`verifiers/` | 尽量串行，属于高耦合层 |
+| `verifiers/` | step/case 验证结果 | `detectors/`、运行日志 | 可与 `reports/` 并行 |
 | `reports/` | `summary.json`、`report.md` | `verifiers/`、运行日志 | 低耦合，适合独立开发 |
 | `maintenance/` | anchor 校验、截图录制 | `pages/`、`detectors/` | 与主执行链解耦，独立推进 |
 
 并行开发规则：
 
 1. 先冻结接口，再并行 coding；不要一边改接口一边多模块同时实现。
-2. 高耦合模块优先串行：`gui_agents/s3/agents/worker.py`、`grounding.py`、未来的 `gui_agents/feishu/agents/feishu_worker.py`。
+2. 高耦合模块优先串行：`gui_agents/s3/agents/worker.py`、`grounding.py`、`gui_agents/s3/cli_app.py`。
 3. 任一模块若需要跨边界新增字段，先更新 `interfaces`，再进入实现。
-4. workflow 应按单一职责拆分，避免多个 agent 共同修改同一 workflow 文件。
+4. 不得以并行开发为由恢复产品级固定 workflow 文件。
 
 ## 12. 实施顺序建议
 
-1. 先定 `TestCase`、`WorkflowPlan`、`FeishuState`、`LocatorResult`、`ActionLog`、`StepResult`、`RuntimeContext` 这些基础契约。
-2. 再做 `testcases/` 与 `planner/`，保证自然语言输入先收敛成结构化计划。
+1. 先定 `TestCase`、`FeishuToolGuidance`、`FeishuState`、`LocatorResult`、`ActionLog`、`StepResult`、`RuntimeContext` 这些基础契约。
+2. 再做 `testcases/` 与 `tooling/`，保证自然语言输入先收敛成结构化意图和工具指导。
 3. 随后并行推进 `pages/`、`detectors/`、`locators/`。
-4. 在状态识别和定位稳定后，再按单一场景并行补 `workflows/` 与 `verifiers/`。
-5. `FeishuWorker` 在各模块契约冻结后再串行接入。
+4. 在状态识别和定位稳定后，补 verifier 与产品级 guidance，仍由 `feishu_agent` 执行。
+5. `AgentS3` + `S3RuntimeRecorder` 在各模块契约冻结后再串行接入。
 6. 最后处理 `reports/`、异常、自愈、跨产品联动等进阶能力。

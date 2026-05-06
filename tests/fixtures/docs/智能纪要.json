@@ -1,0 +1,25 @@
+{
+  "fixture_id": "docs_smart_minutes",
+  "image_file": "智能纪要.png",
+  "product": "docs",
+  "page_id": "docs_home",
+  "page_type": "docs_home",
+  "display_name": "Feishu Docs Smart Minutes",
+  "scenario": "Smart minutes navigation page under cloud docs.",
+  "expected_state": {
+    "product": "docs",
+    "page_type": "docs_home",
+    "message_input_visible": false,
+    "send_button_visible": false,
+    "search_box_visible": true,
+    "modal_type": null,
+    "last_error_banner": null
+  },
+  "product_state": {
+    "smart_minutes_visible": true,
+    "workflow_support": "deferred"
+  },
+  "supported_workflows": [],
+  "annotation_status": "draft",
+  "review_status": "unreviewed"
+}

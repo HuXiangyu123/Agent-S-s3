@@ -1,0 +1,26 @@
+﻿{
+    "fixture_id":  "base_share_panel_open",
+    "image_file":  "新建多维表格后浏览器界面-点击分享后.png",
+    "product":  "base",
+    "page_id":  "base_share_panel",
+    "page_type":  "base_share_panel",
+    "display_name":  "Feishu Base Share Panel",
+    "scenario":  "Share panel opened from Base browser editor.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_share_panel",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "share_panel",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "share_panel_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_share_panel_area"
+                        ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

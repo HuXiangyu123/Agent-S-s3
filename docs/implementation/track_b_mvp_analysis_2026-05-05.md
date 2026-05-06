@@ -1,5 +1,12 @@
 # Track B MVP Analysis And Implementation Plan (2026-05-05)
 
+## Status
+
+Historical implementation record. References to downstream `WorkflowPlan`,
+`workflows/`, or `feishu_worker` were superseded by the current
+`feishu_agent = AgentS3 + WindowsFeishuACI` runtime route. Track B remains valid
+only as page/state/locator knowledge for agentic tool use.
+
 ## Goal
 
 为飞书 GUI Agent 建立 `Track B` 的最小可用视觉知识层，覆盖：
@@ -86,7 +93,7 @@
 - `@提及` 下拉
 - UIA / Accessibility 实现
 - 默认 `cli_app.py` 入口改线
-- `FeishuWorker` / `workflows/` / `verifiers/`
+- 确定性 workflow executor / `workflows/` / `verifiers/`
 - 真实自动点击执行集成
 
 ## Recommended Module Boundaries

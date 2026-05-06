@@ -1,0 +1,41 @@
+﻿{
+    "fixture_id":  "base_template_gallery_open",
+    "image_file":  "点击新建后.png",
+    "product":  "base",
+    "page_id":  "base_template_gallery",
+    "page_type":  "base_template_gallery",
+    "display_name":  "Feishu Base Template Gallery",
+    "scenario":  "Base template center opened after choosing new Base table.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_template_gallery",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  "template_center",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "template_gallery_visible":  true,
+                          "blank_base_table_card_visible":  true,
+                          "category_nav_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_template_search_area",
+                            "base_blank_table_card_area"
+                        ],
+    "text_anchors":  [
+                         {
+                             "text":  "模板中心",
+                             "role":  "modal_title",
+                             "required":  true
+                         },
+                         {
+                             "text":  "新建多维表格",
+                             "role":  "blank_card",
+                             "required":  true
+                         }
+                     ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

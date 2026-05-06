@@ -1,0 +1,24 @@
+﻿{
+    "fixture_id":  "base_search_active",
+    "image_file":  "点击搜索后.png",
+    "product":  "base",
+    "page_id":  "base_home",
+    "page_type":  "base_home",
+    "display_name":  "Feishu Base Search Active",
+    "scenario":  "Base search field focused or search panel opened.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_home",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  true,
+                           "modal_type":  "base_search_panel",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "base_home_visible":  true,
+                          "base_search_active":  true
+                      },
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}

@@ -1,0 +1,42 @@
+﻿{
+    "fixture_id":  "base_new_menu_open",
+    "image_file":  "点击新建.png",
+    "product":  "base",
+    "page_id":  "base_new_menu",
+    "page_type":  "base_new_menu",
+    "display_name":  "Feishu Base New Menu",
+    "scenario":  "Top-right Base new menu opened from all Base list.",
+    "expected_state":  {
+                           "product":  "base",
+                           "page_type":  "base_new_menu",
+                           "message_input_visible":  false,
+                           "send_button_visible":  false,
+                           "search_box_visible":  false,
+                           "modal_type":  "base_new_menu",
+                           "last_error_banner":  null
+                       },
+    "product_state":  {
+                          "new_menu_visible":  true,
+                          "new_base_table_option_visible":  true,
+                          "new_base_app_option_visible":  true,
+                          "import_excel_option_visible":  true
+                      },
+    "visible_targets":  [
+                            "base_new_menu_area",
+                            "base_new_table_option_area"
+                        ],
+    "text_anchors":  [
+                         {
+                             "text":  "新建多维表格",
+                             "role":  "menu_item",
+                             "required":  true
+                         },
+                         {
+                             "text":  "导入 Excel/在线表格",
+                             "role":  "menu_item",
+                             "required":  false
+                         }
+                     ],
+    "annotation_status":  "draft",
+    "review_status":  "unreviewed"
+}
