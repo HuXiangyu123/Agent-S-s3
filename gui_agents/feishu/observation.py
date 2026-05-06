@@ -14,7 +14,7 @@ def load_fixture_metadata(image_path: str | Path) -> dict[str, Any]:
     metadata_path = path.with_suffix(".json")
     if not metadata_path.exists():
         return {}
-    return json.loads(metadata_path.read_text(encoding="utf-8"))
+    return json.loads(metadata_path.read_text(encoding="utf-8-sig"))
 
 
 def normalize_observation(observation: dict[str, Any]) -> dict[str, Any]:

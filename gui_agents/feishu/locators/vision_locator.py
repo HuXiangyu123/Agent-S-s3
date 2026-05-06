@@ -70,12 +70,33 @@ def _canonical_target(target: str, state: FeishuState) -> str:
 
 
 def _descriptor_from_state(state: FeishuState) -> str | None:
+    base_page_types = {
+        "base_home": "base_home",
+        "base_new_menu": "base_new_menu",
+        "base_template_gallery": "base_template_gallery",
+        "base_browser_table": "base_browser_table",
+        "base_share_panel": "base_share_panel",
+        "base_dashboard": "base_dashboard",
+        "base_automation": "base_automation",
+        "base_app_market": "base_app_market",
+    }
+    if state.get("page_type") in base_page_types:
+        return base_page_types[state["page_type"]]
     if state.get("page_type") == "chat_main":
         return "im_chat_main"
     if state.get("page_type") == "chat_search_panel":
         return "im_chat_search_panel"
     if state.get("page_type") == "shell_search":
         return "feishu_shell_search"
+    vc_page_types = {
+        "vc_home": "vc_home",
+        "vc_start_preview": "vc_start_preview",
+        "vc_meeting_active": "vc_meeting_active",
+        "vc_join_preview": "vc_join_preview",
+        "vc_invite_dialog": "vc_invite_dialog",
+    }
+    if state.get("page_type") in vc_page_types:
+        return vc_page_types[state["page_type"]]
     return None
 
 
@@ -109,6 +130,13 @@ def locate_target(
         if not isinstance(region, dict):
             raise KeyError(name)
         return region["relative_bounds"]
+
+    if state.get("product") == "base" or target.startswith("base_"):
+        return _failure_result(
+            "location",
+            "Base semantic priors do not expose fixed coordinates; use grounded browser actions instead",
+            page_descriptor["page_id"],
+        )
 
     if target == "message_input":
         if page_descriptor["page_id"] != "im_chat_main":

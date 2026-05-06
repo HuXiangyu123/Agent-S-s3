@@ -1,4 +1,4 @@
-"""Minimal Feishu state detector for Track B MVP."""
+﻿"""Minimal Feishu state detector for Track B MVP."""
 
 from __future__ import annotations
 
@@ -10,28 +10,20 @@ from gui_agents.feishu.observation import normalize_observation
 from gui_agents.feishu.pages.registry import get_page_descriptor
 
 
-CHAT_PLACEHOLDER_KEYWORDS = ("发送给", "鍙戦€佺粰")
-MESSAGE_TAB_KEYWORDS = ("消息", "娑堟伅")
-SEND_BUTTON_KEYWORDS = ("发送", "鍙戦€?")
+CHAT_PLACEHOLDER_KEYWORDS = ("发送给",)
+MESSAGE_TAB_KEYWORDS = ("消息",)
+SEND_BUTTON_KEYWORDS = ("发送",)
 SHELL_SEARCH_KEYWORDS = (
     "问你想问的问题",
     "搜索关键词",
-    "闂綘鎯抽棶鐨勯棶棰?",
-    "鎼滅储鍏抽敭璇?",
 )
-CHAT_SEARCH_PANEL_KEYWORDS = ("搜索会话内容", "鎼滅储浼氳瘽鍐呭")
+CHAT_SEARCH_PANEL_KEYWORDS = ("搜索会话内容",)
 CHAT_SEARCH_FILTER_KEYWORDS = (
     "来自用户",
     "时间",
     "高级搜索",
-    "鏉ヨ嚜鐢ㄦ埛",
-    "鏃堕棿",
-    "楂樼骇鎼滅储",
 )
-CHAT_SEARCH_EMPTY_HINT_KEYWORDS = (
-    "输入关键词或使用过滤器查找消息记录",
-    "杈撳叆鍏抽敭璇嶆垨浣跨敤杩囨护鍣ㄦ煡鎵炬秷鎭褰?",
-)
+CHAT_SEARCH_EMPTY_HINT_KEYWORDS = ("输入关键词或使用过滤器查找消息记录",)
 
 
 def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
@@ -39,7 +31,10 @@ def _contains_any(text: str, keywords: tuple[str, ...]) -> bool:
 
 
 def _extract_chat_name(text: str) -> str | None:
-    match = re.search(r"(?:发送给|鍙戦€佺粰)\s*([^\n\r]+)", text)
+    match = re.search(
+        r"发送给\s*([^\n\r]+)",
+        text,
+    )
     if match:
         return match.group(1).strip()
     return None
@@ -77,7 +72,7 @@ def _shell_search_state(ocr_text: str) -> FeishuState:
         modal_type=None,
         last_error_banner=None,
         product_state={
-            "search_result_list_visible": "常用" in ocr_text or "甯哥敤" in ocr_text,
+            "search_result_list_visible": "常用" in ocr_text,
         },
     )
 

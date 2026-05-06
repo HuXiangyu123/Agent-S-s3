@@ -14,13 +14,24 @@ FailureType = Literal[
 ]
 
 ActionId = Literal[
+    "open_docs_home",
+    "open_docs_new_menu",
     "open_chat",
+    "select_blank_doc_template",
+    "select_docs_document_type",
     "focus_message_input",
+    "type_doc_body",
+    "type_doc_title",
     "type_message",
     "send_message",
 ]
 
 TargetId = Literal[
+    "docs_blank_doc_card",
+    "docs_body_editor",
+    "docs_document_option",
+    "docs_new_card",
+    "docs_title_input",
     "global_search_entry",
     "conversation_list_item",
     "conversation_search_entry",
@@ -29,12 +40,37 @@ TargetId = Literal[
     "search_result_item",
     "message_input",
     "send_button",
+    "vc_home",
+    "vc_start_card",
+    "vc_join_card",
+    "vc_start_button",
+    "vc_meeting_id_input",
+    "vc_join_button",
+    "vc_invite_button",
+    "vc_invite_contact_result",
+    "vc_share_button",
 ]
 
 AssertionId = Literal[
+    "base_editor_ready",
+    "base_home_ready",
+    "base_new_menu_opened",
+    "base_template_gallery_ready",
     "chat_title_matched",
+    "doc_body_contains_text",
+    "doc_editor_ready",
+    "doc_title_contains_text",
+    "docs_home_ready",
+    "docs_new_menu_opened",
+    "docs_template_gallery_ready",
     "message_input_contains_text",
     "message_sent",
+    "vc_home_ready",
+    "vc_start_preview_ready",
+    "vc_meeting_active",
+    "vc_join_preview_ready",
+    "vc_meeting_id_entered",
+    "vc_joined",
 ]
 
 
@@ -54,16 +90,6 @@ class TestCase(TypedDict):
     steps: list[TestStep]
     assertions: list[str]
     artifacts: NotRequired[dict[str, Any]]
-
-
-class WorkflowPlan(TypedDict):
-    workflow: str | None
-    reason: str
-    workflow_params: dict[str, Any]
-    entry_assertions: list[str]
-    preconditions: list[str]
-    failure_type: FailureType | None
-    failure_reason: str | None
 
 
 class PageDescriptor(TypedDict):

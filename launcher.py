@@ -99,6 +99,10 @@ EXECUTION_MODES = {
 }
 
 
+def _warn(message: str) -> None:
+    print(f"[launcher warning] {message}", file=sys.stderr)
+
+
 def _default_config() -> dict:
     return {
         "first_run_completed": False,
@@ -249,7 +253,8 @@ def load_config() -> dict:
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as handle:
                 raw = json.load(handle)
-        except Exception:
+        except Exception as exc:
+            _warn(f"load_config failed, using defaults: {exc!r}")
             raw = {}
     had_main_routing = "main_provider" in raw or "main_providers" in raw
 
@@ -314,7 +319,8 @@ def detect_environment() -> dict:
             ctypes.windll.user32, "GetDpiForSystem"
         ):
             dpi_scale = round(ctypes.windll.user32.GetDpiForSystem() / 96.0, 2)
-    except Exception:
+    except Exception as exc:
+        _warn(f"detect_environment dpi probe failed: {exc!r}")
         dpi_scale = 1.0
 
     env = {
@@ -337,21 +343,23 @@ def detect_environment() -> dict:
 class Launcher:
     def __init__(self):
         self.colors = {
-            "bg": "#f5f5f7",
+            "bg": "#f9fafb",
             "panel": "#ffffff",
-            "panel_alt": "#f0f0f2",
-            "border": "#e0e0e4",
-            "text": "#1d1d1f",
-            "muted": "#86868b",
-            "accent": "#4a6cf7",
-            "accent_alt": "#34c759",
-            "warn": "#ff9f0a",
-            "danger": "#ff3b30",
-            "success": "#34c759",
-            "button_text": "#1d1d1f",
-            "input_bg": "#ffffff",
-            "input_text": "#1d1d1f",
-            "log_bg": "#fafafa",
+            "panel_alt": "#f3f4f6",
+            "border": "#e5e7eb",
+            "text": "#171717",
+            "muted": "#737373",
+            "accent": "#2563eb",
+            "accent_alt": "#0d9488",
+            "warn": "#d97706",
+            "danger": "#dc2626",
+            "success": "#16a34a",
+            "button_text": "#ffffff",
+            "input_bg": "#f9fafb",
+            "input_text": "#171717",
+            "log_bg": "#ffffff",
+            "dark_panel": "#171717",
+            "dark_muted": "#a3a3a3",
         }
 
         self.root = tk.Tk()
@@ -411,6 +419,8 @@ class Launcher:
             ".", background=self.colors["bg"], foreground=self.colors["text"]
         )
         style.configure("App.TFrame", background=self.colors["bg"])
+        style.configure("Panel.TFrame", background=self.colors["panel"])
+        style.configure("Alt.TFrame", background=self.colors["panel_alt"])
         style.configure(
             "Card.TLabelframe",
             background=self.colors["panel"],
@@ -437,6 +447,12 @@ class Launcher:
             font=("Segoe UI", 9),
         )
         style.configure(
+            "AppMuted.TLabel",
+            background=self.colors["bg"],
+            foreground=self.colors["muted"],
+            font=("Segoe UI", 9),
+        )
+        style.configure(
             "Section.TLabel",
             background=self.colors["panel"],
             foreground=self.colors["accent"],
@@ -452,7 +468,7 @@ class Launcher:
         style.configure(
             "Subtle.TButton",
             background=self.colors["panel_alt"],
-            foreground=self.colors["button_text"],
+            foreground=self.colors["text"],
             padding=(10, 7),
             borderwidth=1,
         )
@@ -465,18 +481,18 @@ class Launcher:
         )
         style.map(
             "Primary.TButton",
-            background=[("active", "#6d88ff"), ("disabled", "#d6defa")],
-            foreground=[("disabled", "#97a3d3")],
+            background=[("active", "#1d4ed8"), ("disabled", "#9ca3af")],
+            foreground=[("disabled", "#ffffff")],
         )
         style.map(
             "Subtle.TButton",
-            background=[("active", "#e5e5ea"), ("disabled", self.colors["panel_alt"])],
+            background=[("active", "#e5e7eb"), ("disabled", self.colors["panel_alt"])],
             foreground=[("disabled", "#9a9aa1")],
         )
         style.map(
             "Danger.TButton",
-            background=[("active", "#ff6b60"), ("disabled", "#f7d7d4")],
-            foreground=[("disabled", "#c79c97")],
+            background=[("active", "#b91c1c"), ("disabled", "#fca5a5")],
+            foreground=[("disabled", "#ffffff")],
         )
         style.configure("TNotebook", background=self.colors["bg"], borderwidth=0)
         style.configure(
@@ -549,86 +565,179 @@ class Launcher:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
 
-        outer = ttk.Frame(self.root, style="App.TFrame", padding=16)
+        outer = ttk.Frame(self.root, style="App.TFrame", padding=24)
         outer.grid(row=0, column=0, sticky="nsew")
         outer.columnconfigure(0, weight=1)
         outer.rowconfigure(1, weight=1)
 
         hero = tk.Frame(
             outer,
-            bg=self.colors["panel_alt"],
+            bg=self.colors["panel"],
             highlightbackground=self.colors["border"],
             highlightthickness=1,
-            padx=18,
+            padx=24,
             pady=16,
         )
-        hero.grid(row=0, column=0, sticky="ew")
+        hero.grid(row=0, column=0, sticky="ew", pady=(0, 24))
         hero.columnconfigure(0, weight=1)
         tk.Label(
             hero,
-            text="Agent S3 Launcher",
-            bg=self.colors["panel_alt"],
+            text="Agent S3 启动器",
+            bg=self.colors["panel"],
             fg=self.colors["text"],
-            font=("Segoe UI Semibold", 20),
+            font=("Segoe UI Variable Display", 22, "bold"),
         ).grid(row=0, column=0, sticky="w")
         tk.Label(
             hero,
-            text="Provider routing, runtime review, and legacy Doubao grounding compatibility.",
-            bg=self.colors["panel_alt"],
+            text="路由分发、运行监控与 Feishu Agent 调试面板",
+            bg=self.colors["panel"],
             fg=self.colors["muted"],
-            font=("Segoe UI", 10),
-        ).grid(row=1, column=0, sticky="w", pady=(6, 0))
+            font=("Segoe UI Variable Text", 11),
+        ).grid(row=1, column=0, sticky="w", pady=(4, 0))
 
-        hero_actions = tk.Frame(hero, bg=self.colors["panel_alt"])
+        hero_actions = tk.Frame(hero, bg=self.colors["panel"])
         hero_actions.grid(row=0, column=1, rowspan=2, sticky="e")
         self.status_badge = tk.Label(
             hero_actions,
             textvariable=self.v_status,
-            bg="#e5e5ea",
-            fg=self.colors["button_text"],
-            font=("Segoe UI Semibold", 11),
-            padx=14,
-            pady=6,
+            bg=self.colors["panel_alt"],
+            fg="#4b5563",
+            font=("Segoe UI Variable Text Semibold", 11),
+            padx=16,
+            pady=8,
         )
-        self.status_badge.pack(side="left", padx=(0, 8))
+        self.status_badge.pack(side="left", padx=(0, 16))
         self.btn_stop = ttk.Button(
             hero_actions,
-            text="停止",
+            text="停止任务",
             style="Danger.TButton",
             command=self._stop_agent,
             state="disabled",
         )
-        self.btn_stop.pack(side="left")
-        tk.Label(
-            hero,
-            textvariable=self.v_status_detail,
-            bg=self.colors["panel_alt"],
+        self.btn_stop.pack(side="left", padx=(0, 12))
+        self.btn_start = ttk.Button(
+            hero_actions,
+            text="启动智能体",
+            style="Primary.TButton",
+            command=self._start_agent,
+        )
+        self.btn_start.pack(side="left")
+
+        main_content = ttk.Frame(outer, style="App.TFrame")
+        main_content.grid(row=1, column=0, sticky="nsew")
+        main_content.columnconfigure(0, weight=4)
+        main_content.columnconfigure(1, weight=6)
+        main_content.rowconfigure(0, weight=1)
+
+        left_pane = ttk.Frame(main_content, style="App.TFrame")
+        left_pane.grid(row=0, column=0, sticky="nsew", padx=(0, 24))
+        left_pane.columnconfigure(0, weight=1)
+        left_pane.rowconfigure(1, weight=1)
+
+        switcher = tk.Frame(left_pane, bg=self.colors["border"], padx=4, pady=4)
+        switcher.grid(row=0, column=0, sticky="w", pady=(0, 16))
+        tab_agent = tk.Label(
+            switcher,
+            text="智能体工作台",
+            bg=self.colors["panel"],
+            fg=self.colors["accent"],
+            font=("Segoe UI Variable Display", 11, "bold"),
+            padx=24,
+            pady=8,
+            cursor="hand2",
+        )
+        tab_agent.grid(row=0, column=0)
+        tab_sop = tk.Label(
+            switcher,
+            text="SOP 快捷面板",
+            bg=self.colors["border"],
             fg=self.colors["muted"],
-            font=("Segoe UI", 9),
-        ).grid(row=2, column=0, sticky="w", pady=(12, 0))
+            font=("Segoe UI Variable Display", 11),
+            padx=24,
+            pady=8,
+            cursor="hand2",
+        )
+        tab_sop.grid(row=0, column=1)
 
-        notebook = ttk.Notebook(outer)
-        notebook.grid(row=1, column=0, sticky="nsew", pady=(14, 0))
-
-        agent_tab = ttk.Frame(notebook, style="App.TFrame", padding=10)
-        sop_tab = ttk.Frame(notebook, style="App.TFrame", padding=10)
-        notebook.add(agent_tab, text="Agent Console")
-        notebook.add(sop_tab, text="SOP 快捷操作")
+        tab_stack = ttk.Frame(left_pane, style="App.TFrame")
+        tab_stack.grid(row=1, column=0, sticky="nsew")
+        tab_stack.columnconfigure(0, weight=1)
+        tab_stack.rowconfigure(0, weight=1)
+        agent_tab = tk.Frame(
+            tab_stack,
+            bg=self.colors["panel"],
+            highlightbackground=self.colors["border"],
+            highlightthickness=1,
+        )
+        sop_tab = tk.Frame(
+            tab_stack,
+            bg=self.colors["panel"],
+            highlightbackground=self.colors["border"],
+            highlightthickness=1,
+        )
+        agent_tab.grid(row=0, column=0, sticky="nsew")
+        sop_tab.grid(row=0, column=0, sticky="nsew")
 
         self._build_agent_tab(agent_tab)
         self._build_sop_tab(sop_tab)
+        agent_tab.tkraise()
+
+        def switch_to_agent(_event=None):
+            tab_agent.configure(
+                bg=self.colors["panel"],
+                fg=self.colors["accent"],
+                font=("Segoe UI Variable Display", 11, "bold"),
+            )
+            tab_sop.configure(
+                bg=self.colors["border"],
+                fg=self.colors["muted"],
+                font=("Segoe UI Variable Display", 11),
+            )
+            agent_tab.tkraise()
+
+        def switch_to_sop(_event=None):
+            tab_sop.configure(
+                bg=self.colors["panel"],
+                fg=self.colors["accent"],
+                font=("Segoe UI Variable Display", 11, "bold"),
+            )
+            tab_agent.configure(
+                bg=self.colors["border"],
+                fg=self.colors["muted"],
+                font=("Segoe UI Variable Display", 11),
+            )
+            sop_tab.tkraise()
+
+        tab_agent.bind("<Button-1>", switch_to_agent)
+        tab_sop.bind("<Button-1>", switch_to_sop)
+
+        right_pane = ttk.Frame(main_content, style="App.TFrame")
+        right_pane.grid(row=0, column=1, sticky="nsew")
+        right_pane.columnconfigure(0, weight=1)
+        right_pane.rowconfigure(2, weight=1)
+        self._build_right_pane(right_pane)
+
+        footer = ttk.Frame(outer, style="App.TFrame")
+        footer.grid(row=2, column=0, sticky="ew", pady=(16, 0))
+        footer.columnconfigure(1, weight=1)
+        ttk.Label(
+            footer, textvariable=self.v_status_detail, style="AppMuted.TLabel"
+        ).grid(row=0, column=0, sticky="w")
+        ttk.Label(
+            footer, text="Agent S3 / Feishu desktop runtime", style="AppMuted.TLabel"
+        ).grid(row=0, column=1, sticky="e")
 
     def _build_agent_tab(self, parent):
         parent.columnconfigure(0, weight=1)
         parent.rowconfigure(0, weight=1)
 
-        canvas = tk.Canvas(parent, bg=self.colors["bg"], highlightthickness=0, bd=0)
+        canvas = tk.Canvas(parent, bg=self.colors["panel"], highlightthickness=0, bd=0)
         canvas.grid(row=0, column=0, sticky="nsew")
         vsb = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         vsb.grid(row=0, column=1, sticky="ns")
         canvas.configure(yscrollcommand=vsb.set)
 
-        inner = ttk.Frame(canvas, style="App.TFrame")
+        inner = ttk.Frame(canvas, style="Panel.TFrame", padding=24)
         inner_id = canvas.create_window((0, 0), window=inner, anchor="nw")
         inner.bind(
             "<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
@@ -637,13 +746,12 @@ class Launcher:
         self._agent_canvas = canvas
         self._agent_inner = inner
 
-        inner.columnconfigure(0, weight=3)
-        inner.columnconfigure(1, weight=2)
+        inner.columnconfigure(0, weight=1)
 
         cfg = ttk.LabelFrame(
             inner, text="运行配置", style="Card.TLabelframe", padding=14
         )
-        cfg.grid(row=0, column=0, sticky="nsew", padx=(0, 10), pady=(0, 10))
+        cfg.grid(row=0, column=0, sticky="nsew")
         cfg.columnconfigure(1, weight=1)
 
         row = 0
@@ -798,78 +906,115 @@ class Launcher:
         ttk.Button(
             actions, text="保存配置", style="Subtle.TButton", command=self._save_config
         ).pack(side="left")
-        self.btn_start = ttk.Button(
+        ttk.Button(
             actions,
-            text="启动 Agent",
-            style="Primary.TButton",
-            command=self._start_agent,
-        )
-        self.btn_start.pack(side="left", padx=(8, 0))
-
-        panel = ttk.LabelFrame(
-            inner, text="运行总览", style="Card.TLabelframe", padding=14
-        )
-        panel.grid(row=0, column=1, sticky="nsew", pady=(0, 10))
-        panel.columnconfigure(0, weight=1)
-        ttk.Label(panel, text="主模型", style="Section.TLabel").grid(
-            row=0, column=0, sticky="w"
-        )
-        ttk.Label(
-            panel, textvariable=self.v_summary_main, style="App.TLabel", wraplength=320
-        ).grid(row=1, column=0, sticky="w", pady=(4, 10))
-        ttk.Label(panel, text="定位模型", style="Section.TLabel").grid(
-            row=2, column=0, sticky="w"
-        )
-        ttk.Label(
-            panel,
-            textvariable=self.v_summary_ground,
-            style="App.TLabel",
-            wraplength=320,
-        ).grid(row=3, column=0, sticky="w", pady=(4, 10))
-        ttk.Label(panel, text="运行策略", style="Section.TLabel").grid(
-            row=4, column=0, sticky="w"
-        )
-        ttk.Label(
-            panel,
-            textvariable=self.v_summary_runtime,
-            style="App.TLabel",
-            wraplength=320,
-        ).grid(row=5, column=0, sticky="w", pady=(4, 10))
-        ttk.Label(
-            panel, textvariable=self.v_env_info, style="Muted.TLabel", wraplength=320
-        ).grid(row=6, column=0, sticky="w", pady=(0, 10))
-        btns = ttk.Frame(panel, style="App.TFrame")
-        btns.grid(row=7, column=0, sticky="ew")
-        ttk.Button(
-            btns,
-            text="重新检测环境",
-            style="Subtle.TButton",
-            command=self._redetect_environment,
-        ).pack(side="left")
-        ttk.Button(
-            btns,
             text="恢复 Doubao 1.6 Vision",
             style="Subtle.TButton",
             command=self._restore_doubao_legacy,
         ).pack(side="left", padx=(8, 0))
-        ttk.Button(
-            btns,
-            text="测试连通性",
-            style="Primary.TButton",
-            command=self._test_connectivity,
-        ).pack(side="left", padx=(8, 0))
-        ttk.Button(
-            btns, text="清空日志", style="Subtle.TButton", command=self._clear_logs
-        ).pack(side="left", padx=(8, 0))
 
-        log = ttk.LabelFrame(
-            inner, text="运行日志", style="Card.TLabelframe", padding=10
+    def _build_right_pane(self, parent):
+        panel = tk.Frame(parent, bg=self.colors["dark_panel"], padx=24, pady=24)
+        panel.grid(row=0, column=0, sticky="ew", pady=(0, 16))
+        panel.columnconfigure(0, weight=1)
+        panel.columnconfigure(1, weight=1)
+
+        main_box = tk.Frame(panel, bg=self.colors["dark_panel"])
+        main_box.grid(row=0, column=0, sticky="nsew", padx=(0, 18))
+        tk.Label(
+            main_box,
+            text="COMPUTE",
+            bg=self.colors["dark_panel"],
+            fg=self.colors["dark_muted"],
+            font=("Segoe UI Variable Text", 9, "bold"),
+        ).pack(anchor="w")
+        tk.Label(
+            main_box,
+            textvariable=self.v_summary_main,
+            bg=self.colors["dark_panel"],
+            fg="#ffffff",
+            font=("Segoe UI Variable Display", 10, "bold"),
+            wraplength=260,
+            justify="left",
+        ).pack(anchor="w", pady=(6, 0))
+
+        canvas_box = tk.Frame(panel, bg=self.colors["dark_panel"])
+        canvas_box.grid(row=0, column=1, sticky="nsew")
+        tk.Label(
+            canvas_box,
+            text="CANVAS",
+            bg=self.colors["dark_panel"],
+            fg=self.colors["dark_muted"],
+            font=("Segoe UI Variable Text", 9, "bold"),
+        ).pack(anchor="w")
+        tk.Label(
+            canvas_box,
+            textvariable=self.v_screen_info,
+            bg=self.colors["dark_panel"],
+            fg="#ffffff",
+            font=("Segoe UI Variable Display", 10, "bold"),
+            wraplength=260,
+            justify="left",
+        ).pack(anchor="w", pady=(6, 0))
+
+        controls = ttk.Frame(parent, style="App.TFrame")
+        controls.grid(row=1, column=0, sticky="w", pady=(0, 16))
+        ttk.Button(
+            controls,
+            text="测试连接",
+            style="Subtle.TButton",
+            command=self._test_connectivity,
+        ).pack(side="left")
+        ttk.Button(
+            controls,
+            text="重新检测",
+            style="Subtle.TButton",
+            command=self._redetect_environment,
+        ).pack(side="left", padx=(10, 0))
+        ttk.Button(
+            controls,
+            text="清空日志",
+            style="Subtle.TButton",
+            command=self._clear_logs,
+        ).pack(side="left", padx=(10, 0))
+
+        log_frame = tk.Frame(
+            parent,
+            bg=self.colors["panel"],
+            highlightbackground=self.colors["border"],
+            highlightthickness=1,
         )
-        log.grid(row=1, column=0, columnspan=2, sticky="nsew", pady=(0, 10))
-        log.columnconfigure(0, weight=1)
-        log.rowconfigure(0, weight=1)
+        log_frame.grid(row=2, column=0, sticky="nsew")
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(1, weight=1)
+
+        log_header = tk.Frame(
+            log_frame,
+            bg=self.colors["input_bg"],
+            highlightbackground=self.colors["border"],
+            highlightthickness=1,
+            padx=24,
+            pady=12,
+        )
+        log_header.grid(row=0, column=0, sticky="ew")
+        log_header.columnconfigure(1, weight=1)
+        tk.Label(
+            log_header,
+            text="实时任务流水",
+            bg=self.colors["input_bg"],
+            fg=self.colors["muted"],
+            font=("Segoe UI Variable Display", 11, "bold"),
+        ).grid(row=0, column=0, sticky="w")
+        tk.Label(
+            log_header,
+            textvariable=self.v_summary_runtime,
+            bg=self.colors["input_bg"],
+            fg=self.colors["muted"],
+            font=("Segoe UI Variable Text", 9),
+        ).grid(row=0, column=1, sticky="e")
+
         self.log = scrolledtext.ScrolledText(
-            log,
+            log_frame,
             wrap="word",
             height=16,
             font=("Cascadia Code", 10),
@@ -879,32 +1024,32 @@ class Launcher:
             insertbackground=self.colors["text"],
             relief="flat",
             bd=0,
-            padx=10,
-            pady=10,
+            padx=24,
+            pady=24,
         )
-        self.log.grid(row=0, column=0, sticky="nsew")
+        self.log.grid(row=1, column=0, sticky="nsew")
         self.log.bind(
             "<MouseWheel>",
             lambda e: self.log.yview_scroll(-1 * (e.delta // 120), "units"),
         )
-        self.log.tag_config("info", foreground="#4a6cf7")
-        self.log.tag_config("action", foreground="#30b0a0")
-        self.log.tag_config("warn", foreground="#e8a030")
-        self.log.tag_config("query", foreground="#b8a030")
-        self.log.tag_config("success", foreground="#30a050")
+        self.log.tag_config("info", foreground=self.colors["accent"])
+        self.log.tag_config("action", foreground=self.colors["accent_alt"])
+        self.log.tag_config("warn", foreground=self.colors["warn"])
+        self.log.tag_config("query", foreground="#6b7280")
+        self.log.tag_config("success", foreground=self.colors["success"])
         self.log.tag_config("muted", foreground=self.colors["muted"])
         self.log.tag_config("normal", foreground=self.colors["text"])
 
-        inp = ttk.LabelFrame(
-            inner, text="任务输入", style="Card.TLabelframe", padding=10
+        inp = tk.Frame(
+            log_frame,
+            bg=self.colors["panel"],
+            highlightbackground=self.colors["border"],
+            highlightthickness=1,
+            padx=24,
+            pady=16,
         )
-        inp.grid(row=2, column=0, columnspan=2, sticky="ew")
+        inp.grid(row=2, column=0, sticky="ew")
         inp.columnconfigure(0, weight=1)
-        ttk.Label(
-            inp,
-            text="支持最近指令历史。Agent 进入 Query 状态后可发送任务。",
-            style="Muted.TLabel",
-        ).grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
         self.cb_query = ttk.Combobox(
             inp,
             textvariable=self.v_query,
@@ -912,41 +1057,41 @@ class Launcher:
             font=("Microsoft YaHei UI", 11),
             state="disabled",
         )
-        self.cb_query.grid(row=1, column=0, sticky="ew", padx=(0, 8))
+        self.cb_query.grid(row=0, column=0, sticky="ew", padx=(0, 10))
         self.cb_query.bind("<Return>", lambda _event: self._send_query())
         ttk.Button(
             inp,
             text="插入示例",
             style="Subtle.TButton",
             command=self._insert_example_query,
-        ).grid(row=1, column=1, padx=(0, 8))
+        ).grid(row=0, column=1, padx=(0, 10))
         self.btn_send = ttk.Button(
             inp,
-            text="发送",
+            text="发送指令",
             style="Primary.TButton",
             command=self._send_query,
             state="disabled",
         )
-        self.btn_send.grid(row=1, column=2)
+        self.btn_send.grid(row=0, column=2)
 
     def _build_sop_tab(self, parent):
         parent.columnconfigure(0, weight=1)
         parent.rowconfigure(1, weight=1)
-        bar = ttk.Frame(parent, style="App.TFrame")
-        bar.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        bar = ttk.Frame(parent, style="Panel.TFrame", padding=(24, 16))
+        bar.grid(row=0, column=0, sticky="ew")
         ttk.Button(
             bar, text="刷新 SOP 列表", style="Subtle.TButton", command=self._reload_sops
         ).pack(side="left")
         ttk.Label(
             bar, text="点击卡片并填写参数后即可执行预设工作流。", style="Muted.TLabel"
         ).pack(side="left", padx=(12, 0))
-        canvas = tk.Canvas(parent, bg=self.colors["bg"], highlightthickness=0, bd=0)
-        canvas.grid(row=1, column=0, sticky="nsew")
+        canvas = tk.Canvas(parent, bg=self.colors["panel"], highlightthickness=0, bd=0)
+        canvas.grid(row=1, column=0, sticky="nsew", padx=24)
         vsb = ttk.Scrollbar(parent, orient="vertical", command=canvas.yview)
         vsb.grid(row=1, column=1, sticky="ns")
         canvas.configure(yscrollcommand=vsb.set)
         self._sop_canvas = canvas
-        self._sop_frame = ttk.Frame(canvas, style="App.TFrame")
+        self._sop_frame = ttk.Frame(canvas, style="Panel.TFrame")
         self._sop_frame_id = canvas.create_window(
             (0, 0), window=self._sop_frame, anchor="nw"
         )
@@ -961,7 +1106,7 @@ class Launcher:
         log = ttk.LabelFrame(
             parent, text="SOP 日志", style="Card.TLabelframe", padding=10
         )
-        log.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(10, 0))
+        log.grid(row=2, column=0, columnspan=2, sticky="ew", padx=24, pady=(16, 24))
         log.columnconfigure(0, weight=1)
         self.sop_log = scrolledtext.ScrolledText(
             log,
@@ -1193,16 +1338,14 @@ class Launcher:
 
     def _set_status(self, status: str, mode: str, detail: str):
         palette = {
-            "idle": "#e5e5ea",
-            "starting": "#d6e0fd",
-            "running": "#d1f0dd",
-            "ready": "#c8f0d4",
-            "saved": "#fdf0d1",
-            "stopped": "#fddddd",
+            "idle": "#f3f4f6",
+            "starting": "#dbeafe",
+            "running": "#dcfce7",
+            "ready": "#bbf7d0",
+            "saved": "#fef3c7",
+            "stopped": "#fee2e2",
         }
-        self.status_badge.configure(
-            bg=palette.get(mode, "#e5e5ea"), fg=self.colors["button_text"]
-        )
+        self.status_badge.configure(bg=palette.get(mode, "#f3f4f6"), fg="#374151")
         self.v_status.set(status)
         self.v_status_detail.set(detail)
 
@@ -1300,8 +1443,8 @@ class Launcher:
         if self.process:
             try:
                 self.process.terminate()
-            except Exception:
-                pass
+            except Exception as exc:
+                _warn(f"terminate agent process failed: {exc!r}")
         self._set_stopped()
 
     def _set_stopped(self):
@@ -1331,7 +1474,8 @@ class Launcher:
                 if ch == "\n" or buf.endswith("Query: ") or buf.endswith("(y/n): "):
                     self.output_queue.put(buf)
                     buf = ""
-        except Exception:
+        except Exception as exc:
+            _warn(f"agent output reader stopped unexpectedly: {exc!r}")
             if buf:
                 self.output_queue.put(buf)
             self.output_queue.put(None)
@@ -1483,16 +1627,16 @@ class Launcher:
                     data = json.load(handle)
                 if isinstance(data, list):
                     return data
-            except Exception:
-                pass
+            except Exception as exc:
+                _warn(f"load command history failed: {exc!r}")
         return list(CANDIDATE_COMMANDS)
 
     def _save_command_history(self, history: list[str]):
         try:
             with open(HISTORY_FILE, "w", encoding="utf-8") as handle:
                 json.dump(history, handle, ensure_ascii=False, indent=2)
-        except Exception:
-            pass
+        except Exception as exc:
+            _warn(f"save command history failed: {exc!r}")
 
     def _add_to_history(self, query: str):
         values = list(self.cb_query["values"])
@@ -1525,8 +1669,8 @@ class Launcher:
             try:
                 self.process.stdin.write(text)
                 self.process.stdin.flush()
-            except Exception:
-                pass
+            except Exception as exc:
+                _warn(f"send command to agent failed: {exc!r}")
 
     def _clear_logs(self):
         for widget_name in ("log", "sop_log"):

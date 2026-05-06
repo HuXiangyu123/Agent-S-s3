@@ -1,7 +1,10 @@
 from pathlib import Path
 import unittest
 
+from gui_agents.feishu.detectors.calendar_state_detector import detect_calendar_state
+from gui_agents.feishu.detectors.base_state_detector import detect_base_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
+from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
 from gui_agents.feishu.tooling.tool_router import (
     build_feishu_tool_guidance,
     route_feishu_tools,
@@ -10,6 +13,9 @@ from gui_agents.feishu.tooling.tool_router import (
 
 IM_FIXTURE_DIR = Path("tests/fixtures/im")
 SHELL_FIXTURE_DIR = Path("tests/fixtures/feishu_shell")
+BASE_FIXTURE_DIR = Path("tests/fixtures/base")
+CALENDAR_FIXTURE_DIR = Path("tests/fixtures/calendar")
+VC_FIXTURE_DIR = Path("tests/fixtures/vc")
 
 
 class TestFeishuToolRouter(unittest.TestCase):
@@ -18,6 +24,15 @@ class TestFeishuToolRouter(unittest.TestCase):
 
     def _shell_observation(self, filename: str) -> dict:
         return {"image_path": str(SHELL_FIXTURE_DIR / filename)}
+
+    def _base_observation(self, filename: str) -> dict:
+        return {"image_path": str(BASE_FIXTURE_DIR / filename)}
+
+    def _calendar_observation(self, filename: str) -> dict:
+        return {"image_path": str(CALENDAR_FIXTURE_DIR / filename)}
+
+    def _vc_observation(self, filename: str) -> dict:
+        return {"image_path": str(VC_FIXTURE_DIR / filename)}
 
     def test_chat_main_prefers_composer_tools(self) -> None:
         observation = self._im_observation("im_chat_main_full.png")
@@ -105,6 +120,107 @@ class TestFeishuToolRouter(unittest.TestCase):
         self.assertIn("feishu_type_message", recommendation.preferred_tools)
         self.assertIn("feishu_click_message_input", recommendation.preferred_tools)
         self.assertIn("Do not go to emoji first", " ".join(recommendation.hints))
+
+    def test_base_surface_prefers_grounded_actions_over_fixed_feishu_uia(self) -> None:
+        observation = self._base_observation("点击新建后.png")
+        state = detect_base_state(observation)
+
+        recommendation = route_feishu_tools(
+            "新建一个多维表格并打开空白表",
+            observation,
+            state=state,
+        )
+
+        self.assertEqual(recommendation.product, "base")
+        self.assertEqual(
+            recommendation.next_step_focus, "base_browser_or_desktop_surface"
+        )
+        self.assertIn("click", recommendation.preferred_tools)
+        self.assertIn("type", recommendation.preferred_tools)
+        self.assertIn("feishu_click", recommendation.discouraged_tools)
+        self.assertIn("feishu_type", recommendation.discouraged_tools)
+
+    def test_calendar_surface_stays_agent_guided_not_fixed_workflow(self) -> None:
+        observation = self._calendar_observation("点击创建日程后.png")
+        state = detect_calendar_state(observation)
+
+        recommendation = route_feishu_tools(
+            "打开日历并创建一个会议日程",
+            observation,
+            state=state,
+        )
+        guidance = build_feishu_tool_guidance(
+            "打开日历并创建一个会议日程",
+            observation,
+            state=state,
+        )
+
+        self.assertEqual(recommendation.product, "calendar")
+        self.assertEqual(recommendation.page_type, "calendar_event_modal")
+        self.assertEqual(
+            recommendation.next_step_focus, "calendar_event_modal_controls"
+        )
+        self.assertIn("feishu_click", recommendation.preferred_tools)
+        self.assertIn("feishu_type", recommendation.preferred_tools)
+        self.assertIn(
+            "Calendar should be handled as an agent-guided state surface",
+            " ".join(recommendation.rationale),
+        )
+        self.assertIn("Do not rely on precomputed coordinates", guidance)
+        self.assertIn("visible title field", guidance)
+
+    def test_vc_home_start_is_agent_guided_not_fixed_workflow(self) -> None:
+        observation = self._vc_observation("会议主页面.png")
+        state = detect_vc_state(observation)
+
+        recommendation = route_feishu_tools(
+            "发起视频会议并验证入会成功",
+            observation,
+            state=state,
+        )
+        guidance = build_feishu_tool_guidance(
+            "发起视频会议并验证入会成功",
+            observation,
+            state=state,
+        )
+
+        self.assertEqual(recommendation.product, "vc")
+        self.assertEqual(recommendation.next_step_focus, "start_meeting_card")
+        self.assertIn("feishu_click", recommendation.preferred_tools)
+        self.assertIn(
+            "fixed workflow stage machine", " ".join(recommendation.rationale)
+        )
+        self.assertIn("Start Meeting card", guidance)
+
+    def test_vc_join_preview_guides_meeting_id_input(self) -> None:
+        observation = self._vc_observation("选择加入会议.png")
+        state = detect_vc_state(observation)
+
+        recommendation = route_feishu_tools(
+            "加入会议，会议 ID 为 123456789",
+            observation,
+            state=state,
+        )
+
+        self.assertEqual(recommendation.page_type, "vc_join_preview")
+        self.assertEqual(
+            recommendation.next_step_focus, "meeting_id_input_or_join_button"
+        )
+        self.assertIn("meeting ID", " ".join(recommendation.hints))
+
+    def test_vc_active_meeting_guides_invite_control(self) -> None:
+        observation = self._vc_observation("正在会议的页面.png")
+        state = detect_vc_state(observation)
+
+        recommendation = route_feishu_tools(
+            "在当前视频会议中邀请 bot功能测试",
+            observation,
+            state=state,
+        )
+
+        self.assertEqual(recommendation.page_type, "vc_meeting_active")
+        self.assertEqual(recommendation.next_step_focus, "meeting_invite_control")
+        self.assertIn("invite/participants control", " ".join(recommendation.hints))
 
 
 if __name__ == "__main__":

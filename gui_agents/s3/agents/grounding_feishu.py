@@ -9,6 +9,7 @@ Adds:
 """
 
 import re
+import sys
 import time
 from io import BytesIO
 from typing import Dict, List, Optional
@@ -20,6 +21,7 @@ from gui_agents.feishu.tooling.tool_router import build_feishu_tool_guidance
 from gui_agents.s3.agents.grounding import OSWorldACI, agent_action
 from gui_agents.s3.memory.procedural_memory import PROCEDURAL_MEMORY
 from gui_agents.s3.agents._feishu_exec import (
+    LOG_DIR,
     REPO_ROOT,
     build_feishu_doc_click_code,
     build_feishu_doc_type_code,
@@ -199,12 +201,12 @@ class WindowsFeishuACI(OSWorldACI):
 
     def _trace_execution(self, message: str) -> None:
         try:
-            trace_path = REPO_ROOT / "logs" / "execution-trace.log"
+            trace_path = REPO_ROOT / LOG_DIR / "execution-trace.log"
             trace_path.parent.mkdir(exist_ok=True)
             with trace_path.open("a", encoding="utf-8") as f:
                 f.write(message + "\n")
-        except Exception:
-            pass
+        except Exception as exc:
+            print(f"FEISHU_TRACE_WRITE_ERROR: {exc!r}", file=sys.stderr)
 
     def capture_observation(self, scaled_width: int, scaled_height: int) -> Dict:
         screenshot = ImageGrab.grab()
@@ -257,18 +259,6 @@ class WindowsFeishuACI(OSWorldACI):
                 "FEISHU_OCR_ENRICHED: " + repr({"word_count": len(words)})
             )
         return ocr_text
-
-    def build_dynamic_guidance(self, instruction: str, obs: Dict) -> str:
-        try:
-            self._extract_obs_ocr_text(obs)
-            guidance = build_feishu_tool_guidance(instruction, obs)
-        except Exception as exc:
-            self._trace_execution(f"FEISHU_TOOL_GUIDANCE_ERROR: {exc!r}")
-            return ""
-
-        if guidance:
-            self._trace_execution("FEISHU_TOOL_GUIDANCE: " + repr(guidance))
-        return guidance
 
     def _relative_bounds_center(self, bounds: List[float]) -> List[int]:
         x1, y1, x2, y2 = bounds
@@ -346,6 +336,7 @@ class WindowsFeishuACI(OSWorldACI):
                     ctypes.windll.kernel32.CloseHandle(h)
 
             hwnd = ctypes.windll.user32.GetTopWindow(0)
+            skipped_windows = 0
             while hwnd:
                 try:
                     if ctypes.windll.user32.IsWindowVisible(hwnd):
@@ -359,9 +350,13 @@ class WindowsFeishuACI(OSWorldACI):
                             )
                             return True
                 except Exception:
-                    pass
+                    skipped_windows += 1
                 hwnd = ctypes.windll.user32.GetWindow(hwnd, GW_HWNDNEXT)
 
+            if skipped_windows:
+                self._trace_execution(
+                    f"FEISHU_FOCUS_NOW: skipped_windows={skipped_windows}"
+                )
             self._trace_execution("FEISHU_FOCUS_NOW: window_not_found")
             return False
         except Exception as exc:
@@ -416,43 +411,43 @@ class WindowsFeishuACI(OSWorldACI):
                 value.count(m)
                 for m in (
                     "?",
-                    "锟",
-                    "閿",
-                    "閹",
-                    "閸",
-                    "鍏",
-                    "濞",
-                    "瀣",
-                    "妞",
-                    "鐐",
-                    "鍔",
-                    "鍒",
-                    "嗕",
-                    "韩",
-                    "椋",
-                    "炰",
-                    "功",
-                    "浜",
-                    "戞",
-                    "枃",
-                    "妗",
-                    "鏂",
-                    "板",
-                    "缓",
-                    "绌",
-                    "櫧",
-                    "缁",
-                    "堜",
-                    "簬",
-                    "濂",
-                    "戒",
-                    "簡",
+                    "\u951f",
+                    "\u95bf",
+                    "\u95b9",
+                    "\u95b8",
+                    "\u934f",
+                    "\u6fde",
+                    "\u7023",
+                    "\u599e",
+                    "\u9410",
+                    "\u9354",
+                    "\u9352",
+                    "\u55d5",
+                    "\u97e9",
+                    "\u690b",
+                    "\u70b0",
+                    "\u529f",
+                    "\u6d5c",
+                    "\u621e",
+                    "\u6783",
+                    "\u5997",
+                    "\u93c2",
+                    "\u677f",
+                    "\u7f13",
+                    "\u7ecc",
+                    "\u6ae7",
+                    "\u7f01",
+                    "\u581c",
+                    "\u7c2c",
+                    "\u6fc2",
+                    "\u6212",
+                    "\u7c21",
                 )
             )
             return (
                 good_chars * 3
                 - bad_markers * 5
-                + len(value.replace("?", "").replace("锟", ""))
+                + len(value.replace("?", "").replace("\u951f", ""))
             )
 
         repaired = max(candidates, key=score)
@@ -537,27 +532,6 @@ class WindowsFeishuACI(OSWorldACI):
         Args:
         """
         return build_feishu_focus_code()
-
-    @agent_action
-    def feishu_click(
-        self,
-        element_description: str,
-        num_clicks: int = 1,
-        button_type: str = "left",
-    ):
-        """Focus Feishu/Lark, then click an element using UIA text matching. Does not call visual grounding.
-        Args:
-            element_description:str, a detailed visual description of the Feishu element to click. Include exact visible text when selecting a chat, row, button, tab, or menu item.
-            num_clicks:int, number of times to click the element
-            button_type:str, mouse button to press, such as left, middle, or right
-        """
-        element_description = self._repair_text_mojibake(element_description)
-        target_text = self._extract_feishu_target_text(element_description)
-        self._trace_execution(
-            "FEISHU_CLICK_UIA_ONLY: "
-            + repr({"description": element_description, "target_text": target_text})
-        )
-        return build_feishu_uia_click_code(target_text, num_clicks, button_type)
 
     @agent_action
     def feishu_click_message_input(self):

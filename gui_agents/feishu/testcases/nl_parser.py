@@ -19,11 +19,24 @@ UNSUPPORTED_INTENT_KEYWORDS = (
 
 
 def _extract_quoted_texts(instruction: str) -> list[str]:
-    return [match.strip() for match in QUOTED_TEXT_PATTERN.findall(instruction)]
+    quoted = [match.strip() for match in QUOTED_TEXT_PATTERN.findall(instruction)]
+    modern_quoted = [
+        match.strip()
+        for match in re.findall(r"""["'“”‘’]([^"'“”‘’]+)["'“”‘’]""", instruction)
+    ]
+    for value in modern_quoted:
+        if value and value not in quoted:
+            quoted.append(value)
+    return quoted
 
 
 def _detect_product(instruction: str) -> str:
-    # Current milestone supports IM only; Docs/Calendar will be added later.
+    if any(
+        keyword in instruction for keyword in ("多维表格", "Base", "base", "数据表")
+    ):
+        return "base"
+    if any(keyword in instruction for keyword in ("云文档", "文档", "飞书云文档")):
+        return "docs"
     return "im"
 
 
@@ -83,14 +96,136 @@ def _extract_message_text(instruction: str, quoted_texts: list[str]) -> str | No
     return None
 
 
+def _extract_docs_title(instruction: str, quoted_texts: list[str]) -> str | None:
+    if len(quoted_texts) >= 2 and "标题" in instruction:
+        return quoted_texts[0]
+    if quoted_texts:
+        return quoted_texts[0]
+
+    for pattern in (
+        r"(?:标题|名为|命名为)\s*[:：]?\s*([^\s，,。；;]+)",
+        r"输入标题\s*([^\s，,。；;]+)",
+    ):
+        match = re.search(pattern, instruction)
+        if match:
+            return match.group(1).strip()
+    return None
+
+
+def _extract_docs_body_text(instruction: str, quoted_texts: list[str]) -> str | None:
+    if len(quoted_texts) >= 3:
+        return quoted_texts[2]
+    if len(quoted_texts) >= 2 and any(
+        keyword in instruction for keyword in ("正文", "内容", "输入内容", "编辑文本")
+    ):
+        return quoted_texts[-1]
+
+    for pattern in (
+        r"""(?:正文|内容|输入内容|编辑文本)\s*[:：]?\s*["'“”‘’]([^"'“”‘’]+)["'“”‘’]""",
+        r"(?:正文|内容|输入内容|编辑文本)\s*[:：]?\s*([^\n。；;]+)",
+    ):
+        match = re.search(pattern, instruction)
+        if match:
+            candidate = match.group(1).strip(" ，,。；;")
+            if candidate:
+                return candidate
+    return None
+
+
+def _parse_docs_instruction(instruction: str, quoted_texts: list[str]) -> TestCase:
+    if not any(keyword in instruction for keyword in ("创建", "新建")):
+        raise ValueError("current Docs MVP supports create_doc_and_edit only")
+
+    doc_title = _extract_docs_title(instruction, quoted_texts)
+    if not doc_title:
+        raise ValueError("unable to extract doc_title from instruction")
+    body_text = _extract_docs_body_text(instruction, quoted_texts)
+
+    steps = [
+        {
+            "action": "open_docs_home",
+            "target": "docs_home",
+            "payload": None,
+            "assertion": "docs_home_ready",
+        },
+        {
+            "action": "open_docs_new_menu",
+            "target": "docs_new_card",
+            "payload": None,
+            "assertion": "docs_new_menu_opened",
+        },
+        {
+            "action": "select_docs_document_type",
+            "target": "docs_document_option",
+            "payload": None,
+            "assertion": "docs_template_gallery_ready",
+        },
+        {
+            "action": "select_blank_doc_template",
+            "target": "docs_blank_doc_card",
+            "payload": None,
+            "assertion": "doc_editor_ready",
+        },
+        {
+            "action": "type_doc_title",
+            "target": "docs_title_input",
+            "payload": {"text": doc_title},
+            "assertion": "doc_title_contains_text",
+        },
+    ]
+    if body_text:
+        steps.append(
+            {
+                "action": "type_doc_body",
+                "target": "docs_body_editor",
+                "payload": {"text": body_text},
+                "assertion": "doc_body_contains_text",
+            }
+        )
+
+    return build_testcase(
+        product="docs",
+        title=f"创建云文档并编辑标题 {doc_title}",
+        steps=steps,
+    )
+
+
+def _parse_base_instruction(instruction: str, quoted_texts: list[str]) -> TestCase:
+    del quoted_texts
+    raise ValueError(
+        "Base instructions are handled by feishu_agent prior guidance, "
+        "not fixed TestCase parsing"
+    )
+
+
 def parse_instruction(instruction: str) -> TestCase:
     normalized = instruction.strip()
     if not normalized:
         raise ValueError("instruction cannot be empty")
 
     _reject_unsupported_intents(normalized)
+    if any(
+        keyword in normalized
+        for keyword in (
+            "视频会议",
+            "会议 ID",
+            "会议ID",
+            "会议号",
+            "会议码",
+            "发起会议",
+            "加入会议",
+        )
+    ):
+        raise ValueError(
+            "VC tasks are handled by feishu_agent tool guidance, not deterministic TestCase steps"
+        )
     product = _detect_product(normalized)
     quoted_texts = _extract_quoted_texts(normalized)
+    if product == "base":
+        return _parse_base_instruction(normalized, quoted_texts)
+    if product == "docs":
+        return _parse_docs_instruction(normalized, quoted_texts)
+
     chat_name = _extract_chat_name(normalized, quoted_texts)
     message_text = _extract_message_text(normalized, quoted_texts)
     if not chat_name:

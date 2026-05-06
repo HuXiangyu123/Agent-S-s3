@@ -1,11 +1,15 @@
 from pathlib import Path
 import unittest
 
+from gui_agents.feishu.detectors.base_state_detector import detect_base_state
+from gui_agents.feishu.detectors.docs_state_detector import detect_docs_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
 from gui_agents.feishu.verifiers.assertion_verifier import AssertionVerifier
 
 
 IM_FIXTURE_DIR = Path("tests/fixtures/im")
+DOCS_FIXTURE_DIR = Path("tests/fixtures/docs")
+BASE_FIXTURE_DIR = Path("tests/fixtures/base")
 
 
 class TestAssertionVerifier(unittest.TestCase):
@@ -14,6 +18,12 @@ class TestAssertionVerifier(unittest.TestCase):
 
     def _observation(self, filename: str) -> dict:
         return {"image_path": str(IM_FIXTURE_DIR / filename)}
+
+    def _docs_observation(self, filename: str) -> dict:
+        return {"image_path": str(DOCS_FIXTURE_DIR / filename)}
+
+    def _base_observation(self, filename: str) -> dict:
+        return {"image_path": str(BASE_FIXTURE_DIR / filename)}
 
     def test_verifies_chat_title_match(self) -> None:
         observation = self._observation("im_chat_main_full.png")
@@ -130,6 +140,100 @@ class TestAssertionVerifier(unittest.TestCase):
 
         self.assertTrue(result["passed"])
         self.assertIn("source=ocr_fallback", result["evidence"])
+
+    def test_verifies_docs_home_ready(self) -> None:
+        observation = self._docs_observation("主页.png")
+        state = detect_docs_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "docs_home_ready",
+            state,
+            observation,
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["assertion"], "docs_home_ready")
+
+    def test_verifies_base_home_ready(self) -> None:
+        observation = self._base_observation("多维表格主页-不带弹窗.png")
+        state = detect_base_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "base_home_ready",
+            state,
+            observation,
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["assertion"], "base_home_ready")
+
+    def test_verifies_base_editor_ready(self) -> None:
+        observation = self._base_observation("新建多维表格后浏览器界面-带弹窗.png")
+        state = detect_base_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "base_editor_ready",
+            state,
+            observation,
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertIn("base_editor_ready=True", result["evidence"])
+
+    def test_verifies_docs_editor_ready(self) -> None:
+        observation = self._docs_observation("网页端文档.png")
+        state = detect_docs_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "doc_editor_ready",
+            state,
+            observation,
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertIn("editor_ready=True", result["evidence"])
+
+    def test_verifies_doc_title_with_ocr_fallback(self) -> None:
+        result = self.verifier.verify_assertion(
+            "doc_title_contains_text",
+            {
+                "page_type": "docs_browser_editor",
+                "product": "docs",
+                "chat_name": None,
+                "message_input_visible": False,
+                "send_button_visible": False,
+                "search_box_visible": False,
+                "modal_type": None,
+                "last_error_banner": None,
+                "product_state": {},
+            },
+            {"ocr_text": "项目周报\n输入 / 快速插入内容"},
+            expected={"params": {"text": "项目周报"}},
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertIn("source=ocr_fallback", result["evidence"])
+
+    def test_verifies_doc_body_from_product_state(self) -> None:
+        result = self.verifier.verify_assertion(
+            "doc_body_contains_text",
+            {
+                "page_type": "docs_browser_editor",
+                "product": "docs",
+                "chat_name": None,
+                "message_input_visible": False,
+                "send_button_visible": False,
+                "search_box_visible": False,
+                "modal_type": None,
+                "last_error_banner": None,
+                "product_state": {"body_text": "本周完成联调"},
+            },
+            {},
+            expected={"params": {"text": "本周完成联调"}},
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertIn("body_text=本周完成联调", result["evidence"])
 
 
 if __name__ == "__main__":

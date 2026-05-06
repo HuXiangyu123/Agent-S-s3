@@ -116,6 +116,119 @@ class AssertionVerifier:
                 f"sent message mismatch: expected={expected_text!r}, actual={sent_text!r}",
             )
 
+        if assertion == "base_home_ready":
+            if state.get("product") == "base" and (
+                state.get("page_type") == "base_home"
+                or product_state.get("base_home_visible")
+            ):
+                return _success(assertion, ["product=base", "page_type=base_home"])
+            return _failure(
+                assertion,
+                f"Base home not ready: product={state.get('product')!r}, page_type={state.get('page_type')!r}",
+            )
+
+        if assertion == "base_new_menu_opened":
+            if state.get("page_type") == "base_new_menu" or product_state.get(
+                "new_menu_visible"
+            ):
+                return _success(assertion, ["new_menu_visible=True"])
+            return _failure(assertion, "Base new menu is not visible")
+
+        if assertion == "base_template_gallery_ready":
+            if state.get("page_type") == "base_template_gallery" or product_state.get(
+                "template_gallery_visible"
+            ):
+                return _success(assertion, ["template_gallery_visible=True"])
+            return _failure(assertion, "Base template gallery is not visible")
+
+        if assertion == "base_editor_ready":
+            if state.get("page_type") == "base_browser_table" or product_state.get(
+                "base_editor_ready"
+            ):
+                evidence = ["base_editor_ready=True"]
+                if product_state.get("grid_visible"):
+                    evidence.append("grid_visible=True")
+                return _success(assertion, evidence)
+            if "未命名多维表格" in ocr_text and "数据表" in ocr_text:
+                return _success(
+                    assertion,
+                    ["ocr_contains=未命名多维表格", "ocr_contains=数据表"],
+                )
+            return _failure(assertion, "Base table editor is not ready")
+
+        if assertion == "docs_home_ready":
+            if state.get("product") == "docs" and (
+                state.get("page_type") == "docs_home"
+                or product_state.get("docs_home_visible")
+            ):
+                return _success(assertion, ["product=docs", "page_type=docs_home"])
+            return _failure(
+                assertion,
+                f"Docs home not ready: product={state.get('product')!r}, page_type={state.get('page_type')!r}",
+            )
+
+        if assertion == "docs_new_menu_opened":
+            if state.get("page_type") == "docs_new_dropdown" or product_state.get(
+                "new_dropdown_visible"
+            ):
+                return _success(assertion, ["new_dropdown_visible=True"])
+            return _failure(assertion, "Docs new dropdown is not visible")
+
+        if assertion == "docs_template_gallery_ready":
+            if state.get("page_type") == "docs_template_gallery" or product_state.get(
+                "template_gallery_visible"
+            ):
+                return _success(assertion, ["template_gallery_visible=True"])
+            return _failure(assertion, "Docs template gallery is not visible")
+
+        if assertion == "doc_editor_ready":
+            if state.get("page_type") == "docs_browser_editor" or product_state.get(
+                "editor_ready"
+            ):
+                return _success(assertion, ["editor_ready=True"])
+            return _failure(assertion, "Docs browser editor is not ready")
+
+        if assertion == "doc_title_contains_text":
+            expected_text = (
+                expected.get("doc_title")
+                or expected.get("title")
+                or expected.get("text")
+                or (expected.get("params") or {}).get("text")
+                or (expected.get("payload") or {}).get("text")
+            )
+            actual_title = product_state.get("doc_title")
+            if expected_text and actual_title == expected_text:
+                return _success(assertion, [f"doc_title={actual_title}"])
+            if expected_text and expected_text in ocr_text:
+                return _success(
+                    assertion,
+                    [f"ocr_contains={expected_text}", "source=ocr_fallback"],
+                )
+            return _failure(
+                assertion,
+                f"doc title mismatch: expected={expected_text!r}, actual={actual_title!r}",
+            )
+
+        if assertion == "doc_body_contains_text":
+            expected_text = (
+                expected.get("body_text")
+                or expected.get("text")
+                or (expected.get("params") or {}).get("text")
+                or (expected.get("payload") or {}).get("text")
+            )
+            actual_body = product_state.get("body_text")
+            if expected_text and actual_body == expected_text:
+                return _success(assertion, [f"body_text={actual_body}"])
+            if expected_text and expected_text in ocr_text:
+                return _success(
+                    assertion,
+                    [f"ocr_contains={expected_text}", "source=ocr_fallback"],
+                )
+            return _failure(
+                assertion,
+                f"doc body mismatch: expected={expected_text!r}, actual={actual_body!r}",
+            )
+
         return _failure(assertion, f"unsupported assertion: {assertion}")
 
     def verify_step(

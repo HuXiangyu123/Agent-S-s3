@@ -1,4 +1,5 @@
 import argparse
+import builtins
 import datetime
 import io
 import logging
@@ -21,10 +22,25 @@ try:
 except ImportError:  # pragma: no cover - runtime dependency only
     WindowsFeishuACI = None
 
+try:
+    from gui_agents.feishu.reports import S3RuntimeRecorder
+except ImportError:  # pragma: no cover - optional Feishu reporting layer
+    S3RuntimeRecorder = None
+
 current_platform = platform.system().lower()
 
 # Global flag to track pause state for debugging
 paused = False
+
+
+def _safe_console_text(value) -> str:
+    text = str(value)
+    encoding = sys.stdout.encoding or "utf-8"
+    return text.encode(encoding, errors="replace").decode(encoding, errors="replace")
+
+
+def _print(*args, **kwargs) -> None:
+    builtins.print(*[_safe_console_text(arg) for arg in args], **kwargs)
 
 
 def get_char():
@@ -57,36 +73,36 @@ def signal_handler(signum, frame):
     global paused
 
     if not paused:
-        print("\n\n🔸 Agent-S Workflow Paused 🔸")
-        print("=" * 50)
-        print("Options:")
-        print("  • Press Ctrl+C again to quit")
-        print("  • Press Esc to resume workflow")
-        print("=" * 50)
+        _print("\n\n🔸 Agent-S Workflow Paused 🔸")
+        _print("=" * 50)
+        _print("Options:")
+        _print("  • Press Ctrl+C again to quit")
+        _print("  • Press Esc to resume workflow")
+        _print("=" * 50)
 
         paused = True
 
         while paused:
             try:
-                print("\n[PAUSED] Waiting for input... ", end="", flush=True)
+                _print("\n[PAUSED] Waiting for input... ", end="", flush=True)
                 char = get_char()
 
                 if ord(char) == 3:  # Ctrl+C
-                    print("\n\n🛑 Exiting Agent-S...")
+                    _print("\n\n🛑 Exiting Agent-S...")
                     sys.exit(0)
                 elif ord(char) == 27:  # Esc
-                    print("\n\n▶️  Resuming Agent-S workflow...")
+                    _print("\n\n▶️  Resuming Agent-S workflow...")
                     paused = False
                     break
                 else:
-                    print(f"\n   Unknown command: '{char}' (ord: {ord(char)})")
+                    _print(f"\n   Unknown command: '{char}' (ord: {ord(char)})")
 
             except KeyboardInterrupt:
-                print("\n\n🛑 Exiting Agent-S...")
+                _print("\n\n🛑 Exiting Agent-S...")
                 sys.exit(0)
     else:
         # Already paused, second Ctrl+C means quit
-        print("\n\n🛑 Exiting Agent-S...")
+        _print("\n\n🛑 Exiting Agent-S...")
         sys.exit(0)
 
 
@@ -98,18 +114,18 @@ logger.setLevel(logging.DEBUG)
 
 datetime_str: str = datetime.datetime.now().strftime("%Y%m%d@%H%M%S")
 
-log_dir = "logs"
-os.makedirs(log_dir, exist_ok=True)
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
 file_handler = logging.FileHandler(
-    os.path.join("logs", "normal-{:}.log".format(datetime_str)), encoding="utf-8"
+    os.path.join(LOG_DIR, "normal-{:}.log".format(datetime_str)), encoding="utf-8"
 )
 debug_handler = logging.FileHandler(
-    os.path.join("logs", "debug-{:}.log".format(datetime_str)), encoding="utf-8"
+    os.path.join(LOG_DIR, "debug-{:}.log".format(datetime_str)), encoding="utf-8"
 )
 stdout_handler = logging.StreamHandler(sys.stdout)
 sdebug_handler = logging.FileHandler(
-    os.path.join("logs", "sdebug-{:}.log".format(datetime_str)), encoding="utf-8"
+    os.path.join(LOG_DIR, "sdebug-{:}.log".format(datetime_str)), encoding="utf-8"
 )
 
 file_handler.setLevel(logging.INFO)
@@ -208,99 +224,214 @@ def _settle_delay(exec_code: str) -> float:
 
 
 def run_agent(
-    agent, instruction: str, scaled_width: int, scaled_height: int, max_steps: int = 15
+    agent,
+    instruction: str,
+    scaled_width: int,
+    scaled_height: int,
+    max_steps: int = 15,
+    recorder=None,
 ):
     global paused
     obs = {}
     traj = "Task:\n" + instruction
     subtask_traj = ""
-    for step in range(max_steps):
-        # Check if we're in paused state and wait
-        while paused:
-            time.sleep(0.1)
-        capture_observation = getattr(
-            agent.grounding_agent, "capture_observation", None
-        )
-        if callable(capture_observation):
-            obs = capture_observation(scaled_width, scaled_height)
-        else:
-            # Get screen shot using pyautogui
-            screenshot = pyautogui.screenshot()
-            screenshot = screenshot.resize((scaled_width, scaled_height), Image.LANCZOS)
+    final_status = "failed"
+    final_failure_reason = "step budget exhausted"
+    if recorder is not None:
+        recorder.start(instruction)
 
-            # Save the screenshot to a BytesIO object
-            buffered = io.BytesIO()
-            screenshot.save(buffered, format="PNG")
-
-            # Get the byte value of the screenshot
-            screenshot_bytes = buffered.getvalue()
-            obs = {
-                "screenshot": screenshot_bytes,
-                "image_width": scaled_width,
-                "image_height": scaled_height,
-            }
-
-        # Check again for pause state before prediction
-        while paused:
-            time.sleep(0.1)
-
-        print(f"\n🔄 Step {step + 1}/{max_steps}: Getting next action from agent...")
-        t_predict_start = time.time()
-
-        # Get next action code from the agent
-        info, code = agent.predict(instruction=instruction, observation=obs)
-
-        t_predict_elapsed = time.time() - t_predict_start
-        print(f"🧠 模型思考 {t_predict_elapsed:.1f}s")
-
-        if "done" in code[0].lower() or "fail" in code[0].lower():
-            if platform.system() == "Darwin":
-                os.system(
-                    f'osascript -e \'display dialog "Task Completed" with title "OpenACI Agent" buttons "OK" default button "OK"\''
-                )
-            elif platform.system() == "Linux":
-                os.system(
-                    f'zenity --info --title="OpenACI Agent" --text="Task Completed" --width=200 --height=100'
+    try:
+        for step in range(max_steps):
+            step_index = step + 1
+            # Check if we're in paused state and wait
+            while paused:
+                time.sleep(0.1)
+            capture_observation = getattr(
+                agent.grounding_agent, "capture_observation", None
+            )
+            if callable(capture_observation):
+                obs = capture_observation(scaled_width, scaled_height)
+            else:
+                # Get screen shot using pyautogui
+                screenshot = pyautogui.screenshot()
+                screenshot = screenshot.resize(
+                    (scaled_width, scaled_height), Image.LANCZOS
                 )
 
-            break
+                # Save the screenshot to a BytesIO object
+                buffered = io.BytesIO()
+                screenshot.save(buffered, format="PNG")
 
-        if "next" in code[0].lower():
-            continue
+                # Get the byte value of the screenshot
+                screenshot_bytes = buffered.getvalue()
+                obs = {
+                    "screenshot": screenshot_bytes,
+                    "image_width": scaled_width,
+                    "image_height": scaled_height,
+                }
+            if recorder is not None:
+                recorder.record_observation(step_index, obs)
 
-        if "wait" in code[0].lower():
-            print("⏳ Agent requested wait...")
-            time.sleep(5)
-            continue
-
-        else:
-            print("EXECUTING CODE:", code[0])
-
-            # Check for pause state before execution
+            # Check again for pause state before prediction
             while paused:
                 time.sleep(0.1)
 
-            # Pre-exec settle: brief buffer before action
-            settle_pre = 0.5 if step > 0 else 0.0
-            if settle_pre > 0:
-                time.sleep(settle_pre)
+            _print(
+                f"\n🔄 Step {step_index}/{max_steps}: Getting next action from agent..."
+            )
+            t_predict_start = time.time()
 
-            # Ask for permission before executing
-            exec(code[0])
+            # Get next action code from the agent
+            info, code = agent.predict(instruction=instruction, observation=obs)
+            exec_code = code[0]
 
-            # Post-exec dynamic settle: longer for navigation-triggering actions
-            settle_post = _settle_delay(code[0])
-            print(f"⏳ 等待 UI 稳定 ({settle_pre + settle_post:.1f}s)...")
-            time.sleep(settle_post)
+            t_predict_elapsed = time.time() - t_predict_start
+            _print(f"🧠 模型思考 {t_predict_elapsed:.1f}s")
 
-            # Update task and subtask trajectories
-            if "reflection" in info and "executor_plan" in info:
-                traj += (
-                    "\n\nReflection:\n"
-                    + str(info["reflection"])
-                    + "\n\n----------------------\n\nPlan:\n"
-                    + info["executor_plan"]
-                )
+            if "done" in exec_code.lower() or "fail" in exec_code.lower():
+                is_fail = "fail" in exec_code.lower()
+                final_status = "failed" if is_fail else "completed"
+                final_failure_reason = "agent returned fail" if is_fail else None
+                if recorder is not None:
+                    recorder.record_action(
+                        step_index,
+                        exec_code,
+                        "failed" if is_fail else "done",
+                        final_failure_reason,
+                    )
+                if platform.system() == "Darwin":
+                    os.system(
+                        f'osascript -e \'display dialog "Task Completed" with title "OpenACI Agent" buttons "OK" default button "OK"\''
+                    )
+                elif platform.system() == "Linux":
+                    os.system(
+                        f'zenity --info --title="OpenACI Agent" --text="Task Completed" --width=200 --height=100'
+                    )
+
+                break
+
+            if "next" in exec_code.lower():
+                if recorder is not None:
+                    recorder.record_action(step_index, exec_code, "next")
+                continue
+
+            if "wait" in exec_code.lower():
+                _print("⏳ Agent requested wait...")
+                if recorder is not None:
+                    recorder.record_action(step_index, exec_code, "wait")
+                time.sleep(5)
+                continue
+
+            else:
+                _print("EXECUTING CODE:", exec_code)
+
+                # Check for pause state before execution
+                while paused:
+                    time.sleep(0.1)
+
+                # Pre-exec settle: brief buffer before action
+                settle_pre = 0.5 if step > 0 else 0.0
+                if settle_pre > 0:
+                    time.sleep(settle_pre)
+
+                try:
+                    exec(exec_code)
+                except Exception as exc:
+                    final_status = "failed"
+                    final_failure_reason = repr(exc)
+                    if recorder is not None:
+                        recorder.record_action(
+                            step_index,
+                            exec_code,
+                            "failed",
+                            final_failure_reason,
+                        )
+                    raise
+                if recorder is not None:
+                    recorder.record_action(step_index, exec_code, "executed")
+
+                # Post-exec dynamic settle: longer for navigation-triggering actions
+                settle_post = _settle_delay(exec_code)
+                _print(f"⏳ 等待 UI 稳定 ({settle_pre + settle_post:.1f}s)...")
+                time.sleep(settle_post)
+
+                # Update task and subtask trajectories
+                if "reflection" in info and "executor_plan" in info:
+                    traj += (
+                        "\n\nReflection:\n"
+                        + str(info["reflection"])
+                        + "\n\n----------------------\n\nPlan:\n"
+                        + info["executor_plan"]
+                    )
+    finally:
+        if recorder is not None:
+            artifact_paths = recorder.finalize(final_status, final_failure_reason)
+            if artifact_paths:
+                _print("FEISHU_RUNTIME_ARTIFACTS:", repr(artifact_paths))
+
+
+def build_execution_runtime(
+    args,
+    engine_params: dict,
+    engine_params_for_grounding: dict,
+    platform_name: str | None = None,
+):
+    runtime_platform = (platform_name or current_platform).lower()
+    max_dim = max(
+        engine_params_for_grounding["grounding_width"],
+        engine_params_for_grounding["grounding_height"],
+    )
+
+    if args.execution_mode == "feishu_agent":
+        if runtime_platform != "windows":
+            raise RuntimeError(
+                f"{args.execution_mode} mode currently supports Windows only"
+            )
+        if WindowsFeishuACI is None:
+            raise RuntimeError(
+                f"{args.execution_mode} mode requires "
+                "gui_agents.s3.agents.grounding_feishu"
+            )
+        screen_width, screen_height = _get_feishu_primary_capture_size()
+        scaled_width, scaled_height = scale_screen_dimensions(
+            screen_width, screen_height, max_dim_size=max_dim
+        )
+        grounding_agent = WindowsFeishuACI(
+            platform=runtime_platform,
+            engine_params_for_generation=engine_params,
+            engine_params_for_grounding=engine_params_for_grounding,
+            width=screen_width,
+            height=screen_height,
+        )
+
+        runtime = AgentS3(
+            engine_params,
+            grounding_agent,
+            platform=runtime_platform,
+            max_trajectory_length=args.max_trajectory_length,
+            enable_reflection=args.enable_reflection,
+        )
+        return runtime, scaled_width, scaled_height, "agent_s3"
+
+    screen_width, screen_height = pyautogui.size()
+    scaled_width, scaled_height = scale_screen_dimensions(
+        screen_width, screen_height, max_dim_size=max_dim
+    )
+    grounding_agent = OSWorldACI(
+        platform=runtime_platform,
+        engine_params_for_generation=engine_params,
+        engine_params_for_grounding=engine_params_for_grounding,
+        width=screen_width,
+        height=screen_height,
+    )
+    runtime = AgentS3(
+        engine_params,
+        grounding_agent,
+        platform=runtime_platform,
+        max_trajectory_length=args.max_trajectory_length,
+        enable_reflection=args.enable_reflection,
+    )
+    return runtime, scaled_width, scaled_height, "agent_s3"
 
 
 def main():
@@ -422,11 +553,7 @@ def main():
         default=15,
         help="Maximum number of steps (default: 15)",
     )
-
     args = parser.parse_args()
-
-    # Re-scales screenshot size to ensure it fits in UI-TARS context limit
-    max_dim = max(args.grounding_width, args.grounding_height)
 
     # Load the general engine params
     engine_params = {
@@ -451,51 +578,26 @@ def main():
     if args.ground_coord_scale is not None:
         engine_params_for_grounding["ground_coord_scale"] = args.ground_coord_scale
 
-    if args.execution_mode == "feishu_agent":
-        if current_platform != "windows":
-            raise RuntimeError("feishu_agent mode currently supports Windows only")
-        if WindowsFeishuACI is None:
-            raise RuntimeError(
-                "feishu_agent mode requires gui_agents.s3.agents.grounding_feishu"
-            )
-        screen_width, screen_height = _get_feishu_primary_capture_size()
-        scaled_width, scaled_height = scale_screen_dimensions(
-            screen_width, screen_height, max_dim_size=max_dim
-        )
-        grounding_agent = WindowsFeishuACI(
-            platform=current_platform,
-            engine_params_for_generation=engine_params,
-            engine_params_for_grounding=engine_params_for_grounding,
-            width=screen_width,
-            height=screen_height,
-        )
-    else:
-        screen_width, screen_height = pyautogui.size()
-        scaled_width, scaled_height = scale_screen_dimensions(
-            screen_width, screen_height, max_dim_size=max_dim
-        )
-        grounding_agent = OSWorldACI(
-            platform=current_platform,
-            engine_params_for_generation=engine_params,
-            engine_params_for_grounding=engine_params_for_grounding,
-            width=screen_width,
-            height=screen_height,
-        )
-
-    agent = AgentS3(
+    runtime, scaled_width, scaled_height, _runtime_kind = build_execution_runtime(
+        args,
         engine_params,
-        grounding_agent,
-        platform=current_platform,
-        max_trajectory_length=args.max_trajectory_length,
-        enable_reflection=args.enable_reflection,
+        engine_params_for_grounding,
     )
 
     while True:
         query = input("Query: ")
-        agent.reset()
-
-        # Run the agent on your own device
-        run_agent(agent, query, scaled_width, scaled_height, args.budget)
+        runtime.reset()
+        recorder = None
+        if args.execution_mode == "feishu_agent" and S3RuntimeRecorder is not None:
+            recorder = S3RuntimeRecorder()
+        run_agent(
+            runtime,
+            query,
+            scaled_width,
+            scaled_height,
+            args.budget,
+            recorder=recorder,
+        )
 
         response = input("Would you like to provide another query? (y/n): ")
         if response.lower() != "y":

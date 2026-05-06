@@ -348,14 +348,15 @@ class Worker(BaseModule):
                 from datetime import datetime
 
                 # Create logs directory if it doesn't exist
-                logs_dir = "logs"
-                if not os.path.exists(logs_dir):
-                    os.makedirs(logs_dir)
+                log_dir = os.path.join("logs")
+                if not os.path.exists(log_dir):
+                    os.makedirs(log_dir)
 
                 # Generate filename with timestamp
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                filename = (
-                    f"logs/code_agent_result_step_{self.turn_count + 1}_{timestamp}.txt"
+                filename = os.path.join(
+                    "logs",
+                    f"code_agent_result_step_{self.turn_count + 1}_{timestamp}.txt",
                 )
 
                 with open(filename, "w") as f:

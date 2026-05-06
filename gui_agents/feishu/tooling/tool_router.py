@@ -6,7 +6,10 @@ import re
 from typing import Iterable
 
 from gui_agents.feishu.contracts import FeishuState
+from gui_agents.feishu.detectors.calendar_state_detector import detect_calendar_state
+from gui_agents.feishu.detectors.base_state_detector import detect_base_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
+from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
 
 from .tool_contracts import FeishuToolRecommendation
 from .tool_registry import get_tool_specs
@@ -18,10 +21,6 @@ COMPOSE_MESSAGE_KEYWORDS = (
     "回复",
     "消息",
     "输入",
-    "鍙戦€?",
-    "鍥炲",
-    "娑堟伅",
-    "杈撳叆",
 )
 
 SEND_MESSAGE_KEYWORDS = (
@@ -29,9 +28,6 @@ SEND_MESSAGE_KEYWORDS = (
     "回复",
     "回车",
     "enter",
-    "鍙戦€?",
-    "鍥炲",
-    "鍥炶溅",
 )
 
 SEARCH_KEYWORDS = (
@@ -39,18 +35,12 @@ SEARCH_KEYWORDS = (
     "查找",
     "检索",
     "定位",
-    "鎼滅储",
-    "鏌ユ壘",
-    "妫€绱?",
-    "瀹氫綅",
 )
 
 EMOJI_KEYWORDS = (
     "表情",
     "emoji",
     "颜文字",
-    "琛ㄦ儏",
-    "棰滄枃瀛?",
 )
 
 OPEN_CHAT_KEYWORDS = (
@@ -59,21 +49,39 @@ OPEN_CHAT_KEYWORDS = (
     "会话",
     "聊天",
     "消息中的",
-    "缇?",
-    "浼氳瘽",
-    "鑱婂ぉ",
-    "娑堟伅涓殑",
 )
 
 BROWSER_SURFACE_KEYWORDS = (
+    "多维表格",
+    "Base",
+    "base",
     "文档",
     "云文档",
     "分享",
     "浏览器",
-    "鏂囨。",
-    "浜戞枃妗?",
-    "鍒嗕韩",
-    "娴忚鍣?",
+)
+
+CALENDAR_KEYWORDS = (
+    "日历",
+    "日程",
+    "会议室",
+    "创建日程",
+    "添加主题",
+    "保存",
+)
+
+VC_KEYWORDS = (
+    "视频会议",
+    "发起会议",
+    "发起视频会议",
+    "开始会议",
+    "开始视频会议",
+    "加入会议",
+    "加入视频会议",
+    "会议 ID",
+    "会议ID",
+    "会议号",
+    "邀请",
 )
 
 
@@ -110,16 +118,28 @@ def _detect_intents(instruction: str) -> set[str]:
         intents.add("open_chat")
     if _contains_any(instruction, BROWSER_SURFACE_KEYWORDS):
         intents.add("browser_surface")
+    if _contains_any(instruction, CALENDAR_KEYWORDS):
+        intents.add("calendar")
+    if _contains_any(instruction, VC_KEYWORDS):
+        intents.add("video_meeting")
+    if _contains_any(
+        instruction, ("发起会议", "发起视频会议", "开始会议", "开始视频会议")
+    ):
+        intents.add("start_video_meeting")
+    if _contains_any(
+        instruction, ("加入会议", "加入视频会议", "会议 ID", "会议ID", "会议号")
+    ):
+        intents.add("join_video_meeting")
+    if _contains_any(instruction, ("邀请", "分享邀请", "复制邀请")):
+        intents.add("invite_video_meeting")
     return intents
 
 
 def _extract_target_chat_name(instruction: str) -> str | None:
     patterns = (
-        r'(?:打开消息中的|打开|进入)\s*["“]?([^"”\n]+?)["”]?(?:群聊|群|会话|聊天)',
-        r'(?:在|向|给)\s*["“]([^"”\n]+)["”]\s*(?:群聊|群|会话|聊天)?(?:中)?(?:发送|发|回复)',
-        r'(?:在|向|给)\s*["“]?([^"”\n]+?)["”]?(?:群聊|群|会话|聊天)?(?:中)?(?:发送|发|回复)',
-        r'(?:鎵撳紑娑堟伅涓殑|鎵撳紑|杩涘叆)\s*["鈥淽]?([^"鈥漒n]+?)["鈥漖]?(?:缇よ亰|缇?|浼氳瘽|鑱婂ぉ)',
-        r'(?:鍦?|鍚?|缁?)[\s"]*([^"\n]+?)(?:缇よ亰|缇?|浼氳瘽|鑱婂ぉ)?(?:涓?)?(?:鍙戦€?|鍙?|鍥炲)',
+        r'(?:打开消息中的|打开|进入)\s*[""]([^""\n]+?)[""]?(?:群聊|群|会话|聊天)',
+        r'(?:在|向|给)\s*[""]([^""\n]+)[""]\s*(?:群聊|群|会话|聊天)?(?:中)?(?:发送|发|回复)',
+        r'(?:在|向|给)\s*[""]?([^""\n]+?)[""]?(?:群聊|群|会话|聊天)?(?:中)?(?:发送|发|回复)',
     )
     for pattern in patterns:
         match = re.search(pattern, instruction)
@@ -151,6 +171,16 @@ def _build_state_summary(state: FeishuState) -> str:
         parts.append("conversation_search_results=visible")
     if product_state.get("search_result_list_visible"):
         parts.append("global_search_results=visible")
+    if product_state.get("calendar_home_visible"):
+        parts.append("calendar_home_visible")
+    if product_state.get("event_modal_visible"):
+        parts.append("calendar_event_modal_visible")
+    if product_state.get("create_event_button_visible"):
+        parts.append("create_event_button_visible")
+    if product_state.get("title_input_visible"):
+        parts.append("title_input_visible")
+    if product_state.get("save_button_visible"):
+        parts.append("save_button_visible")
 
     return ", ".join(parts)
 
@@ -160,7 +190,15 @@ def route_feishu_tools(
     observation: dict,
     state: FeishuState | None = None,
 ) -> FeishuToolRecommendation:
-    state = state or detect_feishu_state(observation)
+    if state is None:
+        if _contains_any(instruction, VC_KEYWORDS):
+            state = detect_vc_state(observation)
+        elif _contains_any(instruction, CALENDAR_KEYWORDS):
+            state = detect_calendar_state(observation)
+        elif _contains_any(instruction, ("多维表格", "Base", "base")):
+            state = detect_base_state(observation)
+        else:
+            state = detect_feishu_state(observation)
     page_type = state.get("page_type", "unknown")
     intents = _detect_intents(instruction)
     target_chat_name = _extract_target_chat_name(instruction)
@@ -190,6 +228,102 @@ def route_feishu_tools(
         )
         if target_chat_name:
             hints.append(f"Instruction target chat hint: {target_chat_name}.")
+
+    elif state.get("product") == "vc":
+        enabled_tools.extend(["click", "type"])
+        preferred_tools.extend(["feishu_click", "feishu_type", "click", "type"])
+        next_step_focus = "video_meeting_visible_control"
+        rationale.append(
+            "Video meeting support is handled by feishu_agent tool guidance, not a fixed workflow stage machine."
+        )
+        if page_type == "vc_home":
+            if "join_video_meeting" in intents:
+                next_step_focus = "join_meeting_card"
+                hints.append(
+                    "On the VC home page, choose the visible Join Meeting card, then type the meeting ID into the visible input."
+                )
+            elif "start_video_meeting" in intents:
+                next_step_focus = "start_meeting_card"
+                hints.append(
+                    "On the VC home page, choose the visible Start Meeting card and wait for the preview window before starting."
+                )
+            else:
+                hints.append(
+                    "Use the visible VC entry card that matches the user's intent; do not assume a prebuilt step sequence."
+                )
+        elif page_type == "vc_start_preview":
+            next_step_focus = "start_meeting_button"
+            hints.append(
+                "The start preview is visible. Confirm microphone/camera state from the screen, then use the visible Start Meeting button if appropriate."
+            )
+        elif page_type == "vc_join_preview":
+            next_step_focus = "meeting_id_input_or_join_button"
+            hints.append(
+                "The join preview is visible. Type the meeting ID if the input is empty; otherwise use the visible Join Meeting button."
+            )
+        elif page_type == "vc_meeting_active":
+            if "invite_video_meeting" in intents:
+                next_step_focus = "meeting_invite_control"
+                hints.append(
+                    "The meeting is active. Use the visible invite/participants control and follow the current dialog state."
+                )
+            else:
+                next_step_focus = "active_meeting_toolbar"
+                hints.append(
+                    "The meeting is already active. Continue from visible toolbar controls instead of restarting the meeting."
+                )
+        elif page_type == "vc_invite_dialog":
+            next_step_focus = "invite_dialog_search_or_share"
+            hints.append(
+                "The invite dialog is open. Use visible search/share controls and verify the selected recipient before sharing."
+            )
+        else:
+            hints.append(
+                "For VC tasks, first classify the visible screen, then act through visible controls with Feishu helpers or grounded clicks."
+            )
+
+    elif state.get("product") == "base":
+        enabled_tools.extend(["click", "type"])
+        preferred_tools.extend(["click", "type", "hotkey"])
+        discouraged_tools.extend(["feishu_click", "feishu_type"])
+        next_step_focus = "base_browser_or_desktop_surface"
+        rationale.append(
+            "Base commonly runs inside a browser-like surface, so visual grounding and keyboard input are safer than text-only Feishu UIA helpers."
+        )
+        hints.append(
+            "Use the visible Base surface cues in the current screenshot, such as New entry points, template cards, table grid, or popup blockers."
+        )
+        hints.append(
+            "If a Base AI or onboarding popup blocks the grid, dismiss it only after confirming the Base table editor is visible."
+        )
+
+    elif state.get("product") == "calendar":
+        enabled_tools.extend(["click", "type"])
+        preferred_tools.extend(["feishu_click", "feishu_type", "click"])
+        next_step_focus = "calendar_visible_control"
+        rationale.append(
+            "Calendar should be handled as an agent-guided state surface, not a fixed workflow stage machine."
+        )
+        if page_type == "calendar_home":
+            next_step_focus = "calendar_home_controls"
+            hints.append(
+                "On Calendar home, prefer the visible Create Schedule control or the text anchors in the screenshot, then re-check the screen before the next action."
+            )
+            hints.append(
+                "If the user asked to create an event, act through the visible Calendar controls rather than assuming a scripted home->modal sequence."
+            )
+        elif page_type == "calendar_event_modal":
+            next_step_focus = "calendar_event_modal_controls"
+            hints.append(
+                "The create-event modal is visible. Use the visible title field, attendee field, time controls, and Save button according to the current screenshot."
+            )
+            hints.append(
+                "Do not rely on precomputed coordinates or a fixed step chain; re-check the modal state before typing or saving."
+            )
+        else:
+            hints.append(
+                "First classify whether Calendar home or the create-event modal is visible, then use the visible text controls from the current screenshot."
+            )
 
     elif page_type == "chat_search_panel":
         preferred_tools.extend(["feishu_type", "feishu_click", "hotkey"])

@@ -6,7 +6,18 @@ All functions return strings; none depend on instance state.
 from pathlib import Path
 import textwrap
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+
+def _find_repo_root() -> Path:
+    current = Path(__file__).resolve().parent
+    for _ in range(6):
+        if (current / ".git").exists() or (current / "AGENTS.md").exists():
+            return current
+        current = current.parent
+    return Path.cwd()
+
+
+REPO_ROOT = _find_repo_root()
+LOG_DIR = "logs"
 
 
 def build_win32_click_code(
@@ -347,7 +358,7 @@ def build_feishu_doc_click_code(button_name: str) -> str:
         "更多": (55, 93),
         "分析": (330, 93),
     }
-    log_path = str(REPO_ROOT / "logs")
+    log_path = str(REPO_ROOT / LOG_DIR)
     return f"""
 import ctypes
 import ctypes.wintypes
@@ -476,7 +487,7 @@ def build_feishu_doc_type_code(text: str) -> str:
     Does NOT click — use after feishu_doc_click() when the popup input is already
     focused. Clicking would dismiss light-dismiss popups like the share search field.
     """
-    log_path = str(REPO_ROOT / "logs")
+    log_path = str(REPO_ROOT / LOG_DIR)
     return f"""
 import ctypes
 import ctypes.wintypes

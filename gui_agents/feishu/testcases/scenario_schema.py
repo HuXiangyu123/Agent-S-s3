@@ -10,10 +10,18 @@ from gui_agents.feishu.contracts import TestCase, TestStep
 
 
 DEFAULT_PRECONDITIONS = {
+    "base": ["飞书桌面端已登录"],
+    "docs": ["飞书桌面端已登录"],
     "im": ["飞书桌面端已登录"],
 }
 
 VALID_ACTION_IDS = {
+    "open_docs_home",
+    "open_docs_new_menu",
+    "select_docs_document_type",
+    "select_blank_doc_template",
+    "type_doc_title",
+    "type_doc_body",
     "open_chat",
     "focus_message_input",
     "type_message",
