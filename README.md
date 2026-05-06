@@ -1,356 +1,292 @@
-<h1 align="center">
-  <img src="images/agent_s.png" alt="Logo" style="vertical-align:middle" width="60"> Agent S:
-  <small>Use Computer Like a Human</small>
-</h1>
+# Feishu GUI Agent
 
----
+Windows-first Feishu desktop GUI agent built on top of Agent-S.
 
-## 🇨🇳 快速上手（Windows）
+This project focuses on operating the Feishu desktop client like a user:
+understanding screenshots, selecting GUI actions, verifying product state, and
+writing run artifacts for review. It is not a Feishu Open Platform bot, not an
+API-first integration, and not a fixed workflow executor.
 
-> 本版本在原版 Agent S3 基础上新增了 **图形化启动器**，支持一键启动，自动适配屏幕分辨率，适合 Windows 用户直接使用。
+Upstream foundation: [simular-ai/Agent-S](https://github.com/simular-ai/Agent-S).
 
-### 第一步：安装依赖
+## What It Does
 
-右键 `install.ps1` → **用 PowerShell 运行**，等待安装完成。
+- Drives Feishu desktop through `AgentS3 + WindowsFeishuACI`.
+- Supports semantic priors for IM, Docs, Calendar, Base, and VC.
+- Uses page descriptors, state detectors, tool guidance, and verifiers to help
+  the Agent-S loop make GUI decisions.
+- Produces auditable artifacts under `artifacts/test_runs/`, including
+  `summary.json`, `report.md`, `actions.jsonl`, and screenshots.
+- Provides a Windows launcher for model configuration, task input, execution
+  mode selection, and runtime logs.
 
-> 需要提前安装 [Python 3.10–3.12](https://www.python.org/downloads/)
+Current best-supported path is IM text messaging. Docs/Base/VC/Calendar have
+semantic and unit-test coverage, but some live desktop flows still need more
+validation.
 
-### 第二步：准备 API Key
+## Architecture
 
-需要两个免费/付费 API：
-
-| 用途 | 平台 | 说明 |
-|------|------|------|
-| 主模型（理解指令）| [火山引擎方舟](https://console.volcengine.com/ark) | 注册后创建豆包视觉模型 Endpoint，获取 API Key 和 Endpoint ID |
-| 定位模型（找图标）| [OpenRouter](https://openrouter.ai) | 注册免费账号，在 Settings → Keys 创建 Key |
-
-### 第三步：启动
-
-双击 **`启动.bat`**，在弹出的界面中填入 API Key，点击「保存配置」后点「启动 Agent」。
-
-出现 **✅ Agent 就绪** 后，在底部输入框输入任务指令即可，例如：
-
-```
-在飞书群聊"项目组"中发送消息"今天下午3点开会"
-```
-
-### 注意事项
-
-- 仅支持**单显示器**
-- Agent 会直接控制鼠标和键盘，执行过程中请勿操作电脑
-- 每步操作需要 30 秒–2 分钟，请耐心等待
-
----
-
-## 📖 开发文档
-
-> 🔍 **团队协作 / 代码审查的必读**
-
-| 文档 | 用途 |
-|------|------|
-| [MERGE_NOTES.md](MERGE_NOTES.md) | 本次合并的详细改动说明（What / Why） |
-| [docs/INTERFACE_COMPATIBILITY.md](docs/INTERFACE_COMPATIBILITY.md) | API 兼容性、迁移清单、扩展指南 |
-| [docs/PROJECT_STATE.md](docs/PROJECT_STATE.md) | 项目当前状态、已知问题 |
-| [docs/DECISIONS.md](docs/DECISIONS.md) | 架构决策记录（ADR） |
-
----
-
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s3">[S3 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2510.02250">[S3 Paper]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=VHr0a3UBsh4">[S3 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/articles/agent-s2-technical-review">[S2 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2504.00906">[S2 Paper (COLM 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=wUGVQl7c0eg">[S2 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-  🌐 <a href="https://www.simular.ai/agent-s">[S1 blog]</a>&nbsp;
-  📄 <a href="https://arxiv.org/abs/2410.08164">[S1 Paper (ICLR 2025)]</a>&nbsp;
-  🎥 <a href="https://www.youtube.com/watch?v=OBDE3Knte0g">[S1 Video]</a>
-</p>
-
-<p align="center">&nbsp;
-<a href="https://trendshift.io/repositories/13151" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13151" alt="simular-ai%2FAgent-S | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/OS-Windows-blue?logo=windows&logoColor=white" alt="Windows">
-  <img src="https://img.shields.io/badge/OS-macOS-black?logo=apple&logoColor=white" alt="macOS">
-  <img src="https://img.shields.io/badge/OS-Linux-yellow?logo=linux&logoColor=black" alt="Linux">
-  <a href="https://discord.gg/E2XfsK9fPV">
-    <img src="https://dcbadge.limes.pink/api/server/https://discord.gg/E2XfsK9fPV?style=flat" alt="Discord">
-  </a>
-  &nbsp;&nbsp;
-  <a href="https://pepy.tech/projects/gui-agents">
-    <img src="https://static.pepy.tech/badge/gui-agents" alt="PyPI Downloads">
-  </a>
-</p>
-
-<div align="center">
-  <!-- Keep these links. Translations will automatically update with the README. -->
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=de">Deutsch</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=es">Español</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=fr">français</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ja">日本語</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ko">한국어</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=pt">Português</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=ru">Русский</a> | 
-  <a href="https://www.readme-i18n.com/simular-ai/Agent-S?lang=zh">中文</a>
-</div>
-
-<div align="center">
-  &nbsp;&nbsp;
-<p>Skip the setup? Try Agent S in <a href="https://cloud.simular.ai/">Simular Cloud</a>
-</div>
-
-## 🥳 Updates
-- [x] **2025/10/02**: Released the [Agent S3 paper](https://arxiv.org/abs/2510.02250), setting a new SOTA of **69.9%** on OSWorld, with strong performance on WindowsAgentArena, and AndroidWorld!
-- [x] **2025/08/01**: Agent S2.5 is released (gui-agents v0.2.5): simpler, better, and faster! New SOTA on [OSWorld-Verified](https://os-world.github.io)!
-- [x] **2025/07/07**: The [Agent S2 paper](https://arxiv.org/abs/2504.00906) is accepted to COLM 2025! See you in Montreal!
-- [x] **2025/04/27**: The Agent S paper won the Best Paper Award 🏆 at ICLR 2025 Agentic AI for Science Workshop!
-- [x] **2025/04/01**: Released the [Agent S2 paper](https://arxiv.org/abs/2504.00906) with new SOTA results on OSWorld, WindowsAgentArena, and AndroidWorld!
-- [x] **2025/03/12**: Released Agent S2 along with v0.2.0 of [gui-agents](https://github.com/simular-ai/Agent-S), the new state-of-the-art for computer use agents (CUA), outperforming OpenAI's CUA/Operator and Anthropic's Claude 3.7 Sonnet Computer-Use!
-- [x] **2025/01/22**: The [Agent S paper](https://arxiv.org/abs/2410.08164) is accepted to ICLR 2025!
-- [x] **2025/01/21**: Released v0.1.2 of [gui-agents](https://github.com/simular-ai/Agent-S) library, with support for Linux and Windows!
-- [x] **2024/12/05**: Released v0.1.0 of [gui-agents](https://github.com/simular-ai/Agent-S) library, allowing you to use Agent-S for Mac, OSWorld, and WindowsAgentArena with ease!
-- [x] **2024/10/10**: Released the [Agent S paper](https://arxiv.org/abs/2410.08164) and codebase!
-
-## Table of Contents
-
-1. [💡 Introduction](#-introduction)
-2. [🎯 Current Results](#-current-results)
-3. [🛠️ Installation & Setup](#%EF%B8%8F-installation--setup) 
-4. [🚀 Usage](#-usage)
-5. [🤝 Acknowledgements](#-acknowledgements)
-6. [💬 Citation](#-citation)
-
-## 💡 Introduction
-
-Welcome to **Agent S**, an open-source framework designed to enable autonomous interaction with computers through Agent-Computer Interface. Our mission is to build intelligent GUI agents that can learn from past experiences and perform complex tasks autonomously on your computer. 
-
-Whether you're interested in AI, automation, or contributing to cutting-edge agent-based systems, we're excited to have you here!
-
-## 🎯 Current Results
-
-<p align="center">
-  <img src="images/s3_results.png" alt="Agent S3 Results" width="700"/>
-</p>
-
-On OSWorld, Agent S3 alone reaches 62.6% in the 100-step setting, already exceeding the previous state of the art of 61.4% (Claude Sonnet 4.5). With the addition of Behavior Best-of-N, performance climbs even higher to 69.9%, bringing computer-use agents to within just a few points of human-level accuracy (72%).
-
-Agent S3 also demonstrates strong zero-shot generalization. On WindowsAgentArena, accuracy rises from 50.2% using only Agent S3 to 56.6% by selecting from 3 rollouts. Similarly on AndroidWorld, performance improves from 68.1% to 71.6%
-
-## 🛠️ Installation & Setup
-
-### Prerequisites
-- **Single Monitor**: Our agent is designed for single monitor screens
-- **Security**: The agent runs Python code to control your computer - use with care
-- **Supported Platforms**: Linux, Mac, and Windows
-
-
-### Installation
-To install Agent S3 without cloning the repository, run
-```bash
-pip install gui-agents
-```
-If you would like to test Agent S3 while making changes, clone the repository and install using
-```
-pip install -e .
+```text
+User instruction
+  -> launcher.py or gui_agents/s3/cli_app.py
+  -> AgentS3 LLM loop
+  -> WindowsFeishuACI
+  -> Feishu semantic priors
+       pages/
+       detectors/
+       tooling/
+       verifiers/
+       reports/
+  -> runtime artifacts
+       summary.json
+       report.md
+       actions.jsonl
+       screenshots/
 ```
 
-### API Configuration
+Key points:
 
-#### Option 1: Environment Variables
-Add to your `.bashrc` (Linux) or `.zshrc` (MacOS):
-```bash
-export OPENAI_API_KEY=<YOUR_API_KEY>
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_API_KEY>
-export HF_TOKEN=<YOUR_HF_TOKEN>
+- `feishu_agent` is the active Feishu-specific route.
+- `classic_s3` remains available for the original generic Agent-S route.
+- Feishu product logic should live under `gui_agents/feishu/` where possible.
+- Product execution must stay agentic: guidance informs the LLM loop, but does
+  not replace it with deterministic product workflows.
+- Screenshot-derived metadata is semantic-only. Do not add static coordinates,
+  bounding boxes, confidence scores, image dimensions, or fixed step scripts to
+  page/fixture metadata.
+
+## Repository Layout
+
+```text
+launcher.py                         Windows GUI launcher
+gui_agents/s3/                      Agent-S3 runtime and CLI integration
+gui_agents/feishu/                  Feishu domain layer
+  pages/                            semantic page descriptors
+  detectors/                        observation -> FeishuState
+  tooling/                          tool registry, routing, helper contracts
+  verifiers/                        assertion verification
+  reports/                          runtime and evaluation reports
+  runtime/                          agentic goal extraction
+scripts/check_constraints.py        architecture guardrail checks
+scripts/run_ci_checks.py            local CI parity entry
+scripts/build_feishu_eval_report.py aggregate evaluation report builder
+tests/                              unit and integration tests
+docs/                               requirements, specs, process, implementation notes
 ```
 
-#### Option 2: Python Script
-```python
-import os
-os.environ["OPENAI_API_KEY"] = "<YOUR_API_KEY>"
+## Requirements
+
+- Windows 10/11 recommended.
+- Python 3.10 to 3.12 recommended.
+- Feishu desktop client installed and logged in.
+- Single primary monitor recommended.
+- API access for:
+  - main model: Doubao/Volcano ARK by default
+  - grounding/vision model: Doubao vision or another compatible endpoint
+
+The agent controls mouse and keyboard. Do not use the machine for other work
+while a run is active.
+
+## Installation
+
+### Option 1: Launcher Script
+
+Run:
+
+```powershell
+.\启动.bat
 ```
 
-### Supported Models
-We support Azure OpenAI, Anthropic, Gemini, Open Router, and vLLM inference. See [models.md](models.md) for details.
+The script checks Python, installs required runtime dependencies, sets
+`PYTHONPATH`, and starts `launcher.py`.
 
-### Grounding Models (Required)
-For optimal performance, we recommend [UI-TARS-1.5-7B](https://huggingface.co/ByteDance-Seed/UI-TARS-1.5-7B) hosted on Hugging Face Inference Endpoints or another provider. See [Hugging Face Inference Endpoints](https://huggingface.co/learn/cookbook/en/enterprise_dedicated_endpoints) for setup instructions.
+### Option 2: Manual Setup
 
-## 🚀 Usage
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m pip install -e .
+python launcher.py
+```
 
+If your environment blocks editable installs, you can still launch from the
+repository root with:
 
-> ⚡️ **Recommended Setup:**  
-> For the best configuration, we recommend using **OpenAI gpt-5-2025-08-07** as the main model, paired with **UI-TARS-1.5-7B** for grounding.  
+```powershell
+$env:PYTHONPATH=(Get-Location).Path
+python launcher.py
+```
 
+## Model Configuration
+
+The launcher stores configuration in `config.json`. Secrets can also be provided
+through `env.txt`; copy `env.txt.example` to `env.txt` and fill in real values.
+`env.txt` is ignored by git.
+
+### Main Model: Doubao / Volcano ARK
+
+The launcher defaults to the Doubao/Volcano main provider.
+
+Common fields:
+
+```text
+VOLCANO_ENDPOINT_ID: ep-xxxxxxxxxxxxx-xxxxx
+VOLCANO_API_KEY: ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+Legacy aliases are also supported:
+
+```text
+ep-id: ep-xxxxxxxxxxxxx-xxxxx
+api-key: ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### Grounding Model
+
+Default grounding provider is Doubao ARK vision.
+
+```text
+ARK_API_KEY: ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+If the grounding key differs from the main model key:
+
+```text
+GROUND_API_KEY: ark-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+```
+
+### Optional OpenAI-Compatible Main Model
+
+OpenAI-compatible settings can be stored, but they do not override the default
+Doubao main provider unless explicitly selected in the launcher.
+
+```text
+oai_base_url: https://example.com/v1
+oai_api: sk-xxxxxxxx
+oai_model: gpt-5.4
+model_reasoning_effort: medium
+```
+
+## Running
+
+### GUI Launcher
+
+```powershell
+python launcher.py
+```
+
+Recommended launcher settings:
+
+- Execution mode: `feishu_agent`
+- Main provider: Doubao / Volcano
+- Grounding provider: Doubao ARK or another configured vision endpoint
+- Reflection mode: `on_failure`
+
+After the status shows the agent is ready, enter a task instruction such as:
+
+```text
+打开消息中的 bot 功能测试群聊，发送“Hello World”，并确认消息已发送
+```
+
+Other launcher examples cover Docs, Calendar, Base, and VC. Some examples are
+semantic/runtime probes and may require live UI stabilization before they become
+reliable acceptance cases.
 
 ### CLI
 
-Note, this is running Agent S3, our improved agent, without bBoN. 
+The launcher wraps `gui_agents/s3/cli_app.py`. Direct CLI use is mainly for
+debugging:
 
-Run Agent S3 with the required parameters:
-
-```bash
-agent_s \
-    --provider openai \
-    --model gpt-5-2025-08-07 \
-    --ground_provider huggingface \
-    --ground_url http://localhost:8080 \
-    --ground_model ui-tars-1.5-7b \
-    --grounding_width 1920 \
-    --grounding_height 1080
+```powershell
+python gui_agents/s3/cli_app.py `
+  --execution_mode feishu_agent `
+  --provider openai `
+  --model <MAIN_MODEL_OR_ENDPOINT_ID> `
+  --model_url <MAIN_MODEL_BASE_URL> `
+  --model_api_key <MAIN_MODEL_API_KEY> `
+  --ground_provider openai `
+  --ground_url <GROUNDING_BASE_URL> `
+  --ground_api_key <GROUNDING_API_KEY> `
+  --ground_model <GROUNDING_MODEL> `
+  --grounding_width 1000 `
+  --grounding_height 1000 `
+  --ground_coord_scale 1000
 ```
 
-#### Required Parameters
-- **`--provider`**: Main generation model provider (e.g., openai, anthropic, etc.) - Default: "openai"
-- **`--model`**: Main generation model name (e.g., gpt-5-2025-08-07) - Default: "gpt-5-2025-08-07"
-- **`--ground_provider`**: The provider for the grounding model - **Required**
-- **`--ground_url`**: The URL of the grounding model - **Required**
-- **`--ground_model`**: The model name for the grounding model - **Required**
-- **`--grounding_width`**: Width of the output coordinate resolution from the grounding model - **Required**
-- **`--grounding_height`**: Height of the output coordinate resolution from the grounding model - **Required**
+Use the launcher for normal local runs because it manages provider config,
+screen settings, process lifecycle, and logs.
 
-#### Optional Parameters
-- **`--model_temperature`**: The temperature to fix all model calls to (necessary to set to 1.0 for models like o3 but can be left blank for other models)
+## Evaluation Artifacts
 
-#### Grounding Model Dimensions
-The grounding width and height should match the output coordinate resolution of your grounding model:
-- **UI-TARS-1.5-7B**: Use `--grounding_width 1920 --grounding_height 1080`
-- **UI-TARS-72B**: Use `--grounding_width 1000 --grounding_height 1000`
+Each Feishu run can write artifacts under:
 
-#### Optional Parameters
-- **`--model_url`**: Custom API URL for main generation model - Default: ""
-- **`--model_api_key`**: API key for main generation model - Default: ""
-- **`--ground_api_key`**: API key for grounding model endpoint - Default: ""
-- **`--max_trajectory_length`**: Maximum number of image turns to keep in trajectory - Default: 8
-- **`--enable_reflection`**: Enable reflection agent to assist the worker agent - Default: True
-
-### `gui_agents` SDK
-
-First, we import the necessary modules. `AgentS3` is the main agent class for Agent S3. `OSWorldACI` is our grounding agent that translates agent actions into executable python code.
-```python
-import pyautogui
-import io
-from gui_agents.s3.agents.agent_s import AgentS3
-from gui_agents.s3.agents.grounding import OSWorldACI
-
-# Load in your API keys.
-from dotenv import load_dotenv
-load_dotenv()
-
-current_platform = "linux"  # "darwin", "windows"
+```text
+artifacts/test_runs/<run_id>/
+  summary.json
+  report.md
+  actions.jsonl
+  screenshots/
 ```
 
-Next, we define our engine parameters. `engine_params` is used for the main agent, and `engine_params_for_grounding` is for grounding. For `engine_params_for_grounding`, we support custom endpoints like HuggingFace TGI, vLLM, and Open Router.
+Aggregate existing run summaries:
 
-```python
-engine_params = {
-  "engine_type": provider,
-  "model": model,
-  "base_url": model_url,           # Optional
-  "api_key": model_api_key,        # Optional
-  "temperature": model_temperature # Optional
-}
-
-# Load the grounding engine from a custom endpoint
-ground_provider = "<your_ground_provider>"
-ground_url = "<your_ground_url>"
-ground_model = "<your_ground_model>"
-ground_api_key = "<your_ground_api_key>"
-
-# Set grounding dimensions based on your model's output coordinate resolution
-# UI-TARS-1.5-7B: grounding_width=1920, grounding_height=1080
-# UI-TARS-72B: grounding_width=1000, grounding_height=1000
-grounding_width = 1920  # Width of output coordinate resolution
-grounding_height = 1080  # Height of output coordinate resolution
-
-engine_params_for_grounding = {
-  "engine_type": ground_provider,
-  "model": ground_model,
-  "base_url": ground_url,
-  "api_key": ground_api_key,  # Optional
-  "grounding_width": grounding_width,
-  "grounding_height": grounding_height,
-}
+```powershell
+python scripts/build_feishu_eval_report.py --artifact-root artifacts/test_runs --output-dir artifacts/evaluation
 ```
 
-Then, we define our grounding agent and Agent S3.
+Outputs:
 
-```python
-grounding_agent = OSWorldACI(
-    platform=current_platform,
-    engine_params_for_generation=engine_params,
-    engine_params_for_grounding=engine_params_for_grounding,
-    width=1920,  # Optional: screen width
-    height=1080  # Optional: screen height
-)
-
-agent = AgentS3(
-    engine_params,
-    grounding_agent,
-    platform=current_platform,
-    max_trajectory_length=8,  # Optional: maximum image turns to keep
-    enable_reflection=True     # Optional: enable reflection agent
-)
+```text
+artifacts/evaluation/evaluation_summary.json
+artifacts/evaluation/evaluation_report.md
 ```
 
-Finally, let's query the agent!
+## Development Checks
 
-```python
-# Get screenshot.
-screenshot = pyautogui.screenshot()
-buffered = io.BytesIO() 
-screenshot.save(buffered, format="PNG")
-screenshot_bytes = buffered.getvalue()
+Every coding session should start with:
 
-obs = {
-  "screenshot": screenshot_bytes,
-}
-
-instruction = "Close VS Code"
-info, action = agent.predict(instruction=instruction, observation=obs)
-
-exec(action[0])
+```powershell
+python -m unittest tests.test_agent_startup -v
 ```
 
-Refer to `gui_agents/s3/cli_app.py` for more details on how the inference loop works.
+Common local checks:
 
-### OSWorld
-
-To deploy Agent S3 in OSWorld, follow the [OSWorld Deployment instructions](osworld_setup/s3/OSWorld.md).
-
-## 💬 Citations
-
-If you find this codebase useful, please cite:
-
-```
-@misc{Agent-S2,
-      title={Agent S2: A Compositional Generalist-Specialist Framework for Computer Use Agents}, 
-      author={Saaket Agashe and Kyle Wong and Vincent Tu and Jiachen Yang and Ang Li and Xin Eric Wang},
-      year={2025},
-      eprint={2504.00906},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2504.00906}, 
-}
-
-@inproceedings{Agent-S,
-    title={{Agent S: An Open Agentic Framework that Uses Computers Like a Human}},
-    author={Saaket Agashe and Jiuzhou Han and Shuyu Gan and Jiachen Yang and Ang Li and Xin Eric Wang},
-    booktitle={International Conference on Learning Representations (ICLR)},
-    year={2025},
-    url={https://arxiv.org/abs/2410.08164}
-}
+```powershell
+python scripts/check_constraints.py
+python -m unittest tests.test_launcher_env_config -v
+python -m unittest discover tests/feishu -v
+python scripts/run_ci_checks.py
 ```
 
-## Star History
+`scripts/check_constraints.py` enforces the current architecture guardrails,
+including no FeishuWorker runtime, no deterministic product workflow executor,
+and semantic-only static Feishu metadata.
 
-[![Star History Chart](https://api.star-history.com/svg?repos=simular-ai/Agent-S&type=Date)](https://star-history.com/#simular-ai/Agent-S&Date)
+## Project Docs
+
+Start here for current project state and contracts:
+
+- `docs/process/project_state.md`
+- `docs/process/requirements_coverage_audit_2026-05-06.md`
+- `docs/feishu_gui_agent_master_plan.md`
+- `docs/spec/feishu_gui_agent_technical_spec.md`
+- `docs/interfaces/feishu_gui_agent_interfaces.md`
+- `AGENTS.md`
+
+Implementation records live under `docs/implementation/`. Some older documents
+describe workflow-era designs and should be treated as history, not active
+runtime contracts.
+
+## Upstream Attribution
+
+This repository is based on Agent-S and keeps the Agent-S3 loop as the core
+agent runtime. For the original general-purpose computer-use framework,
+benchmarks, papers, SDK documentation, and citations, see:
+
+- Repository: <https://github.com/simular-ai/Agent-S>
+- Project page: <https://www.simular.ai/agent-s>
+
+## License
+
+See `LICENSE`.
