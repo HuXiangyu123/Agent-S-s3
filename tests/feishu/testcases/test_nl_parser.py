@@ -16,6 +16,11 @@ class TestNLParser(unittest.TestCase):
         )
         self.assertEqual(testcase["steps"][2]["action"], "send_message")
         self.assertIn("message_sent", testcase["assertions"])
+        self.assertEqual(
+            testcase["artifacts"]["runtime_contract"],
+            "semantic_validation_only",
+        )
+        self.assertEqual(testcase["artifacts"]["active_executor"], "feishu_agent")
 
     def test_parse_launcher_style_open_chat_and_input_instruction(self) -> None:
         testcase = parse_instruction(
@@ -31,9 +36,13 @@ class TestNLParser(unittest.TestCase):
                 "打开消息中的bot功能测试群聊，在消息发送框输入hello，并且点击表情图标随机选择一个表情并发送"
             )
 
-    def test_rejects_vc_fixed_testcase_parsing(self) -> None:
-        with self.assertRaisesRegex(ValueError, "feishu_agent tool guidance"):
-            parse_instruction("发起视频会议并验证入会成功")
+    def test_vc_parses_as_guidance_only_testcase(self) -> None:
+        testcase = parse_instruction("发起视频会议并验证入会成功")
+
+        self.assertEqual(testcase["product"], "vc")
+        self.assertEqual(testcase["steps"], [])
+        self.assertTrue(testcase["artifacts"]["semantic_guidance_only"])
+        self.assertEqual(testcase["artifacts"]["intent"], "start_video_meeting")
 
     def test_rejects_instruction_without_clear_chat_or_message(self) -> None:
         with self.assertRaisesRegex(ValueError, "unable to extract chat_name"):
@@ -59,6 +68,10 @@ class TestNLParser(unittest.TestCase):
         self.assertEqual(testcase["steps"][5]["payload"], {"text": "本周完成联调"})
         self.assertIn("doc_title_contains_text", testcase["assertions"])
         self.assertIn("doc_body_contains_text", testcase["assertions"])
+        self.assertEqual(
+            testcase["artifacts"]["ordered_steps_role"],
+            "acceptance_scaffold_not_workflow",
+        )
 
     def test_parse_docs_title_only_instruction(self) -> None:
         testcase = parse_instruction("新建一个云文档，标题为“项目周报”。")
@@ -68,19 +81,20 @@ class TestNLParser(unittest.TestCase):
         self.assertEqual(testcase["steps"][-1]["action"], "type_doc_title")
         self.assertEqual(testcase["steps"][-1]["payload"], {"text": "项目周报"})
 
-    def test_rejects_base_fixed_workflow_parsing(self) -> None:
-        with self.assertRaisesRegex(
-            ValueError,
-            "Base instructions are handled by feishu_agent prior guidance",
-        ):
-            parse_instruction("新建一个多维表格")
+    def test_base_parses_as_guidance_only_testcase(self) -> None:
+        testcase = parse_instruction("新建一个多维表格")
 
-    def test_rejects_base_fixed_workflow_parsing_with_title(self) -> None:
-        with self.assertRaisesRegex(
-            ValueError,
-            "Base instructions are handled by feishu_agent prior guidance",
-        ):
-            parse_instruction("新建一个多维表格，标题为“销售跟进表”")
+        self.assertEqual(testcase["product"], "base")
+        self.assertEqual(testcase["steps"], [])
+        self.assertTrue(testcase["artifacts"]["semantic_guidance_only"])
+        self.assertEqual(testcase["artifacts"]["intent"], "base_semantic_task")
+
+    def test_base_guidance_preserves_title_hint(self) -> None:
+        testcase = parse_instruction("新建一个多维表格，标题为“销售跟进表”")
+
+        self.assertEqual(testcase["product"], "base")
+        self.assertEqual(testcase["steps"], [])
+        self.assertEqual(testcase["artifacts"]["params"]["title_hint"], "销售跟进表")
 
 
 if __name__ == "__main__":

@@ -28,12 +28,27 @@
     "vc_microphone_toggle",
     "vc_camera_toggle"
   ],
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "会议 ID", "role": "input_placeholder", "required": true},
-    {"text": "麦克风", "role": "control_label", "required": true},
-    {"text": "摄像头", "role": "control_label", "required": true},
-    {"text": "加入会议", "role": "primary_button", "required": true}
+    {
+      "text": "会议 ID",
+      "role": "input_placeholder",
+      "required": true
+    },
+    {
+      "text": "麦克风",
+      "role": "control_label",
+      "required": true
+    },
+    {
+      "text": "摄像头",
+      "role": "control_label",
+      "required": true
+    },
+    {
+      "text": "加入会议",
+      "role": "primary_button",
+      "required": true
+    }
   ],
   "annotation_status": "semantic",
   "review_status": "unreviewed"

@@ -27,12 +27,27 @@
     "vc_join_card",
     "vc_history"
   ],
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "视频会议", "role": "product_title", "required": true},
-    {"text": "发起会议", "role": "entry_card", "required": true},
-    {"text": "加入会议", "role": "entry_card", "required": true},
-    {"text": "历史记录", "role": "history_heading", "required": true}
+    {
+      "text": "视频会议",
+      "role": "product_title",
+      "required": true
+    },
+    {
+      "text": "发起会议",
+      "role": "entry_card",
+      "required": true
+    },
+    {
+      "text": "加入会议",
+      "role": "entry_card",
+      "required": true
+    },
+    {
+      "text": "历史记录",
+      "role": "history_heading",
+      "required": true
+    }
   ],
   "annotation_status": "semantic",
   "review_status": "unreviewed"

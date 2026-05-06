@@ -18,25 +18,39 @@
   "product_state": {
     "template_gallery_visible": true,
     "blank_doc_card_visible": true,
-    "template_search_visible": true,
-    "workflow_support": "primary"
+    "template_search_visible": true
   },
   "visible_targets": [
     "blank_doc_card_area",
     "template_search_area",
     "close_button_area"
   ],
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "新建到", "role": "gallery_header", "required": true},
-    {"text": "搜索模板", "role": "search_placeholder", "required": true},
-    {"text": "新建空白文档", "role": "blank_document_card", "required": true},
-    {"text": "为你推荐", "role": "section_title", "required": true}
+    {
+      "text": "新建到",
+      "role": "gallery_header",
+      "required": true
+    },
+    {
+      "text": "搜索模板",
+      "role": "search_placeholder",
+      "required": true
+    },
+    {
+      "text": "新建空白文档",
+      "role": "blank_document_card",
+      "required": true
+    },
+    {
+      "text": "为你推荐",
+      "role": "section_title",
+      "required": true
+    }
   ],
   "key_regions": {
-    "blank_doc_card_area": {"relative_bounds": [0.18, 0.13, 0.365, 0.39]},
-    "template_search_area": {"relative_bounds": [0.36, 0.015, 0.642, 0.05]},
-    "close_button_area": {"relative_bounds": [0.965, 0.015, 0.99, 0.045]}
+    "blank_doc_card_area": {},
+    "template_search_area": {},
+    "close_button_area": {}
   },
   "annotation_status": "draft",
   "review_status": "unreviewed"

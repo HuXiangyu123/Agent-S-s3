@@ -21,7 +21,7 @@ class TestPageRegistry(unittest.TestCase):
         descriptor = get_page_descriptor("feishu_shell_search")
         self.assertIsNotNone(descriptor)
         self.assertEqual(descriptor["page_type"], "shell_search")
-        self.assertIn("open_chat", descriptor["supported_workflows"])
+        self.assertNotIn("supported_workflows", descriptor)
         self.assertIn("global_search_entry_area", descriptor["key_regions"])
         self.assertIn("search_result_item_area", descriptor["key_regions"])
 
@@ -32,7 +32,7 @@ class TestPageRegistry(unittest.TestCase):
         descriptor = get_page_descriptor("im_chat_main")
         self.assertIsNotNone(descriptor)
         self.assertEqual(descriptor["page_type"], "chat_main")
-        self.assertIn("send_message", descriptor["supported_workflows"])
+        self.assertNotIn("supported_workflows", descriptor)
         self.assertIn("message_input_area", descriptor["key_regions"])
         self.assertIn("send_button_area", descriptor["key_regions"])
 

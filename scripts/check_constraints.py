@@ -185,6 +185,53 @@ def check_no_deterministic_planner_or_workflows() -> list[str]:
     return errors
 
 
+def check_semantic_static_feishu_metadata() -> list[str]:
+    """Static Feishu descriptors/fixtures must not carry workflow or click priors."""
+    errors = []
+    forbidden = (
+        "relative_bounds",
+        '"bbox"',
+        '"confidence"',
+        "supported_workflows",
+        "workflow_support",
+    )
+    checks = [
+        (REPO_ROOT / "gui_agents" / "feishu" / "pages", "*.py"),
+        (REPO_ROOT / "tests" / "fixtures", "*.json"),
+    ]
+    for root, pattern in checks:
+        for path in root.rglob(pattern):
+            text = path.read_text(encoding="utf-8-sig")
+            for token in forbidden:
+                if token in text:
+                    errors.append(
+                        f"{path.relative_to(REPO_ROOT)}: static metadata contains {token}"
+                    )
+    return errors
+
+
+def check_no_static_relative_locator_path() -> list[str]:
+    """Feishu locators and runtime priors must not read static relative bounds."""
+    errors = []
+    forbidden_patterns = [
+        (re.compile(r"region\.get\([\"']relative_bounds[\"']\)"), "reads region relative_bounds"),
+        (re.compile(r"_relative_bounds_center"), "relative bounds center helper"),
+        (re.compile(r"_relative_region_click_code"), "relative region click helper"),
+        (re.compile(r"\bOFFSETS\s*="), "hard-coded toolbar offsets"),
+    ]
+    roots = [
+        REPO_ROOT / "gui_agents" / "feishu",
+        REPO_ROOT / "gui_agents" / "s3" / "agents",
+    ]
+    for root in roots:
+        for py_file in _iter_py_files(root):
+            text = py_file.read_text(encoding="utf-8")
+            for pattern, desc in forbidden_patterns:
+                if pattern.search(text):
+                    errors.append(f"{py_file.relative_to(REPO_ROOT)}: {desc}")
+    return errors
+
+
 # ---------------------------------------------------------------------------
 # Doc checks
 # ---------------------------------------------------------------------------
@@ -344,6 +391,8 @@ def main() -> int:
             "code: no deterministic planner/workflows",
             check_no_deterministic_planner_or_workflows,
         ),
+        ("code: semantic static Feishu metadata", check_semantic_static_feishu_metadata),
+        ("code: no static relative locator path", check_no_static_relative_locator_path),
         ("docs: implementation no target file", check_docs_no_target_file),
         ("docs: SOT no active worker", check_docs_no_active_worker),
         ("docs: SOT no active workflow design", check_docs_no_active_workflow_design),

@@ -39,7 +39,6 @@
     "conversation_search_entry",
     "conversation_search_close_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "搜索会话内容",
@@ -74,37 +73,30 @@
   ],
   "key_regions": {
     "search_panel_area": {
-      "relative_bounds": [0.05, 0.08, 0.95, 0.98],
       "annotation_status": "coarse",
       "notes": "Right-side local search panel for the current conversation"
     },
     "conversation_search_close_button_area": {
-      "relative_bounds": [0.86, 0.12, 0.94, 0.20],
       "annotation_status": "coarse",
       "notes": "Close button in the top-right corner of the local search panel"
     },
     "conversation_search_entry_area": {
-      "relative_bounds": [0.10, 0.23, 0.90, 0.28],
       "annotation_status": "coarse",
       "notes": "Primary search input for searching within the current conversation"
     },
     "search_filters_row_area": {
-      "relative_bounds": [0.10, 0.29, 0.70, 0.35],
       "annotation_status": "coarse",
       "notes": "Row containing sender/time/advanced search filters"
     },
     "search_empty_hint_area": {
-      "relative_bounds": [0.26, 0.62, 0.82, 0.78],
       "annotation_status": "coarse",
       "notes": "Empty-state hint area shown before any search results appear"
     },
     "conversation_search_result_list_area": {
-      "relative_bounds": [0.09, 0.36, 0.92, 0.82],
       "annotation_status": "coarse",
       "notes": "Area that will contain search results once the query returns matches"
     },
     "conversation_search_result_item_area": {
-      "relative_bounds": [0.10, 0.37, 0.90, 0.45],
       "annotation_status": "coarse",
       "notes": "Fallback region for the first visible conversation-search result item"
     }

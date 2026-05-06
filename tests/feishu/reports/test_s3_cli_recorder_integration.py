@@ -2,11 +2,16 @@ import unittest
 
 
 class _FakeGroundingAgent:
+    def __init__(self):
+        self.capture_calls = 0
+
     def capture_observation(self, scaled_width, scaled_height):
+        self.capture_calls += 1
         return {
             "screenshot": b"fake-png-bytes",
             "image_width": scaled_width,
             "image_height": scaled_height,
+            "capture_id": self.capture_calls,
         }
 
 
@@ -36,13 +41,13 @@ class _FakeRecorder:
     def record_action(self, step_index, exec_code, status, failure_reason=None):
         self.actions.append((step_index, exec_code, status, failure_reason))
 
-    def finalize(self, status=None, failure_reason=None):
-        self.finalized_with = (status, failure_reason)
+    def finalize(self, status=None, failure_reason=None, final_observation=None):
+        self.finalized_with = (status, failure_reason, final_observation)
         return {"summary": "fake-summary.json"}
 
 
 class TestS3CliRecorderIntegration(unittest.TestCase):
-    def test_run_agent_records_s3_loop_facts_without_executing_workflow(self):
+    def test_run_agent_refreshes_final_observation_before_finalize(self):
         from gui_agents.s3 import cli_app
 
         cli_app.paused = False
@@ -63,11 +68,14 @@ class TestS3CliRecorderIntegration(unittest.TestCase):
         self.assertEqual(len(recorder.observations), 1)
         self.assertEqual(recorder.observations[0][0], 1)
         self.assertEqual(recorder.observations[0][1]["image_width"], 800)
+        self.assertEqual(recorder.observations[0][1]["capture_id"], 1)
         self.assertEqual(
             recorder.actions,
             [(1, "agent.done()", "done", None)],
         )
-        self.assertEqual(recorder.finalized_with, ("completed", None))
+        self.assertEqual(recorder.finalized_with[:2], ("completed", None))
+        self.assertIsNotNone(recorder.finalized_with[2])
+        self.assertEqual(recorder.finalized_with[2]["capture_id"], 2)
 
 
 if __name__ == "__main__":

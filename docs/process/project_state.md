@@ -64,8 +64,10 @@ This section checks the current repository state against `docs/项目需求.md`.
    Current status:
    - `IM`, `Docs`, and `Base` assertions are implemented in
      `AssertionVerifier`.
-   - `Calendar` and `VC` detector coverage exists, but dedicated verifier
-     branches are still missing.
+   - `VC` now has dedicated runtime assertions for home/start/join/invite end
+     states.
+   - `Calendar` detector coverage exists, but stronger calendar-specific
+     verifier depth is still missing.
 
 5. Evaluation report: partially to substantially implemented.
    Current status:
@@ -169,11 +171,16 @@ Implemented:
 - VC detector
 - VC tool-router guidance
 - semantic-only fixture constraints
+- dedicated VC verifier branches
+- runtime goal extraction and Track D final-state verification
+- agentic helper tools for start/join/invite-related controls
+- invite-popover semantic detection for active-meeting flows
 
 Missing:
 
-- verifier branches
-- stable live runtime path validation for start/join/invite flows
+- stable live runtime validation for start/join/invite flows on the launcher
+- broader VC task coverage such as camera/microphone toggles and richer invite
+  completion paths
 
 ## Auto Evaluation Status
 
@@ -186,6 +193,9 @@ Missing:
 - `S3RuntimeRecorder` passive runtime capture
 - `ArtifactManager` stable artifact persistence
 - `ReportBuilder` for `summary.json` and `report.md`
+- `EvaluationAggregator` batch aggregation from `summary.json` artifacts
+- `tests/eval_suite/feishu_eval_suite.json` read-only test case manifest (12 cases, 5 products)
+- `scripts/build_feishu_eval_report.py` CLI wrapper for batch evaluation
 
 ### Output Currently Available
 
@@ -196,10 +206,15 @@ Per-run outputs under `artifacts/test_runs/<run_id>/`:
 - `actions.jsonl`
 - `screenshots/`
 
+Batch outputs under `artifacts/evaluation/`:
+
+- `evaluation_summary.json`
+- `evaluation_report.md`
+
 ### Still Missing
 
-- regression runner over a test suite
-- aggregate success-rate reporting across runs
+- ~~aggregate success-rate reporting across runs~~ → done: `evaluation_aggregator.py` + `build_feishu_eval_report.py`
+- regression runner over a test suite (manifest created, batch runner deferred)
 - dashboard / visualization layer
 - trend comparison between runs
 
@@ -207,94 +222,115 @@ Per-run outputs under `artifacts/test_runs/<run_id>/`:
 
 Checked against the advanced requirements in `docs/项目需求.md`.
 
+Preliminary implementation plan for 4 low-risk features is available at
+`docs/implementation/advanced_features_preliminary_plan.md`.
+
 ### 1. Exception handling
 
-Status: partially implemented.
+Status: partially implemented (preliminary plan ready).
 
 Evidence:
 
 - detectors preserve `modal_type`
-- tool routing includes popup/dialog-aware branches
-- runtime can classify recognition/location/action/verification failures
+- tool routing includes popup/dialog-aware branches for IM, VC, Docs, Calendar
+- runtime can classify recognition/location/action/verification/runtime failures
 
 Gap:
 
-- no unified abnormal-scene recovery matrix across all products
+- no unified anomaly detection keywords in detector fallback paths
+- no `recovery_hint` guidance injection in tool_router
 
 ### 2. Self-healing execution
 
-Status: partially implemented.
+Status: partially implemented (preliminary plan ready).
 
 Evidence:
 
 - `Worker` supports `reflection_mode=on_failure`
-- runtime detects when the previous action had no effect
+- `_detect_plan_failure()` detects "Behind:", "no effect", "still empty" etc.
+- `last_step_failed` flag escalates reasoning effort
 - `feishu_click(...)` can prepare a grounded fallback for icon-only controls
-- verifier supports OCR fallback in several assertions
+- verifier supports OCR fallback in all assertion branches
 
 Gap:
 
-- no generalized multi-strategy retry engine per product task
+- no recovery guidance injected into Worker prompt when `last_step_failed=True`
+- no `recovery_attempts` tracking in RuntimeContext
 
 ### 3. Cross-product linked testing
 
-Status: not implemented.
+Status: not implemented (deferred).
 
 Current state:
 
 - no active IM -> Calendar -> IM linked runtime flow
+- deferred: depends on stable live product paths not yet validated
 
 ### 4. Testcase auto generation
 
-Status: not implemented.
+Status: not implemented (deferred).
 
 Current state:
 
-- no generator from Feishu docs, recordings, or product specs into structured
-  testcases
+- no generator from Feishu docs, recordings, or product specs
+- deferred: scope explosion risk
 
 ### 5. Mixed locator strategy
 
-Status: design placeholder only.
+Status: design placeholder only (deferred).
 
 Current state:
 
-- `VisionLocator` is active
+- `VisionLocator` is active (runtime-region-only bounds)
 - `AccessibilityLocator` / `HybridLocator` remain documented placeholders
+- deferred: environment compatibility not yet stable
 
 ### 6. Multi-turn orchestration
 
-Status: partially implemented at the agent loop level, not as a dedicated
-feature module.
+Status: partially implemented (preliminary plan ready).
 
 Evidence:
 
 - `AgentS3` adjusts next action from current screenshot
+- `build_dynamic_guidance()` provides per-step tool guidance
 - reasoning effort and reflection escalate after failures
+- `FeishuToolRecommendation` already carries state_summary, next_step_focus, preferred_tools
 
 Gap:
 
-- no explicit product-facing multi-round test orchestration feature or policy
+- per-turn state/guidance block not yet formatted into Worker prompt
+- no concise turn summary injection before each action generation
 
 ### 7. Record and replay
 
-Status: not implemented.
+Status: not implemented (preliminary plan ready — semantic trace only).
 
 Current state:
 
-- screenshots and action logs are recorded
-- there is no replay engine that turns captured actions into reusable scripts
+- screenshots and action logs are recorded via S3RuntimeRecorder
+- `summary.json`, `report.md`, `actions.jsonl` are generated
+- no semantic trace or replay draft output yet
+- plan commits to semantic-only trace (no coordinate scripts)
 
 ## Current Priority
 
-The main app-level remaining repair item is `VC`.
+Primary repair items completed:
 
-Recommended order:
+- VC verifier branches (6 assertions) implemented
+- Docs tool routing branch implemented
+- `relative_bounds` / quantitative coordinates purged from all feishu modules
+- `LocatorResult` purified to `action_target` (semantic-only)
+- `RuntimeContext` cleaned of workflow remnants (`intent`/`params` replaces `workflow`/`workflow_params`)
 
-1. finish VC verifier/runtime repair
-2. close one more stable live product path beyond IM
-3. then decide whether to deepen `Calendar` or `Docs`
-4. only after that, raise M4/M5 with batch evaluation and advanced features
+Recommended next order:
+
+1. Step 0: freeze RuntimeContext shared fields (`recovery_attempts`, `anomaly_events`, `semantic_steps`)
+2. 异常场景处理 (anomaly detection + recovery hints)
+3. 自愈式执行 (recovery prompt injection)
+4. 多轮对话编排 (per-turn state/guidance block)
+5. 录制回放语义轨迹版 (semantic_trace.json + replay_draft.md)
+6. Calendar verifier branches (only major gap remaining in product coverage)
+7. Batch evaluation and regression runner (M4)
 
 ## Historical Drift Notes
 

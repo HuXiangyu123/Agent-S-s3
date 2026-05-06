@@ -1,5 +1,17 @@
 # Docs Track B Pages And Detector 2026-05-06
 
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/technical_debt_dead_code_cleanup_2026-05-06.md`
+> - `docs/implementation/feishu_agent_docs_router_and_parser_contract_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The
+> references below to coarse `relative_bounds` and supported workflow metadata
+> are superseded. Current Docs page descriptors and fixtures are semantic-only;
+> runtime coordinates may come only from runtime grounding/observation.
+
 ## Goal
 
 Implement the smallest Docs Track B slice from the existing screenshots under `tests/fixtures/docs/`.

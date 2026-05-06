@@ -21,15 +21,13 @@
     "video_meeting_button_visible": true,
     "meeting_note_link_visible": true,
     "reminder_visible": true,
-    "owner_visible": true,
-    "workflow_support": "deferred"
+    "owner_visible": true
   },
   "visible_targets": [
     "share_schedule_button",
     "video_meeting_button",
     "meeting_note_link"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "分享日程",

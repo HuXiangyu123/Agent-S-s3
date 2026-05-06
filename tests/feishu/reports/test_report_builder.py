@@ -18,8 +18,8 @@ class TestReportBuilder(unittest.TestCase):
         self.runtime = {
             "run_id": "20260506_010203",
             "status": "failed",
-            "workflow": "send_message",
-            "workflow_params": {"chat_name": "bot功能测试", "message_text": "hello"},
+            "intent": "send_message",
+            "params": {"chat_name": "bot功能测试", "message_text": "hello"},
             "page_id": "chat_main",
             "precondition_results": [],
             "action_logs": [
@@ -76,7 +76,7 @@ class TestReportBuilder(unittest.TestCase):
         summary = builder.build_summary(self.testcase, self.runtime)
 
         self.assertEqual(summary["task_id"], "tc_im_send_message_001")
-        self.assertEqual(summary["workflow"], "send_message")
+        self.assertEqual(summary["intent"], "send_message")
         self.assertEqual(summary["steps"], 3)
         self.assertEqual(summary["passed_steps"], 1)
         self.assertEqual(summary["failed_steps"], 1)
@@ -116,8 +116,8 @@ class TestReportBuilder(unittest.TestCase):
         runtime = {
             "run_id": "20260506_docs",
             "status": "passed",
-            "workflow": "create_doc_and_edit",
-            "workflow_params": {"doc_title": "项目周报", "body_text": None},
+            "intent": "create_doc_and_edit",
+            "params": {"doc_title": "项目周报", "body_text": None},
             "page_id": "docs_browser_editor",
             "precondition_results": [],
             "action_logs": [],
@@ -162,7 +162,7 @@ class TestReportBuilder(unittest.TestCase):
         summary = ReportBuilder().build_summary(testcase, runtime)
 
         self.assertEqual(summary["product"], "docs")
-        self.assertEqual(summary["workflow"], "create_doc_and_edit")
+        self.assertEqual(summary["intent"], "create_doc_and_edit")
         self.assertEqual(summary["failed_steps"], 0)
         self.assertTrue(summary["assertions"][0]["passed"])
 
@@ -177,8 +177,8 @@ class TestReportBuilder(unittest.TestCase):
         runtime = {
             "run_id": "20260506_base",
             "status": "passed",
-            "workflow": None,
-            "workflow_params": {},
+            "intent": "base_semantic_task",
+            "params": {},
             "page_id": "base_browser_table",
             "precondition_results": [],
             "action_logs": [],
@@ -223,6 +223,49 @@ class TestReportBuilder(unittest.TestCase):
         summary = ReportBuilder().build_summary(testcase, runtime)
 
         self.assertEqual(summary["product"], "base")
-        self.assertIsNone(summary["workflow"])
+        self.assertEqual(summary["intent"], "base_semantic_task")
         self.assertEqual(summary["failed_steps"], 0)
         self.assertTrue(summary["assertions"][1]["passed"])
+
+    def test_build_summary_uses_runtime_identity_without_testcase(self) -> None:
+        runtime = {
+            "run_id": "20260506_vc",
+            "status": "completed",
+            "intent": "agent_s3_feishu",
+            "params": {"instruction": "发起视频会议并验证进入成功"},
+            "product": "vc",
+            "task_id": "agentic_vc_start_meeting",
+            "task_title": "发起视频会议并验证进入成功",
+            "assertion_plan": [{"assertion": "vc_meeting_active", "expected": {}}],
+            "page_id": "vc_meeting_active",
+            "precondition_results": [],
+            "action_logs": [],
+            "screenshots": [],
+            "step_results": [
+                {
+                    "step_id": "final_assertion_1",
+                    "stage": "FINAL_ASSERTION",
+                    "action": "verify_assertion",
+                    "target": "vc_meeting_active",
+                    "status": "passed",
+                    "locator_result": {},
+                    "verification_result": {
+                        "assertion": "vc_meeting_active",
+                        "passed": True,
+                        "failure_reason": None,
+                    },
+                    "failure_type": None,
+                    "failure_reason": None,
+                }
+            ],
+            "failure_type": None,
+            "failure_reason": None,
+            "started_at": "2026-05-06T01:02:03+08:00",
+        }
+
+        summary = ReportBuilder().build_summary(None, runtime)
+
+        self.assertEqual(summary["product"], "vc")
+        self.assertEqual(summary["task_id"], "agentic_vc_start_meeting")
+        self.assertEqual(summary["assertions"][0]["name"], "vc_meeting_active")
+        self.assertTrue(summary["assertions"][0]["passed"])

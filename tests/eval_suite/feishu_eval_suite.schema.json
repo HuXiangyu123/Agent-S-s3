@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "feishu_eval_suite.schema.json",
+  "title": "Feishu Eval Suite Manifest",
+  "description": "Schema for the read-only test case manifest. No live runtime — used for manual selection and future batch evaluation wiring.",
+  "type": "object",
+  "required": ["test_cases"],
+  "properties": {
+    "description": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "products": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["im", "docs", "calendar", "base", "vc"] }
+    },
+    "test_cases": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/EvalTestCase" }
+    }
+  },
+  "$defs": {
+    "EvalTestCase": {
+      "type": "object",
+      "required": ["id", "product", "title", "instruction", "priority", "enabled"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^tc_[a-z0-9_]+$" },
+        "product": { "type": "string", "enum": ["im", "docs", "calendar", "base", "vc"] },
+        "title": { "type": "string" },
+        "instruction": { "type": "string", "description": "Natural-language instruction for the agent" },
+        "assertions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Expected verifier assertion IDs"
+        },
+        "priority": { "type": "string", "enum": ["high", "medium", "low"] },
+        "enabled": { "type": "boolean", "description": "Whether ready for live execution" },
+        "verifier_coverage": { "type": "string", "enum": ["full", "partial", "missing"] },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

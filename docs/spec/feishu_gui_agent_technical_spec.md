@@ -156,13 +156,13 @@ class PageDescriptor:
     layout_hints: dict
     key_regions: dict
     text_anchors: list[str]
-    supported_workflows: list[str]
+    supported_workflows: NotRequired[list[str]]
     ui_version_tag: str
 ```
 
 说明：
 
-- `supported_workflows` 是兼容旧页面描述符的字段；新功能不得用它驱动 runtime。
+- `supported_workflows` 是历史兼容可选字段；新描述符默认不填写，且不得用它驱动 runtime。
 - 新增产品域应优先通过 `tooling/` 的 semantic guidance 表达可用工具、下一步关注点和验证提示。
 
 ## 6. 规划决策层
@@ -300,7 +300,8 @@ run_agent(instruction)
 
 定位结果约束：
 
-- `bbox` 统一使用 `[x1, y1, x2, y2]`。
+- 静态页面描述符和 fixture 不提供坐标、比例范围、置信度或 `bbox`。
+- runtime locator 可以返回当前截图即时计算出的 `action_target`，用于执行层点击。
 - 定位失败时必须返回结构化失败结果，不允许用 `0` 坐标或省略字段代替失败语义。
 - `page_context` 以 `PageDescriptor` 为核心，可附加运行时局部区域信息，但不能脱离页面描述符体系自行定义。
 - 若定位失败但页面识别成功，`page_id` 返回当前已识别页面的 `PageDescriptor.page_id`。

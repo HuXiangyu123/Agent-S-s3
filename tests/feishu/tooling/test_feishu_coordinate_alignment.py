@@ -18,14 +18,16 @@ class TestFeishuCoordinateAlignment(unittest.TestCase):
 
         self.assertEqual(coords, [1004, 1034])
 
-    def test_relative_region_center_stays_in_primary_screen_space(self) -> None:
+    def test_semantic_prior_tools_do_not_use_static_relative_bounds(self) -> None:
         aci = object.__new__(WindowsFeishuACI)
-        aci.width = 1920
-        aci.height = 1080
+        aci.click = lambda description="", *a, **kw: f"agent.click({description!r})"
 
-        coords = aci._relative_bounds_center([0.25, 0.5, 0.75, 0.75])
+        code = aci.feishu_click_message_input()
 
-        self.assertEqual(coords, [960, 675])
+        self.assertIn("agent.click(", code)
+        self.assertIn("composer input", code)
+        self.assertNotIn("relative_bounds", code)
+        self.assertNotIn("page_descriptor", code)
 
     def test_capture_observation_uses_primary_screen_grab(self) -> None:
         aci = object.__new__(WindowsFeishuACI)

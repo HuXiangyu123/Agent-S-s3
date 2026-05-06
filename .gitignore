@@ -172,4 +172,5 @@ cython_debug/
 #.idea/
 launcher前端美化版.py
 logs/
+artifacts/
 .DS_Store

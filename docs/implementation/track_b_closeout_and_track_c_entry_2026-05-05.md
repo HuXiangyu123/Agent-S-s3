@@ -1,11 +1,15 @@
 # Track B Closeout And Track C Entry (2026-05-05)
 
-## Status
-
-Historical implementation record. The fixed Track C workflow runtime described
-here was removed by
-`docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`.
-Track C is now verifier guidance only; it must not drive runtime steps.
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The fixed
+> Track C workflow runtime described here was removed. Track C now means tool
+> guidance and verifier logic; it must not drive runtime steps through a fixed
+> product workflow.
 
 ## Goal
 

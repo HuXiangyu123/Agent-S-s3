@@ -1,5 +1,17 @@
 # S3 Feishu Agentic Tools Refactor (2026-05-05)
 
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+> - `docs/implementation/s3_feishu_agent_track_d_artifacts_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The main
+> direction, keeping Feishu on top of AgentS3, remains valid. Any rollback or
+> compatibility text around the old standalone worker is superseded and must not
+> be used to restore a separate deterministic Feishu runtime.
+
 ## Goal
 
 Refactor the current Feishu runtime path so that Feishu automation stays on top of the existing `s3` agent architecture instead of branching into a separate deterministic worker.

@@ -19,8 +19,7 @@
     "share_dialog_visible": true,
     "share_search_visible": true,
     "conversation_list_visible": true,
-    "share_send_button_visible": true,
-    "workflow_support": "deferred"
+    "share_send_button_visible": true
   },
   "visible_targets": [
     "share_search_entry",
@@ -28,7 +27,6 @@
     "share_message_input",
     "share_send_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "分享至会话",

@@ -32,7 +32,10 @@ class TestFeishuExecBuilders(unittest.TestCase):
         click_code = build_feishu_doc_click_code("分享")
         type_code = build_feishu_doc_type_code("hello")
 
-        self.assertIn("FEISHU_DOC_CLICKED", click_code)
+        self.assertIn("FEISHU_DOC_CLICK_SEMANTIC", click_code)
+        self.assertIn("agent.click", click_code)
+        self.assertNotIn("_OFFSETS", click_code)
+        self.assertNotIn("SetCursorPos", click_code)
         self.assertIn("'分享'", click_code)
         self.assertIn("FEISHU_DOC_TYPED", type_code)
         self.assertIn("'hello'", type_code)

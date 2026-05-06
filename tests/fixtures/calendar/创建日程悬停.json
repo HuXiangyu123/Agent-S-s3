@@ -21,8 +21,7 @@
     "attendee_input_visible": true,
     "time_controls_visible": true,
     "save_button_visible": true,
-    "hover_hint_visible": true,
-    "workflow_support": "primary"
+    "hover_hint_visible": true
   },
   "visible_targets": [
     "title_input",
@@ -30,7 +29,6 @@
     "time_range",
     "save_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "创建日程",

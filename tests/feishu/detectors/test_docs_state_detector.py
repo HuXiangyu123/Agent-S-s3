@@ -51,7 +51,7 @@ class TestDocsStateDetector(unittest.TestCase):
         state = detect_docs_state(self._docs_observation("网页端文档分享.png"))
 
         self.assertEqual(state["page_type"], "docs_share_dialog")
-        self.assertEqual(state["product_state"]["workflow_support"], "deferred")
+        self.assertNotIn("workflow_support", state["product_state"])
         self.assertTrue(state["product_state"]["share_dialog_visible"])
 
 

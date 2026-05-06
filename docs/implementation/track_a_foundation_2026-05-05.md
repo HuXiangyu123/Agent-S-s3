@@ -1,12 +1,15 @@
 # Track A Foundation (2026-05-05)
 
-## Status
-
-Historical implementation record. The fixed `WorkflowPlan` / planner output
-described here was removed by
-`docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`.
-Current Track A output is semantic intent and tool guidance for
-`feishu_agent`, not an executable workflow plan.
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The fixed
+> `WorkflowPlan` / planner output described here is no longer the active route.
+> Current Track A output is semantic intent and tool guidance for
+> `feishu_agent`, not an executable workflow plan.
 
 ## Goal
 

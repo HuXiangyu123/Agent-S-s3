@@ -28,8 +28,12 @@
     "upload_card_visible": true,
     "template_card_visible": true,
     "document_list_visible": true,
-    "visible_sections": ["最近访问", "归我所有", "与我共享", "收藏"],
-    "workflow_support": "primary"
+    "visible_sections": [
+      "最近访问",
+      "归我所有",
+      "与我共享",
+      "收藏"
+    ]
   },
   "visible_targets": [
     "new_card_area",
@@ -37,19 +41,38 @@
     "template_card_area",
     "document_list_area"
   ],
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "云文档", "role": "product_title", "required": true},
-    {"text": "主页", "role": "nav_item", "required": true},
-    {"text": "新建", "role": "entry_card", "required": true},
-    {"text": "上传", "role": "entry_card", "required": false},
-    {"text": "模板库", "role": "entry_card", "required": false}
+    {
+      "text": "云文档",
+      "role": "product_title",
+      "required": true
+    },
+    {
+      "text": "主页",
+      "role": "nav_item",
+      "required": true
+    },
+    {
+      "text": "新建",
+      "role": "entry_card",
+      "required": true
+    },
+    {
+      "text": "上传",
+      "role": "entry_card",
+      "required": false
+    },
+    {
+      "text": "模板库",
+      "role": "entry_card",
+      "required": false
+    }
   ],
   "key_regions": {
-    "new_card_area": {"relative_bounds": [0.215, 0.145, 0.36, 0.245]},
-    "upload_card_area": {"relative_bounds": [0.375, 0.145, 0.515, 0.245]},
-    "template_card_area": {"relative_bounds": [0.535, 0.145, 0.67, 0.245]},
-    "document_list_area": {"relative_bounds": [0.205, 0.32, 0.96, 0.98]}
+    "new_card_area": {},
+    "upload_card_area": {},
+    "template_card_area": {},
+    "document_list_area": {}
   },
   "annotation_status": "draft",
   "review_status": "unreviewed"

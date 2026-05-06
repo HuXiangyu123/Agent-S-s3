@@ -1,0 +1,130 @@
+{
+  "$schema": "feishu_eval_suite.schema.json",
+  "description": "Feishu eval suite manifest — read-only test case listing for manual selection and future batch evaluation. No live runtime execution.",
+  "generated_at": "2026-05-06T15:00:00+08:00",
+  "products": ["im", "docs", "calendar", "base", "vc"],
+  "test_cases": [
+    {
+      "id": "tc_im_send_message",
+      "product": "im",
+      "title": "发送消息到群聊",
+      "instruction": "打开消息中的 bot 功能测试群聊，发送“Hello World”，并确认消息已发送",
+      "assertions": ["chat_title_matched", "message_input_contains_text", "message_sent"],
+      "priority": "high",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_im_search_message",
+      "product": "im",
+      "title": "搜索消息并查看上下文",
+      "instruction": "在消息中搜索“项目周报”，打开相关会话并停留在搜索结果上下文",
+      "assertions": ["chat_title_matched"],
+      "priority": "medium",
+      "enabled": true,
+      "verifier_coverage": "partial"
+    },
+    {
+      "id": "tc_docs_create_blank_doc",
+      "product": "docs",
+      "title": "新建空白文档",
+      "instruction": "新建一个云文档，标题为“项目周报”，正文输入“2026年M2项目进展”",
+      "assertions": ["docs_new_menu_opened", "doc_editor_ready", "doc_title_contains_text", "doc_body_contains_text"],
+      "priority": "high",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_docs_open_existing",
+      "product": "docs",
+      "title": "打开已有文档",
+      "instruction": "打开云文档首页，找到“项目周报”文档并进入编辑页面",
+      "assertions": ["docs_home_ready", "doc_editor_ready"],
+      "priority": "medium",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_docs_share_check",
+      "product": "docs",
+      "title": "文档分享弹窗",
+      "instruction": "打开云文档中的“项目周报”，点击分享并检查分享弹窗是否出现",
+      "assertions": ["doc_editor_ready"],
+      "priority": "medium",
+      "enabled": true,
+      "verifier_coverage": "partial"
+    },
+    {
+      "id": "tc_calendar_create_event",
+      "product": "calendar",
+      "title": "创建日程",
+      "instruction": "打开日历，创建明天下午 2 点的日程，标题为“项目同步”，并邀请张三",
+      "assertions": [],
+      "priority": "high",
+      "enabled": false,
+      "verifier_coverage": "missing",
+      "note": "Calendar verifier branches not yet implemented; enable after calendar assertion support lands"
+    },
+    {
+      "id": "tc_calendar_view_today",
+      "product": "calendar",
+      "title": "查看今日日程",
+      "instruction": "打开日历主页，查看今天的日程安排并确认日历页面已打开",
+      "assertions": [],
+      "priority": "medium",
+      "enabled": false,
+      "verifier_coverage": "missing",
+      "note": "Calendar verifier branches not yet implemented; enable after calendar assertion support lands"
+    },
+    {
+      "id": "tc_base_create_table",
+      "product": "base",
+      "title": "新建多维表格",
+      "instruction": "新建一个多维表格，标题为“测试用例记录表”",
+      "assertions": ["base_new_menu_opened", "base_editor_ready"],
+      "priority": "high",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_base_open_recent",
+      "product": "base",
+      "title": "打开最近的表格",
+      "instruction": "打开多维表格主页，进入最近的表格并确认编辑器可用",
+      "assertions": ["base_home_ready", "base_editor_ready"],
+      "priority": "medium",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_vc_start_meeting",
+      "product": "vc",
+      "title": "发起视频会议",
+      "instruction": "发起视频会议并验证进入会议中页面",
+      "assertions": ["vc_home_ready", "vc_start_preview_ready", "vc_meeting_active"],
+      "priority": "high",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_vc_join_meeting",
+      "product": "vc",
+      "title": "加入视频会议",
+      "instruction": "加入会议 ID 为 123456789 的视频会议并验证进入会议",
+      "assertions": ["vc_join_preview_ready", "vc_meeting_id_entered", "vc_joined"],
+      "priority": "high",
+      "enabled": true,
+      "verifier_coverage": "full"
+    },
+    {
+      "id": "tc_vc_invite_in_meeting",
+      "product": "vc",
+      "title": "会议中邀请",
+      "instruction": "在当前视频会议中打开邀请面板并确认邀请入口可见",
+      "assertions": ["vc_meeting_active", "vc_invite_dialog_opened"],
+      "priority": "medium",
+      "enabled": true,
+      "verifier_coverage": "full"
+    }
+  ]
+}

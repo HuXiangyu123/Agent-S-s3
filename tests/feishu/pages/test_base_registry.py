@@ -9,7 +9,7 @@ class TestBasePageRegistry(unittest.TestCase):
         descriptor = get_page_descriptor("base_home")
         self.assertIsNotNone(descriptor)
         self.assertIn("base_home_new_button_area", descriptor["key_regions"])
-        self.assertEqual(descriptor["supported_workflows"], [])
+        self.assertNotIn("supported_workflows", descriptor)
         self.assertNotIn(
             "relative_bounds",
             descriptor["key_regions"]["base_home_new_button_area"],
@@ -30,7 +30,7 @@ class TestBasePageRegistry(unittest.TestCase):
         descriptor = get_page_descriptor("base_template_gallery")
         self.assertIsNotNone(descriptor)
         self.assertIn("base_blank_table_card_area", descriptor["key_regions"])
-        self.assertEqual(descriptor["supported_workflows"], [])
+        self.assertNotIn("supported_workflows", descriptor)
 
     def test_registry_exposes_base_browser_table_descriptor(self) -> None:
         self.assertIn("base_browser_table", get_page_ids())
@@ -50,7 +50,7 @@ class TestBasePageRegistry(unittest.TestCase):
             with self.subTest(page_id=page_id):
                 descriptor = get_page_descriptor(page_id)
                 self.assertIsNotNone(descriptor)
-                self.assertEqual(descriptor["supported_workflows"], [])
+                self.assertNotIn("supported_workflows", descriptor)
 
 
 if __name__ == "__main__":

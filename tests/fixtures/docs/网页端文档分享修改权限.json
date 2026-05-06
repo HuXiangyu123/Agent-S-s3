@@ -17,12 +17,14 @@
   },
   "product_state": {
     "share_dialog_visible": true,
-    "permission_menu_visible": true,
-    "workflow_support": "deferred"
+    "permission_menu_visible": true
   },
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "权限", "role": "permission_menu", "required": false}
+    {
+      "text": "权限",
+      "role": "permission_menu",
+      "required": false
+    }
   ],
   "annotation_status": "draft",
   "review_status": "unreviewed"

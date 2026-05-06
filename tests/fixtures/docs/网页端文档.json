@@ -28,26 +28,44 @@
     "share_button_visible": true,
     "doc_title": "未命名文档",
     "title_placeholder": "请输入标题",
-    "body_placeholder": "输入 / 快速插入内容",
-    "workflow_support": "primary"
+    "body_placeholder": "输入 / 快速插入内容"
   },
   "visible_targets": [
     "title_input_area",
     "body_editor_area",
     "share_button_area"
   ],
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "飞书云文档", "role": "product_title", "required": true},
-    {"text": "未命名文档", "role": "doc_title", "required": true},
-    {"text": "请输入标题", "role": "title_placeholder", "required": true},
-    {"text": "输入 / 快速插入内容", "role": "body_placeholder", "required": true},
-    {"text": "分享", "role": "share_button", "required": false}
+    {
+      "text": "飞书云文档",
+      "role": "product_title",
+      "required": true
+    },
+    {
+      "text": "未命名文档",
+      "role": "doc_title",
+      "required": true
+    },
+    {
+      "text": "请输入标题",
+      "role": "title_placeholder",
+      "required": true
+    },
+    {
+      "text": "输入 / 快速插入内容",
+      "role": "body_placeholder",
+      "required": true
+    },
+    {
+      "text": "分享",
+      "role": "share_button",
+      "required": false
+    }
   ],
   "key_regions": {
-    "title_input_area": {"relative_bounds": [0.38, 0.18, 0.62, 0.32]},
-    "body_editor_area": {"relative_bounds": [0.36, 0.38, 0.66, 0.54]},
-    "share_button_area": {"relative_bounds": [0.835, 0.02, 0.895, 0.085]}
+    "title_input_area": {},
+    "body_editor_area": {},
+    "share_button_area": {}
   },
   "annotation_status": "draft",
   "review_status": "unreviewed"

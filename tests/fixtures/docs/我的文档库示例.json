@@ -18,12 +18,14 @@
   "product_state": {
     "docs_home_visible": true,
     "doc_library_visible": true,
-    "document_list_visible": true,
-    "workflow_support": "secondary"
+    "document_list_visible": true
   },
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "我的文档库", "role": "library_section", "required": true}
+    {
+      "text": "我的文档库",
+      "role": "library_section",
+      "required": true
+    }
   ],
   "annotation_status": "draft",
   "review_status": "unreviewed"

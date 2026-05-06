@@ -17,13 +17,19 @@
   },
   "product_state": {
     "new_dropdown_visible": true,
-    "document_option_visible": true,
-    "workflow_support": "primary"
+    "document_option_visible": true
   },
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "新建", "role": "dropdown_title", "required": true},
-    {"text": "文档", "role": "document_type_option", "required": true}
+    {
+      "text": "新建",
+      "role": "dropdown_title",
+      "required": true
+    },
+    {
+      "text": "文档",
+      "role": "document_type_option",
+      "required": true
+    }
   ],
   "annotation_status": "draft",
   "review_status": "unreviewed"

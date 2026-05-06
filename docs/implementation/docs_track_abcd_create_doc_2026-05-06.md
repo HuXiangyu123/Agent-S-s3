@@ -1,14 +1,18 @@
 # Docs Track ABCD Create Doc 2026-05-06
 
-## Status
-
-Superseded for fixed planner/workflow portions by
-`docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`.
-Docs support now enters `feishu_agent = AgentS3 + WindowsFeishuACI` as semantic
-page/state knowledge, tool guidance, verifier hints, and passive report
-artifacts. References below to `WorkflowPlan`, `workflow_selector.py`, or
-`gui_agents/feishu/workflows/` are historical and not active implementation
-targets.
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_docs_router_and_parser_contract_2026-05-06.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The fixed
+> planner/workflow portions are superseded. Docs support now enters
+> `feishu_agent = AgentS3 + WindowsFeishuACI` as semantic page/state knowledge,
+> tool guidance, verifier hints, and passive report artifacts. References below
+> to `WorkflowPlan`, `workflow_selector.py`, or `gui_agents/feishu/workflows/`
+> are historical and not active implementation targets.
 
 ## Goal
 

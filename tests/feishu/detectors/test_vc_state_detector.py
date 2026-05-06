@@ -47,6 +47,21 @@ class TestVCStateDetector(unittest.TestCase):
         self.assertEqual(state["modal_type"], "vc_invite_dialog")
         self.assertTrue(state["product_state"]["invite_dialog_visible"])
 
+    def test_detects_invite_popover_state(self) -> None:
+        state = detect_vc_state(self._vc_observation("会议进行邀请.png"))
+
+        self.assertEqual(state["page_type"], "vc_meeting_active")
+        self.assertEqual(state["modal_type"], "vc_invite_popover")
+        self.assertTrue(state["product_state"]["invite_popover_visible"])
+
+    def test_fallback_detects_invite_popover_from_ocr(self) -> None:
+        state = detect_vc_state({"ocr_text": "会议信息\n布局\n邀请\n复制邀请链接"})
+
+        self.assertEqual(state["product"], "vc")
+        self.assertEqual(state["page_type"], "vc_meeting_active")
+        self.assertEqual(state["modal_type"], "vc_invite_popover")
+        self.assertTrue(state["product_state"]["invite_entry_visible"])
+
     def test_vc_fixture_metadata_is_semantic_only(self) -> None:
         forbidden_markers = (
             "relative_bounds",

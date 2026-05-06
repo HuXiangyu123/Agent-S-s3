@@ -47,6 +47,7 @@ class AgentStartupTest(unittest.TestCase):
         from gui_agents.feishu.detectors.docs_state_detector import detect_docs_state
         from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
         from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
+        from gui_agents.feishu.runtime import build_agentic_run_goal
         from gui_agents.feishu.reports.report_builder import ReportBuilder
         from gui_agents.feishu.reports.s3_runtime_recorder import S3RuntimeRecorder
         from gui_agents.feishu.maintenance.artifact_manager import ArtifactManager
@@ -58,6 +59,7 @@ class AgentStartupTest(unittest.TestCase):
         self.assertTrue(callable(detect_docs_state))
         self.assertTrue(callable(detect_feishu_state))
         self.assertTrue(callable(detect_vc_state))
+        self.assertTrue(callable(build_agentic_run_goal))
         self.assertIsNotNone(ReportBuilder)
         self.assertIsNotNone(S3RuntimeRecorder)
         self.assertIsNotNone(ArtifactManager)
@@ -76,6 +78,7 @@ class AgentStartupTest(unittest.TestCase):
 
     def test_core_pipeline_e2e(self) -> None:
         from gui_agents.feishu.testcases.nl_parser import parse_instruction
+        from gui_agents.feishu.runtime import build_agentic_run_goal
         from gui_agents.feishu.tooling.tool_router import route_feishu_tools
         from gui_agents.feishu.detectors.base_state_detector import detect_base_state
 
@@ -93,11 +96,10 @@ class AgentStartupTest(unittest.TestCase):
         self.assertEqual(docs_result["product"], "docs")
         self.assertEqual(docs_result["steps"][-1]["action"], "type_doc_title")
 
-        with self.assertRaisesRegex(
-            ValueError,
-            "Base instructions are handled by feishu_agent prior guidance",
-        ):
-            parse_instruction("新建一个多维表格")
+        base_result = parse_instruction("新建一个多维表格")
+        self.assertEqual(base_result["product"], "base")
+        self.assertEqual(base_result["steps"], [])
+        self.assertTrue(base_result["artifacts"]["semantic_guidance_only"])
 
         base_guidance = route_feishu_tools(
             "新建一个多维表格",
@@ -115,6 +117,11 @@ class AgentStartupTest(unittest.TestCase):
         )
         self.assertEqual(vc_guidance.product, "vc")
         self.assertEqual(vc_guidance.next_step_focus, "start_meeting_card")
+        self.assertIn("feishu_vc_click_start_card", vc_guidance.preferred_tools)
+
+        vc_goal = build_agentic_run_goal("发起视频会议并验证进入成功")
+        self.assertEqual(vc_goal["product"], "vc")
+        self.assertEqual(vc_goal["assertions"][0]["assertion"], "vc_meeting_active")
 
 
 def load_tests(loader, standard_tests, pattern):

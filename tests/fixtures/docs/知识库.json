@@ -16,10 +16,8 @@
     "last_error_banner": null
   },
   "product_state": {
-    "wiki_visible": true,
-    "workflow_support": "deferred"
+    "wiki_visible": true
   },
-  "supported_workflows": [],
   "annotation_status": "draft",
   "review_status": "unreviewed"
 }

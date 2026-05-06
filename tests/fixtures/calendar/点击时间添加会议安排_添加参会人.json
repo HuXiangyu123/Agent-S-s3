@@ -21,8 +21,7 @@
     "attendee_input_visible": true,
     "attendee_suggestions_visible": true,
     "time_controls_visible": true,
-    "save_button_visible": true,
-    "workflow_support": "primary"
+    "save_button_visible": true
   },
   "visible_targets": [
     "title_input",
@@ -30,7 +29,6 @@
     "attendee_suggestion_list",
     "save_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "添加主题",

@@ -1,15 +1,17 @@
 # Launcher Dual-Mode S3 / Feishu Integration (2026-05-05)
 
-## Status
-
-Superseded for runtime routing.
-
-The current valid route is:
-
-- `classic_s3`: `AgentS3 + OSWorldACI`
-- `feishu_agent`: `AgentS3 + WindowsFeishuACI`
-
-Do not use this document to reintroduce a `FeishuWorker` or deterministic workflow execution path behind `feishu_agent`. See `docs/implementation/s3_feishu_agentic_tools_refactor_2026-05-05.md` and `docs/implementation/s3_feishu_agent_track_d_artifacts_2026-05-06.md` for the active route.
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+> - `docs/implementation/s3_feishu_agent_track_d_artifacts_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record. The current
+> valid launcher routes are `classic_s3 = AgentS3 + OSWorldACI` and
+> `feishu_agent = AgentS3 + WindowsFeishuACI`. Do not use this document to
+> reintroduce a standalone Feishu worker or deterministic workflow execution
+> path behind `feishu_agent`.
 
 ## Goal
 

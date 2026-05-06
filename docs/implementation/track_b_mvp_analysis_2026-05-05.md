@@ -1,11 +1,17 @@
 # Track B MVP Analysis And Implementation Plan (2026-05-05)
 
-## Status
-
-Historical implementation record. References to downstream `WorkflowPlan`,
-`workflows/`, or `feishu_worker` were superseded by the current
-`feishu_agent = AgentS3 + WindowsFeishuACI` runtime route. Track B remains valid
-only as page/state/locator knowledge for agentic tool use.
+> Status: Superseded
+> Date: 2026-05-06
+> Superseded by:
+> - `docs/process/project_state.md`
+> - `docs/implementation/feishu_agent_migration_remove_workflows_2026-05-06.md`
+> - `docs/implementation/technical_debt_dead_code_cleanup_2026-05-06.md`
+>
+> Note: This document is kept as a historical implementation record.
+> References to downstream `WorkflowPlan`, `workflows/`, or `feishu_worker`
+> were superseded by the current `feishu_agent = AgentS3 + WindowsFeishuACI`
+> route. Track B remains valid only as page/state/locator knowledge for
+> agentic tool use.
 
 ## Goal
 

@@ -226,7 +226,7 @@ class BaseLocator:
 {
     "page_descriptor": PageDescriptor,
     "active_region": str | None,
-    "region_bounds": list[int] | None,
+    "runtime_region": dict | None,
 }
 ```
 
@@ -235,19 +235,21 @@ class BaseLocator:
 ```python
 {
     "matched": True,
-    "strategy": "vision",
-    "x": 123,
-    "y": 456,
-    "confidence": 0.91,
-    "bbox": [100, 430, 146, 482],
-    "page_id": "im_chat_main"
+    "strategy": "runtime_region",
+    "page_id": "im_chat_main",
+    "target": "message_input",
+    "action_target": {
+        "kind": "point",
+        "point": [512, 720],
+        "source": "runtime_observation"
+    }
 }
 ```
 
 字段约定：
 
-- `bbox` 固定为 `[x1, y1, x2, y2]`
-- `x`、`y` 表示点击中心点坐标
+- 静态 `PageDescriptor` / fixture 不提供坐标。
+- `action_target` 只能来自当前 runtime observation 的即时定位结果。
 - `page_id` 应与 `PageDescriptor.page_id` 对齐
 - 若定位失败但页面识别成功，`page_id` 返回当前页面的 `PageDescriptor.page_id`
 - 若页面也无法可靠识别，`page_id` 返回 `None`
@@ -257,12 +259,10 @@ class BaseLocator:
 ```python
 {
     "matched": False,
-    "strategy": "vision",
-    "x": None,
-    "y": None,
-    "confidence": 0.0,
-    "bbox": None,
+    "strategy": "runtime_region",
     "page_id": None,
+    "target": None,
+    "action_target": None,
     "failure_type": "location",
     "failure_reason": "anchor text not found in current viewport"
 }

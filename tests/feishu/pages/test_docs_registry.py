@@ -10,7 +10,8 @@ class TestDocsPageRegistry(unittest.TestCase):
         self.assertIsNotNone(descriptor)
         self.assertEqual(descriptor["page_type"], "docs_home")
         self.assertIn("new_card_area", descriptor["key_regions"])
-        self.assertIn("create_doc_and_edit", descriptor["supported_workflows"])
+        self.assertNotIn("supported_workflows", descriptor)
+        self.assertNotIn("relative_bounds", str(descriptor["key_regions"]))
 
     def test_registry_exposes_docs_new_dropdown_descriptor(self) -> None:
         self.assertIn("docs_new_dropdown", get_page_ids())

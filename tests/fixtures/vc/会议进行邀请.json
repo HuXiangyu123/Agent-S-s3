@@ -27,10 +27,17 @@
     "vc_invite_entry",
     "vc_copy_invite_link"
   ],
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "邀请", "role": "popover_entry", "required": true},
-    {"text": "复制邀请链接", "role": "popover_entry", "required": true}
+    {
+      "text": "邀请",
+      "role": "popover_entry",
+      "required": true
+    },
+    {
+      "text": "复制邀请链接",
+      "role": "popover_entry",
+      "required": true
+    }
   ],
   "annotation_status": "semantic",
   "review_status": "unreviewed"

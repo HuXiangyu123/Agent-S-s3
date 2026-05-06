@@ -21,15 +21,13 @@
     "attendee_input_visible": false,
     "time_controls_visible": true,
     "save_button_visible": true,
-    "selected_time_slot_visible": true,
-    "workflow_support": "primary"
+    "selected_time_slot_visible": true
   },
   "visible_targets": [
     "title_input",
     "time_range",
     "save_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "添加日程",

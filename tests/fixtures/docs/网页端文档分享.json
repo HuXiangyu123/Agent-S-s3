@@ -17,12 +17,14 @@
   },
   "product_state": {
     "share_dialog_visible": true,
-    "invite_input_visible": true,
-    "workflow_support": "deferred"
+    "invite_input_visible": true
   },
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "分享", "role": "dialog_title", "required": true}
+    {
+      "text": "分享",
+      "role": "dialog_title",
+      "required": true
+    }
   ],
   "annotation_status": "draft",
   "review_status": "unreviewed"

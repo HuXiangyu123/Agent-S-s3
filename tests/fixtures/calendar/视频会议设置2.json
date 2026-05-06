@@ -20,8 +20,7 @@
     "security_tab_visible": false,
     "meeting_permissions_visible": true,
     "recording_tab_visible": false,
-    "confirm_button_visible": true,
-    "workflow_support": "deferred"
+    "confirm_button_visible": true
   },
   "visible_targets": [
     "security_tab",
@@ -29,7 +28,6 @@
     "recording_tab",
     "confirm_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "视频会议设置",

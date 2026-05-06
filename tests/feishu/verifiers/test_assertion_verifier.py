@@ -4,12 +4,14 @@ import unittest
 from gui_agents.feishu.detectors.base_state_detector import detect_base_state
 from gui_agents.feishu.detectors.docs_state_detector import detect_docs_state
 from gui_agents.feishu.detectors.im_state_detector import detect_feishu_state
+from gui_agents.feishu.detectors.vc_state_detector import detect_vc_state
 from gui_agents.feishu.verifiers.assertion_verifier import AssertionVerifier
 
 
 IM_FIXTURE_DIR = Path("tests/fixtures/im")
 DOCS_FIXTURE_DIR = Path("tests/fixtures/docs")
 BASE_FIXTURE_DIR = Path("tests/fixtures/base")
+VC_FIXTURE_DIR = Path("tests/fixtures/vc")
 
 
 class TestAssertionVerifier(unittest.TestCase):
@@ -24,6 +26,9 @@ class TestAssertionVerifier(unittest.TestCase):
 
     def _base_observation(self, filename: str) -> dict:
         return {"image_path": str(BASE_FIXTURE_DIR / filename)}
+
+    def _vc_observation(self, filename: str) -> dict:
+        return {"image_path": str(VC_FIXTURE_DIR / filename)}
 
     def test_verifies_chat_title_match(self) -> None:
         observation = self._observation("im_chat_main_full.png")
@@ -234,6 +239,44 @@ class TestAssertionVerifier(unittest.TestCase):
 
         self.assertTrue(result["passed"])
         self.assertIn("body_text=本周完成联调", result["evidence"])
+
+    def test_verifies_vc_home_ready(self) -> None:
+        observation = self._vc_observation("会议主页面.png")
+        state = detect_vc_state(observation)
+
+        result = self.verifier.verify_assertion("vc_home_ready", state, observation)
+
+        self.assertTrue(result["passed"])
+        self.assertEqual(result["assertion"], "vc_home_ready")
+
+    def test_verifies_vc_meeting_active(self) -> None:
+        observation = self._vc_observation("正在会议的页面.png")
+        state = detect_vc_state(observation)
+
+        result = self.verifier.verify_assertion("vc_meeting_active", state, observation)
+
+        self.assertTrue(result["passed"])
+        self.assertIn("page_type=vc_meeting_active", result["evidence"])
+
+    def test_verifies_vc_joined_from_active_meeting(self) -> None:
+        observation = self._vc_observation("正在会议的页面.png")
+        state = detect_vc_state(observation)
+
+        result = self.verifier.verify_assertion("vc_joined", state, observation)
+
+        self.assertTrue(result["passed"])
+        self.assertIn("joined=True", result["evidence"])
+
+    def test_verifies_vc_invite_dialog_opened(self) -> None:
+        observation = self._vc_observation("会议邀请点击后.png")
+        state = detect_vc_state(observation)
+
+        result = self.verifier.verify_assertion(
+            "vc_invite_dialog_opened", state, observation
+        )
+
+        self.assertTrue(result["passed"])
+        self.assertIn("page_type=vc_invite_dialog", result["evidence"])
 
 
 if __name__ == "__main__":

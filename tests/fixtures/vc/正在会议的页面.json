@@ -28,11 +28,22 @@
     "vc_camera_toggle",
     "vc_leave_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "会议信息", "role": "toolbar_label", "required": true},
-    {"text": "布局", "role": "toolbar_label", "required": true},
-    {"text": "AI 总结", "role": "toolbar_control", "required": false}
+    {
+      "text": "会议信息",
+      "role": "toolbar_label",
+      "required": true
+    },
+    {
+      "text": "布局",
+      "role": "toolbar_label",
+      "required": true
+    },
+    {
+      "text": "AI 总结",
+      "role": "toolbar_control",
+      "required": false
+    }
   ],
   "annotation_status": "semantic",
   "review_status": "unreviewed"

@@ -19,13 +19,19 @@
     "docs_home_visible": true,
     "nav_selected": "云盘",
     "drive_page_visible": true,
-    "document_list_visible": true,
-    "workflow_support": "secondary"
+    "document_list_visible": true
   },
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "云文档", "role": "product_title", "required": true},
-    {"text": "云盘", "role": "nav_item", "required": true}
+    {
+      "text": "云文档",
+      "role": "product_title",
+      "required": true
+    },
+    {
+      "text": "云盘",
+      "role": "nav_item",
+      "required": true
+    }
   ],
   "annotation_status": "draft",
   "review_status": "unreviewed"

@@ -16,7 +16,7 @@ class TestVCPageRegistry(unittest.TestCase):
                 self.assertIn(page_id, get_page_ids())
                 descriptor = get_page_descriptor(page_id)
                 self.assertIsNotNone(descriptor)
-                self.assertEqual(descriptor["supported_workflows"], [])
+                self.assertNotIn("supported_workflows", descriptor)
                 for region in descriptor["key_regions"].values():
                     self.assertNotIn("relative_bounds", region)
                     self.assertIn("role", region)

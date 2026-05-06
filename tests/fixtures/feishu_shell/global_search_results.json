@@ -39,9 +39,6 @@
     "global_search_entry",
     "search_result_item"
   ],
-  "supported_workflows": [
-    "open_chat"
-  ],
   "text_anchors": [
     {
       "text": "问你想问的问题，或搜索关键词",
@@ -76,34 +73,26 @@
   ],
   "key_regions": {
     "global_search_entry_area": {
-      "relative_bounds": [0.02, 0.02, 0.96, 0.08],
       "annotation_status": "coarse",
       "notes": "Top global search input in the shell overlay"
     },
     "search_scope_tab_row": {
-      "relative_bounds": [0.01, 0.08, 0.82, 0.15],
       "annotation_status": "coarse",
       "notes": "Top row of search category tabs"
     },
     "search_result_list_area": {
-      "relative_bounds": [0.0, 0.15, 0.34, 0.62],
       "annotation_status": "coarse",
       "notes": "Visible left-side result list in the overlay"
     },
     "search_result_item_area": {
-      "relative_bounds": [0.01, 0.19, 0.28, 0.34],
       "annotation_status": "coarse",
       "notes": "Fallback region covering the first visible result area"
     }
   },
   "named_regions": {
     "search_result_items": {
-      "bot功能测试": {
-        "relative_bounds": [0.01, 0.18, 0.21, 0.27]
-      },
-      "孙思超": {
-        "relative_bounds": [0.01, 0.27, 0.17, 0.36]
-      }
+      "bot功能测试": {},
+      "孙思超": {}
     }
   },
   "negative_assertions": [

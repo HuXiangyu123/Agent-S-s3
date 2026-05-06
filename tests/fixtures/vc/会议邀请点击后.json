@@ -26,13 +26,32 @@
     "vc_invite_contact_result",
     "vc_share_button"
   ],
-  "supported_workflows": [],
   "text_anchors": [
-    {"text": "分享邀请", "role": "tab", "required": true},
-    {"text": "电话邀请", "role": "tab", "required": true},
-    {"text": "搜索", "role": "search_placeholder", "required": true},
-    {"text": "复制入会信息", "role": "secondary_button", "required": false},
-    {"text": "分享", "role": "primary_button", "required": true}
+    {
+      "text": "分享邀请",
+      "role": "tab",
+      "required": true
+    },
+    {
+      "text": "电话邀请",
+      "role": "tab",
+      "required": true
+    },
+    {
+      "text": "搜索",
+      "role": "search_placeholder",
+      "required": true
+    },
+    {
+      "text": "复制入会信息",
+      "role": "secondary_button",
+      "required": false
+    },
+    {
+      "text": "分享",
+      "role": "primary_button",
+      "required": true
+    }
   ],
   "annotation_status": "semantic",
   "review_status": "unreviewed"

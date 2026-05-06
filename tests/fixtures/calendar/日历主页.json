@@ -19,15 +19,13 @@
     "calendar_home_visible": true,
     "create_event_button_visible": true,
     "week_grid_visible": true,
-    "mini_month_visible": true,
-    "workflow_support": "primary"
+    "mini_month_visible": true
   },
   "visible_targets": [
     "create_event_button",
     "week_grid",
     "mini_month"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "日历",

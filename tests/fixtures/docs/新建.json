@@ -19,24 +19,34 @@
     "new_dropdown_visible": true,
     "document_option_visible": true,
     "folder_option_visible": true,
-    "more_types_visible": true,
-    "workflow_support": "primary"
+    "more_types_visible": true
   },
   "visible_targets": [
     "document_option_area",
     "folder_option_area",
     "more_types_area"
   ],
-  "supported_workflows": ["create_doc_and_edit"],
   "text_anchors": [
-    {"text": "新建", "role": "dropdown_title", "required": true},
-    {"text": "文档", "role": "document_type_option", "required": true},
-    {"text": "文件夹", "role": "folder_type_option", "required": false}
+    {
+      "text": "新建",
+      "role": "dropdown_title",
+      "required": true
+    },
+    {
+      "text": "文档",
+      "role": "document_type_option",
+      "required": true
+    },
+    {
+      "text": "文件夹",
+      "role": "folder_type_option",
+      "required": false
+    }
   ],
   "key_regions": {
-    "document_option_area": {"relative_bounds": [0.0, 0.18, 1.0, 0.29]},
-    "folder_option_area": {"relative_bounds": [0.0, 0.62, 1.0, 0.72]},
-    "more_types_area": {"relative_bounds": [0.0, 0.52, 1.0, 0.62]}
+    "document_option_area": {},
+    "folder_option_area": {},
+    "more_types_area": {}
   },
   "annotation_status": "draft",
   "review_status": "unreviewed"

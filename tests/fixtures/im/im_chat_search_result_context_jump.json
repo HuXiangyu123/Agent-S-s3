@@ -50,7 +50,6 @@
     "conversation_search_close_button",
     "conversation_search_result_item"
   ],
-  "supported_workflows": [],
   "text_anchors": [
     {
       "text": "搜索会话内容",
@@ -80,60 +79,43 @@
   ],
   "key_regions": {
     "search_panel_area": {
-      "relative_bounds": [0.80, 0.06, 0.995, 0.995],
       "annotation_status": "coarse",
       "notes": "Right-side conversation-local search panel remains visible"
     },
     "conversation_search_close_button_area": {
-      "relative_bounds": [0.96, 0.08, 0.99, 0.12],
       "annotation_status": "coarse",
       "notes": "Close button in the top-right corner of the local search panel"
     },
     "conversation_search_entry_area": {
-      "relative_bounds": [0.82, 0.18, 0.97, 0.22],
       "annotation_status": "coarse",
       "notes": "Search input containing the active query"
     },
     "search_filters_row_area": {
-      "relative_bounds": [0.82, 0.22, 0.97, 0.26],
       "annotation_status": "coarse",
       "notes": "Sender and time filter row"
     },
     "conversation_search_result_list_area": {
-      "relative_bounds": [0.81, 0.31, 0.99, 0.98],
       "annotation_status": "coarse",
       "notes": "Visible search result list for the current conversation"
     },
     "conversation_search_result_item_area": {
-      "relative_bounds": [0.82, 0.43, 0.97, 0.48],
       "annotation_status": "coarse",
       "notes": "Fallback region for a visible message-result card"
     },
     "highlighted_message_context_area": {
-      "relative_bounds": [0.00, 0.53, 0.80, 0.62],
       "annotation_status": "coarse",
       "notes": "Main chat area showing the jumped-to message context"
     }
   },
   "named_regions": {
     "conversation_search_result_items": {
-      "ui如果改了会变吧": {
-        "relative_bounds": [0.82, 0.42, 0.98, 0.47]
-      },
-      "前端有，ui可能也有": {
-        "relative_bounds": [0.82, 0.46, 0.98, 0.51]
-      },
-      "有写ui的skills吧": {
-        "relative_bounds": [0.82, 0.49, 0.98, 0.54]
-      },
-      "确实，gemini的ui确实好看": {
-        "relative_bounds": [0.82, 0.52, 0.98, 0.58]
-      }
+      "ui如果改了会变吧": {},
+      "前端有，ui可能也有": {},
+      "有写ui的skills吧": {},
+      "确实，gemini的ui确实好看": {}
     },
     "main_chat_context_messages": {
-      "ui我感觉gemini就可以": {
-        "relative_bounds": [0.03, 0.54, 0.22, 0.61]
-      }
+      "ui我感觉gemini就可以": {}
     }
   },
   "negative_assertions": [

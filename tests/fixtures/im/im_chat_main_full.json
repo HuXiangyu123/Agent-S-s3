@@ -41,10 +41,6 @@
     "message_input",
     "send_button"
   ],
-  "supported_workflows": [
-    "open_chat",
-    "send_message"
-  ],
   "text_anchors": [
     {
       "text": "bot功能测试",
@@ -95,9 +91,7 @@
   },
   "named_regions": {
     "conversation_list_items": {
-      "bot功能测试": {
-        "relative_bounds": [0.034, 0.112, 0.205, 0.175]
-      }
+      "bot功能测试": {}
     }
   },
   "negative_assertions": [

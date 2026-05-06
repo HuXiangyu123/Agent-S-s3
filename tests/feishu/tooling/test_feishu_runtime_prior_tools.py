@@ -13,25 +13,43 @@ class TestFeishuRuntimePriorTools(unittest.TestCase):
         self.trace_messages: list[str] = []
         self.aci._trace_execution = self.trace_messages.append
 
-    def test_click_message_input_uses_known_region(self) -> None:
+    def test_click_message_input_uses_semantic_grounding(self) -> None:
+        self.aci.click = (
+            lambda description="", *a, **kw: f"agent.click({description!r})"
+        )
+
         code = self.aci.feishu_click_message_input()
 
-        self.assertIn("pyautogui.click", code)
-        self.assertIn("im_chat_main", "".join(self.trace_messages))
-        self.assertIn("message_input_area", "".join(self.trace_messages))
+        self.assertIn("agent.click(", code)
+        self.assertIn("composer input", code)
+        self.assertIn(
+            "composer input", str(self.aci.feishu_click_message_input.__doc__ or "")
+        )
 
-    def test_type_message_uses_prior_region_then_paste(self) -> None:
+    def test_type_message_uses_semantic_focus_then_paste(self) -> None:
+        self.aci.click = (
+            lambda description="", *a, **kw: f"agent.click({description!r})"
+        )
+
         code = self.aci.feishu_type_message("hello", overwrite=False, enter=False)
 
-        self.assertIn("pyautogui.click", code)
+        self.assertIn("agent.click(", code)
+        self.assertIn("composer input", code)
         self.assertIn("pyperclip.copy('hello')", code)
         self.assertIn("pyautogui.hotkey('ctrl', 'v')", code)
 
-    def test_click_send_button_uses_known_region(self) -> None:
+    def test_click_send_button_uses_semantic_grounding(self) -> None:
+        self.aci.click = (
+            lambda description="", *a, **kw: f"agent.click({description!r})"
+        )
+
         code = self.aci.feishu_click_send_button()
 
-        self.assertIn("pyautogui.click", code)
-        self.assertIn("send_button_area", "".join(self.trace_messages))
+        self.assertIn("agent.click(", code)
+        self.assertIn("send button", code)
+        self.assertIn(
+            "send button", str(self.aci.feishu_click_send_button.__doc__ or "")
+        )
 
     def test_feishu_click_prepares_grounded_fallback_for_icon_description(self) -> None:
         self.aci.obs = {"screenshot": b"fake"}
@@ -68,6 +86,17 @@ class TestFeishuRuntimePriorTools(unittest.TestCase):
         self.assertIn("First reason from the screenshot", prompt)
         self.assertIn("agent.feishu_type_message(...)", prompt)
         self.assertIn("icon-only controls", prompt)
+
+    def test_worker_vc_prompt_adds_vc_helper_strategy(self) -> None:
+        prompt = self.aci.build_worker_system_prompt(
+            "发起视频会议并验证进入成功",
+            "windows",
+        )
+
+        self.assertIn("Feishu VC Prior Tool Strategy", prompt)
+        self.assertIn("agent.feishu_vc_click_start_card()", prompt)
+        self.assertIn("agent.feishu_vc_click_start_button()", prompt)
+        self.assertIn("agent.feishu_vc_type_meeting_id(...)", prompt)
 
 
 if __name__ == "__main__":

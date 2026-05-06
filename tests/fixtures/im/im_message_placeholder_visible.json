@@ -36,9 +36,6 @@
     "message_input",
     "send_button"
   ],
-  "supported_workflows": [
-    "send_message"
-  ],
   "text_anchors": [
     {
       "text": "发送给 bot功能测试",
